@@ -94,8 +94,8 @@ export function WaitlistForm() {
 
   return (
     <Card className="animate-in fade-in slide-in-from-bottom-4 group relative mx-auto w-full max-w-4xl overflow-hidden rounded-[2.25rem] border-white/80 bg-white/82 shadow-2xl shadow-brand-forest/10 backdrop-blur-2xl duration-700">
-      <div className="animate-drift pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-brand-mantis/18 blur-3xl" />
-      <div className="animate-drift-reverse pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-brand-blue/14 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-brand-mantis/18 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-brand-blue/14 blur-3xl" />
       <CardContent className="relative p-6 sm:p-10 lg:p-12">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -128,8 +128,8 @@ export function WaitlistForm() {
                 className={cn(
                   "h-auto justify-start rounded-3xl px-5 py-5 text-left transition-all duration-300",
                   role === option.value
-                    ? "scale-[1.02] border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "border-border bg-white/70 text-brand-forest hover:scale-[1.01] hover:bg-muted",
+                    ? "border-primary bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    : "border-border bg-white/70 text-brand-forest hover:bg-muted",
                 )}
               >
                 <span>
