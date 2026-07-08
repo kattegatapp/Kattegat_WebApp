@@ -11,7 +11,7 @@ const siteMetadata = {
   title: "Kattegat | Dubai Events & Hospitality Talent Marketplace",
   description:
     "Join Kattegat, Dubai's direct marketplace for events and hospitality talent. Find talent, get booked, and skip the middlemen.",
-  image: "/brand/logo-cover.png",
+  image: "/opengraph-image.png",
 };
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -33,7 +33,14 @@ export async function generateMetadata(): Promise<Metadata> {
       title: siteMetadata.title,
       description: siteMetadata.description,
       siteName: settings.brand.siteName,
-      images: [{ url: settings.metadata.ogImageUrl ?? siteMetadata.image }],
+      images: [
+        {
+          url: settings.metadata.ogImageUrl ?? siteMetadata.image,
+          width: 1200,
+          height: 630,
+          alt: "Kattegat - Find talent. Get booked. No middlemen.",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",

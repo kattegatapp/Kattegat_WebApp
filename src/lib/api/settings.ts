@@ -77,7 +77,7 @@ export const fallbackAppSettings: PublicAppSettings = {
     description:
       "Join Kattegat, Dubai's direct marketplace for events and hospitality talent. Find talent, get booked, and skip the middlemen.",
     keywords: ["Kattegat", "Dubai", "events", "services", "marketplace"],
-    ogImageUrl: "/brand/logo-cover.png",
+    ogImageUrl: "/opengraph-image.png",
   },
   links: {
     webAppUrl: "https://kattegat.app",
