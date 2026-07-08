@@ -9,7 +9,6 @@ import { useForm } from "react-hook-form";
 
 import { joinWaitlist } from "@/lib/api/waitlist";
 import { ApiRequestError } from "@/lib/api/client";
-import { getDeviceId } from "@/lib/device-id";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,8 +35,7 @@ export function WaitlistForm() {
   const phoneField = form.register("phone");
 
   const mutation = useMutation({
-    mutationFn: (values: WaitlistFormValues) =>
-      joinWaitlist({ ...values, source, deviceId: getDeviceId() }),
+    mutationFn: (values: WaitlistFormValues) => joinWaitlist({ ...values, source }),
     onSuccess: () => form.reset({ fullName: "", email: "", phone: "", role }),
   });
 

@@ -9,7 +9,7 @@ export interface WaitlistEntry {
   createdAt: string;
 }
 
-export type JoinWaitlistInput = WaitlistFormValues & { source: string; deviceId: string };
+export type JoinWaitlistInput = WaitlistFormValues & { source: string };
 
 export function joinWaitlist(values: JoinWaitlistInput) {
   return apiFetch<WaitlistEntry>(

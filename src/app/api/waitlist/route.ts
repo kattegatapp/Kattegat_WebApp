@@ -48,13 +48,7 @@ export async function POST(request: Request) {
   try {
     const response = await fetch(`${BACKEND_API_URL}/api/waitlist`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Forwarded-For":
-          request.headers.get("x-forwarded-for") ??
-          request.headers.get("x-real-ip") ??
-          "",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       cache: "no-store",
     });
