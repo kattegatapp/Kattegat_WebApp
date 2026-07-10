@@ -17,6 +17,7 @@ import { clearAdminToken, fetchAdminSettings, type AdminSettings, updateAdminSet
 type SectionKey = "brand" | "metadata" | "links" | "features" | "operations";
 
 const featureLabels: Array<[keyof AdminSettings["features"], string]> = [
+  ["freeAccessMode", "Free access mode (launch: every seller gets Pro features)"],
   ["maintenanceMode", "Maintenance mode"],
   ["waitlistEnabled", "Waitlist enabled"],
   ["buyerSignupEnabled", "Buyer signup enabled"],
@@ -106,6 +107,10 @@ export function AdminSettingsForm() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href="/kattegat-admin/pricing" className={buttonVariants({ variant: "outline" })}>
+              <Settings />
+              Plan features
+            </Link>
             <Link href="/" target="_blank" className={buttonVariants({ variant: "outline" })}>
               <ExternalLink />
               Public site

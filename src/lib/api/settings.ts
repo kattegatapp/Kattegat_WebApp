@@ -43,6 +43,7 @@ export interface PublicAppSettings {
     featuredPlacementEnabled: boolean;
     pushNotificationsEnabled: boolean;
     emailNotificationsEnabled: boolean;
+    freeAccessMode: boolean;
   };
   operations: {
     defaultCurrency: string;
@@ -108,6 +109,7 @@ export const fallbackAppSettings: PublicAppSettings = {
     featuredPlacementEnabled: true,
     pushNotificationsEnabled: true,
     emailNotificationsEnabled: true,
+    freeAccessMode: false,
   },
   operations: {
     defaultCurrency: "AED",
