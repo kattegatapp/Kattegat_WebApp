@@ -55,6 +55,7 @@ export interface PublicAppSettings {
     forceUpgrade: boolean;
     maxListingPhotosDefault: number;
     maxVideoLinksDefault: number;
+    maxRequirementAttachments: number;
     commissionRate: number;
     platformFee: number;
     allowedCountries: string[];
@@ -119,6 +120,7 @@ export const fallbackAppSettings: PublicAppSettings = {
     forceUpgrade: false,
     maxListingPhotosDefault: 12,
     maxVideoLinksDefault: 3,
+    maxRequirementAttachments: 10,
     commissionRate: 0,
     platformFee: 0,
     allowedCountries: ["United Arab Emirates"],

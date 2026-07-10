@@ -26,6 +26,8 @@ export function WaitlistForm() {
       fullName: "",
       email: "",
       phone: "",
+      instagramHandle: "",
+      linkedinUrl: "",
       role: "seller",
     },
   });
@@ -33,10 +35,12 @@ export function WaitlistForm() {
   // eslint-disable-next-line react-hooks/incompatible-library
   const role = form.watch("role");
   const phoneField = form.register("phone");
+  const instagramField = form.register("instagramHandle");
 
   const mutation = useMutation({
     mutationFn: (values: WaitlistFormValues) => joinWaitlist({ ...values, source }),
-    onSuccess: () => form.reset({ fullName: "", email: "", phone: "", role }),
+    onSuccess: () =>
+      form.reset({ fullName: "", email: "", phone: "", instagramHandle: "", linkedinUrl: "", role }),
   });
 
   function onSubmit(values: WaitlistFormValues) {
@@ -45,6 +49,8 @@ export function WaitlistForm() {
     mutation.mutate({
       ...values,
       phone: phoneDigits ? `+971${phoneDigits}` : undefined,
+      instagramHandle: values.instagramHandle.replace(/^@/, ""),
+      linkedinUrl: values.linkedinUrl ? values.linkedinUrl : undefined,
     });
   }
 
@@ -202,6 +208,51 @@ export function WaitlistForm() {
               />
               {form.formState.errors.email ? (
                 <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instagramHandle" className="text-brand-forest">
+                Instagram handle
+              </Label>
+              <div className="flex">
+                <span className="flex h-14 shrink-0 items-center rounded-l-2xl border border-transparent bg-muted/90 px-4 text-base font-bold text-brand-forest">
+                  @
+                </span>
+                <Input
+                  id="instagramHandle"
+                  autoComplete="off"
+                  placeholder="yourhandle"
+                  className="h-14 rounded-l-none rounded-r-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
+                  {...instagramField}
+                  onChange={(event) => {
+                    event.currentTarget.value = event.currentTarget.value.replace(/^@/, "");
+                    instagramField.onChange(event);
+                  }}
+                />
+              </div>
+              {form.formState.errors.instagramHandle ? (
+                <p className="text-sm text-red-600">{form.formState.errors.instagramHandle.message}</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <Label htmlFor="linkedinUrl" className="text-brand-forest">
+                  LinkedIn
+                </Label>
+                <span className="text-xs font-semibold text-muted-foreground">Optional</span>
+              </div>
+              <Input
+                id="linkedinUrl"
+                type="url"
+                autoComplete="url"
+                placeholder="https://linkedin.com/in/yourname"
+                className="h-14 rounded-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
+                {...form.register("linkedinUrl")}
+              />
+              {form.formState.errors.linkedinUrl ? (
+                <p className="text-sm text-red-600">{form.formState.errors.linkedinUrl.message}</p>
               ) : null}
             </div>
 

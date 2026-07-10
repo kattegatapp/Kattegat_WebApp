@@ -358,6 +358,14 @@ export default function Home() {
             </Link>
           ))}
         </div>
+        <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-semibold text-muted-foreground">
+          <Link href="/privacy-policy" className="hover:text-brand-forest">
+            Privacy Policy
+          </Link>
+          <Link href="/delete-account" className="hover:text-brand-forest">
+            Delete Account
+          </Link>
+        </div>
         <p className="mt-5 text-xs text-muted-foreground">
           © 2026 Kattegat · Hidden Diversion Recreational Services · Dubai, UAE
         </p>

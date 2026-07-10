@@ -171,6 +171,7 @@ export function AdminSettingsForm() {
             <NumberField label="Minimum build number" value={settings.operations.minimumSupportedBuildNumber} onChange={(value) => updateSection("operations", "minimumSupportedBuildNumber", value)} />
             <NumberField label="Max listing photos" value={settings.operations.maxListingPhotosDefault} onChange={(value) => updateSection("operations", "maxListingPhotosDefault", value ?? 1)} />
             <NumberField label="Max video links" value={settings.operations.maxVideoLinksDefault} onChange={(value) => updateSection("operations", "maxVideoLinksDefault", value ?? 0)} />
+            <NumberField label="Max requirement attachments" value={settings.operations.maxRequirementAttachments} onChange={(value) => updateSection("operations", "maxRequirementAttachments", value ?? 0)} />
             <NumberField label="Commission rate" value={settings.operations.commissionRate} step="0.01" onChange={(value) => updateSection("operations", "commissionRate", value ?? 0)} />
             <NumberField label="Platform fee" value={settings.operations.platformFee} step="0.01" onChange={(value) => updateSection("operations", "platformFee", value ?? 0)} />
             <TextField label="Allowed countries" value={settings.operations.allowedCountries.join(", ")} onChange={(value) => updateSection("operations", "allowedCountries", csv(value))} />
