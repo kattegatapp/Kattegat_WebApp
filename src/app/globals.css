@@ -34,14 +34,14 @@
   --chart-3: #1c4759;
   --chart-4: #c9a24b;
   --chart-5: #003912;
-  --radius: 0.625rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #003912;
+  --radius: 0.75rem;
+  --sidebar: #06140d;
+  --sidebar-foreground: #ffffff;
   --sidebar-primary: #6fdb42;
   --sidebar-primary-foreground: #003912;
-  --sidebar-accent: #eef2f0;
-  --sidebar-accent-foreground: #003912;
-  --sidebar-border: #e1e7e3;
+  --sidebar-accent: rgb(255 255 255 / 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.1);
   --sidebar-ring: #1c4759;
 }
 
@@ -105,6 +105,14 @@ body {
   background: var(--background);
   background-attachment: fixed;
   font-family: var(--font-plus-jakarta-sans), sans-serif;
+}
+
+.admin-shell {
+  background-image:
+    radial-gradient(circle at 88% 0%, rgb(111 219 66 / 0.07), transparent 24rem),
+    linear-gradient(rgb(0 57 18 / 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 57 18 / 0.022) 1px, transparent 1px);
+  background-size: auto, 32px 32px, 32px 32px;
 }
 
 .glass-panel {
@@ -176,11 +184,99 @@ body {
   animation: line-grow 1.4s ease-out forwards;
 }
 
+/* Admin login — futuristic scene */
+@keyframes aurora-shift {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+  }
+}
+
+@keyframes beam-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.55;
+  }
+  45% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes grid-pulse {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes ring-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.8;
+  }
+}
+
+.admin-login-scene {
+  isolation: isolate;
+}
+
+.admin-login-aurora {
+  animation: aurora-shift 14s ease-in-out infinite;
+}
+
+.admin-login-beam {
+  animation: beam-sweep 9s ease-in-out infinite;
+}
+
+.admin-login-grid {
+  animation: grid-pulse 7s ease-in-out infinite;
+}
+
+.admin-login-ring {
+  animation: ring-breathe 4.5s ease-in-out infinite;
+}
+
+.admin-login-panel {
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.025) 45%, rgb(78 48 135 / 0.12)),
+    rgb(4 5 12 / 0.68);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow:
+    0 0 0 1px rgb(111 219 66 / 0.06),
+    0 32px 100px rgb(0 0 0 / 0.62),
+    inset 0 1px 0 rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(30px) saturate(1.2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-drift,
   .animate-drift-reverse,
   .animate-pulse-ring::after,
-  .animate-line-grow {
+  .animate-line-grow,
+  .admin-login-aurora,
+  .admin-login-beam,
+  .admin-login-grid,
+  .admin-login-ring {
     animation: none;
   }
 }

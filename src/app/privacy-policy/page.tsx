@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { LegalPageShell, LegalSection } from "@/components/legal/legal-page-shell";
+import { LegalPageShell, LegalSection } from "@/features/legal";
 import { getPublicAppSettings } from "@/lib/api/settings";
 
 export const metadata: Metadata = {

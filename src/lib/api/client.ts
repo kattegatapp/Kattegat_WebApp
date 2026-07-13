@@ -31,12 +31,22 @@ export async function apiFetch<T>(
   init?: RequestInit,
   options?: ApiFetchOptions,
 ): Promise<T> {
+  const envelope = await apiFetchEnvelope<T>(path, init, options);
+  return envelope.data;
+}
+
+export async function apiFetchEnvelope<T>(
+  path: string,
+  init?: RequestInit,
+  options?: ApiFetchOptions,
+): Promise<{ data: T; meta?: { page: number; total: number } }> {
   const baseUrl = options?.baseUrl ?? API_URL;
   let res: Response;
 
   try {
     res = await fetch(`${baseUrl}${path}`, {
       ...init,
+      credentials: init?.credentials ?? "same-origin",
       headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch {
@@ -63,5 +73,5 @@ export async function apiFetch<T>(
     throw new ApiRequestError(body.error.message, body.error.code, res.status);
   }
 
-  return body.data;
+  return { data: body.data, meta: body.meta };
 }

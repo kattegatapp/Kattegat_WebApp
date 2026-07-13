@@ -76,35 +76,44 @@ npx shadcn@latest add <component>
 ```txt
 Kattegat_WebApp/
 ├── src/
-│   ├── app/
-│   │   ├── page.tsx                         # public launch waitlist
-│   │   ├── layout.tsx                       # root metadata, font, providers
-│   │   ├── globals.css                      # Tailwind 4 theme + global brand CSS
-│   │   └── kattegat-admin/login/page.tsx    # admin login entry
+│   ├── README.md                 # Folder map for new developers
+│   ├── proxy.ts                  # Secret admin URL + auth gates (Next 16 proxy)
+│   ├── app/                      # Routes only — keep pages thin
+│   │   ├── page.tsx              # Public launch waitlist
+│   │   ├── layout.tsx
+│   │   ├── globals.css
+│   │   ├── api/admin/            # Admin BFF (cookie session → backend)
+│   │   ├── api/waitlist/         # Waitlist BFF
+│   │   └── kattegat-admin/       # Internal admin routes (public path is secret)
+│   ├── features/                 # Product UI by domain
+│   │   ├── admin/                # Shell, auth, overview, pricing, settings
+│   │   ├── waitlist/
+│   │   └── legal/
 │   ├── components/
-│   │   ├── admin/                           # admin login/dashboard preview modules
-│   │   ├── ui/                              # local design-system primitives
-│   │   └── waitlist/                        # public waitlist modules
-│   └── lib/
-│       ├── providers.tsx                    # QueryClientProvider
-│       ├── utils.ts                         # cn()
-│       └── validations/                     # zod schemas
-├── public/brand/                            # Kattegat app icon/logo/launch imagery
+│   │   ├── ui/                   # shadcn primitives only
+│   │   └── motion/
+│   ├── lib/
+│   │   ├── admin/                # Portal path, cookie, session helpers
+│   │   ├── api/                  # Typed clients (admin/, settings, waitlist)
+│   │   ├── validations/
+│   │   ├── providers.tsx
+│   │   └── utils.ts
+│   └── hooks/
+├── public/brand/
 ├── AGENTS.md
 ├── CLAUDE.md
 └── package.json
 ```
 
+See `src/README.md` for “where do I put X?” guidance.
+
 ## Routes
 
 - `/` — public launch waitlist and brand story.
-- `/kattegat-admin/login` — isolated admin portal login URL.
+- `/{NEXT_PUBLIC_ADMIN_PORTAL_PATH}/login` — unguessable admin login (rewrites to internal `kattegat-admin`).
+- Admin panel pages require the httpOnly admin session cookie (enforced in `src/proxy.ts`).
 
-Current behavior is intentionally scaffolded:
-
-- Waitlist submissions are stored in browser `localStorage`.
-- Admin login simulates a mutation and displays wiring-ready copy.
-- There is no real backend integration in the web app yet.
+Admin and waitlist are wired to `Kattegat_Backend` via Next BFF routes under `src/app/api`.
 
 ## Backend integration
 
@@ -206,7 +215,12 @@ Use **shadcn/ui** as the primary design library. This is a strict project rule, 
 preference. Kattegat's theme, glassmorphism, spacing, and brand assets should be applied
 on top of shadcn components rather than replacing them with custom-built primitives.
 
-- Install UI primitives with `npx shadcn@latest add <component>`.
+**Component reference (always look here first):**
+
+https://ui.shadcn.com/docs/components
+
+- Browse that catalog before inventing a custom control.
+- Install missing primitives with `npx shadcn@latest add <component>`.
 - Keep generated shadcn components in `src/components/ui`.
 - Import UI primitives from `@/components/ui/...`.
 - Do not hand-build custom primitives when shadcn has the component.
@@ -215,12 +229,9 @@ on top of shadcn components rather than replacing them with custom-built primiti
 - Compose product-specific surfaces from shadcn components plus Kattegat theme classes.
 - If a component needs a brand treatment, style the shadcn component with Tailwind classes
   or CSS variables rather than replacing it with a custom implementation.
-- Custom components belong in product folders such as `src/components/waitlist` or
-  `src/components/admin`, and should compose shadcn primitives internally.
+- Custom components belong in product folders such as `src/features/*`, and should compose
+  shadcn primitives internally.
 - Existing shadcn setup is stored in `components.json`.
-
-The app currently has shadcn-generated `button`, `badge`, `card`, `input`, and `label`
-components installed.
 
 ### Assets
 
@@ -312,7 +323,8 @@ too much blur hurts scanning.
 ## UI rules
 
 - Keep the web app visually consistent with the mobile app, not generic SaaS templates.
-- Use shadcn/ui components from `src/components/ui`; install missing ones with the CLI.
+- Use shadcn/ui components from `src/components/ui`; look up available pieces at
+  https://ui.shadcn.com/docs/components and install missing ones with the CLI.
 - Treat shadcn as the default answer for buttons, inputs, cards, badges, labels, dialogs,
   dropdowns, tabs, tables, forms, sheets, popovers, toasts, and similar interface pieces.
 - Use `cn()` from `src/lib/utils.ts` for class composition.

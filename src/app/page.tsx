@@ -16,7 +16,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Reveal } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
-import { WaitlistForm } from "@/components/waitlist/waitlist-form";
+import { WaitlistForm } from "@/features/waitlist";
+import { MaintenanceState } from "@/components/status/error-state";
+import { getPublicAppSettings } from "@/lib/api/settings";
 
 const scarcity = [
   { value: "1,000", label: "early access spots" },
@@ -104,7 +106,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return <p className="text-xs font-extrabold uppercase tracking-[0.28em] text-brand-blue">{children}</p>;
 }
 
-export default function Home() {
+export default async function Home() {
+  const settings = await getPublicAppSettings();
+  if (settings.features.maintenanceMode) {
+    return <MaintenanceState message={settings.features.maintenanceMessage} />;
+  }
   return (
     <main className="min-h-screen overflow-hidden text-brand-forest">
       <section className="px-3 py-3 sm:px-6 sm:py-6">
@@ -185,9 +191,7 @@ export default function Home() {
                 </AvatarGroup>
                 <span className="text-sm font-semibold text-muted-foreground">First 1,000 get access before public launch.</span>
               </div>
-              <Suspense fallback={<div className="mx-auto h-[34rem] max-w-4xl rounded-[2rem] bg-white/70" />}>
-                <WaitlistForm />
-              </Suspense>
+              {settings.features.waitlistEnabled ? <Suspense fallback={<div className="mx-auto h-[34rem] max-w-4xl rounded-[2rem] bg-white/70" />}><WaitlistForm /></Suspense> : <Card className="mx-auto max-w-2xl border-amber-200 bg-white/85 shadow-xl"><CardContent className="p-8 text-center"><p className="text-lg font-extrabold text-brand-forest">The waitlist is currently closed</p><p className="mt-2 text-sm leading-6 text-muted-foreground">New applications are paused for now. Follow Kattegat for the next access window.</p></CardContent></Card>}
             </div>
           </div>
 

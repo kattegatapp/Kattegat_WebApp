@@ -1,40 +1,25 @@
-import { cookies } from "next/headers";
-import { NextResponse, type NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { API_URL } from "@/lib/api/client";
-
-const ADMIN_COOKIE = "kattegat_admin_access_token";
+import { proxyAdminBackend } from "@/lib/admin/session";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ tier: string }> },
 ) {
   const { tier } = await params;
-  const token = (await cookies()).get(ADMIN_COOKIE)?.value;
 
-  if (!token) {
-    return NextResponse.json(
-      { success: false, error: { message: "Admin session required", code: "ADMIN_SESSION_REQUIRED" } },
-      { status: 401 },
+  if (!["starter", "pro", "white_glove"].includes(tier)) {
+    return Response.json(
+      {
+        success: false,
+        error: { message: "Invalid seller tier", code: "INVALID_TIER" },
+      },
+      { status: 400 },
     );
   }
 
-  const body = await request.text();
-  const response = await fetch(`${apiPath(`/admin/pricing/${tier}`)}`, {
+  return proxyAdminBackend(`/admin/pricing/${tier}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body,
+    body: await request.text(),
   });
-  const payload = await response.json().catch(() => null);
-
-  return NextResponse.json(payload ?? { success: false, error: { message: "Invalid API response", code: "INVALID_RESPONSE" } }, {
-    status: response.status,
-  });
-}
-
-function apiPath(path: string) {
-  return `${API_URL}${API_URL.endsWith("/api") ? path : `/api${path}`}`;
 }

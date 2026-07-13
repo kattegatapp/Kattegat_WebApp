@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Mail, ShieldCheck, Smartphone, Trash2 } from "lucide-react";
 
-import { LegalPageShell, LegalSection } from "@/components/legal/legal-page-shell";
+import { LegalPageShell, LegalSection } from "@/features/legal";
 import { getPublicAppSettings } from "@/lib/api/settings";
 
 export const metadata: Metadata = {

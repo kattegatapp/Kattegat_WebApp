@@ -20,6 +20,10 @@ Next.js App Router web app for the Kattegat launch waitlist and admin entry poin
 
 **shadcn/ui is the primary design library for this web app.**
 
+Component catalog (look here first before building anything custom):
+
+**https://ui.shadcn.com/docs/components**
+
 Use shadcn components from `src/components/ui` and install missing primitives with:
 
 ```bash
@@ -30,13 +34,7 @@ Do not hand-build custom UI primitives when shadcn has the component. Product-sp
 components should compose shadcn primitives internally, then apply Kattegat's theme,
 glassmorphism, spacing, and brand assets on top.
 
-The shadcn setup lives in `components.json`. Current installed primitives include:
-
-- `button`
-- `badge`
-- `card`
-- `input`
-- `label`
+The shadcn setup lives in `components.json`.
 
 ## Kattegat Theme
 
@@ -75,8 +73,13 @@ response envelopes, roles, permissions, and domain rules.
 
 ## Routes
 
-- `/` - public launch waitlist
-- `/kattegat-admin/login` - specialized admin login URL
+- `/` — public launch waitlist
+- `/{NEXT_PUBLIC_ADMIN_PORTAL_PATH}/login` — unguessable admin login (see `.env`)
+
+## Source layout
+
+Product UI lives under `src/features/`. Routes in `src/app/` stay thin.
+Start with [`src/README.md`](src/README.md) if you are new to the repo.
 
 ## Getting Started
 

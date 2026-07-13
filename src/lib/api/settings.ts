@@ -8,6 +8,7 @@ export interface PublicAppSettings {
     market: string;
     supportEmail: string;
     supportPhone: string | null;
+    chatLogoUrl: string | null;
   };
   metadata: {
     title: string;
@@ -53,6 +54,7 @@ export interface PublicAppSettings {
     minimumAppVersion: string | null;
     minimumSupportedBuildNumber: number | null;
     latestAppVersion: string | null;
+    /** When true, clients below minimum version must upgrade. */
     forceUpgrade: boolean;
     maxListingPhotosDefault: number;
     maxVideoLinksDefault: number;
@@ -73,6 +75,7 @@ export const fallbackAppSettings: PublicAppSettings = {
     market: "Dubai",
     supportEmail: "support@kattegat.app",
     supportPhone: null,
+    chatLogoUrl: null,
   },
   metadata: {
     title: "Kattegat | Dubai Events & Hospitality Talent Marketplace",
@@ -133,9 +136,7 @@ export const fallbackAppSettings: PublicAppSettings = {
 
 export async function getPublicAppSettings(): Promise<PublicAppSettings> {
   try {
-    return await apiFetch<PublicAppSettings>("/api/settings", {
-      next: { revalidate: 300 },
-    });
+    return await apiFetch<PublicAppSettings>("/api/settings", { cache: "no-store" });
   } catch {
     return fallbackAppSettings;
   }
