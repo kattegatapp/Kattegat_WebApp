@@ -115,6 +115,26 @@ body {
   background-size: auto, 32px 32px, 32px 32px;
 }
 
+/* Admin panel: safe horizontal scroll for dense tables on narrow phones */
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prefer dynamic viewport height on mobile browsers (address bar) */
+.admin-shell-frame {
+  height: 100svh;
+  max-height: 100svh;
+}
+
+@supports (height: 100dvh) {
+  .admin-shell-frame {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+}
+
 .glass-panel {
   border: 1px solid var(--glass-border);
   background: rgb(255 255 255 / 0.62);
@@ -238,6 +258,8 @@ body {
 
 .admin-login-scene {
   isolation: isolate;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 .admin-login-aurora {

@@ -3,7 +3,7 @@ import Image from "next/image";
 /** A cinematic, after-dark backdrop kept deliberately quiet behind the form. */
 export function AdminLoginAtmosphere() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
       <Image
         src="/admin/nightlife-login.png"
         alt=""

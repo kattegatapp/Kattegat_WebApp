@@ -23,6 +23,7 @@ export { SettingsOperationsForm } from "@/features/admin/settings/operations-for
 export {
   adminNavItems,
   adminSettingsSections,
+  canAccessAdminNavItem,
   getAdminNavItem,
   getAdminSettingsSection,
   isSettingsPath,
@@ -32,3 +33,5 @@ export {
   type AdminSettingsNavItem,
   type AdminSettingsSectionKey,
 } from "@/features/admin/navigation";
+
+export { AccessDenied, RequireCapability, useAdminAccess } from "@/features/admin/access/require-capability";

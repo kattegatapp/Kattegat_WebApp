@@ -17,7 +17,7 @@ function unauthorizedJson() {
       success: false,
       error: { message: "Admin session required", code: "ADMIN_SESSION_REQUIRED" },
     },
-    { status: 401 },
+    { status: 401, headers: { "Cache-Control": "private, no-store" } },
   );
 }
 

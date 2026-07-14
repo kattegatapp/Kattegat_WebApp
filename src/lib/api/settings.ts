@@ -136,7 +136,8 @@ export const fallbackAppSettings: PublicAppSettings = {
 
 export async function getPublicAppSettings(): Promise<PublicAppSettings> {
   try {
-    return await apiFetch<PublicAppSettings>("/api/settings", { cache: "no-store" });
+    const backendUrl = (process.env.KATTEGAT_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
+    return await apiFetch<PublicAppSettings>("/api/settings", { cache: "no-store" }, { baseUrl: backendUrl });
   } catch {
     return fallbackAppSettings;
   }

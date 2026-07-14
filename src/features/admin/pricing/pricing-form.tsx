@@ -132,7 +132,7 @@ export function AdminPricingForm() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-[#062418] p-6 text-white shadow-[0_26px_80px_rgb(0_57_18/0.22)] sm:p-8"><div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_88%_0%,rgb(111_219_66/0.25),transparent_36%),linear-gradient(125deg,transparent_45%,rgb(255_255_255/0.04))]" /><div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-2xl"><Badge className="mb-4 border-white/10 bg-white/10 text-brand-mantis"><Layers3 />Commercial controls</Badge><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Design the value of every plan.</h1><p className="mt-3 text-sm leading-6 text-white/65">Set practical limits and premium capabilities for Starter, Pro and White Glove sellers. Free access mode temporarily overrides these baselines.</p></div><div className="flex gap-2"><HeroStat icon={ShieldCheck} value="3" label="Plan tiers" /><HeroStat icon={Sparkles} value="Live" label="Configuration" /></div></div></section>
+      <section className="relative overflow-hidden rounded-[1.5rem] bg-[#062418] p-5 text-white shadow-[0_26px_80px_rgb(0_57_18/0.22)] sm:rounded-[2rem] sm:p-8"><div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_88%_0%,rgb(111_219_66/0.25),transparent_36%),linear-gradient(125deg,transparent_45%,rgb(255_255_255/0.04))]" /><div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end"><div className="max-w-2xl min-w-0"><Badge className="mb-4 border-white/10 bg-white/10 text-brand-mantis"><Layers3 />Commercial controls</Badge><h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Design the value of every plan.</h1><p className="mt-3 text-sm leading-6 text-white/65">Set practical limits and premium capabilities for Starter, Pro and White Glove sellers. Free access mode temporarily overrides these baselines.</p></div><div className="flex flex-wrap gap-2"><HeroStat icon={ShieldCheck} value="3" label="Plan tiers" /><HeroStat icon={Sparkles} value="Live" label="Configuration" /></div></div></section>
 
       {mutation.isSuccess ? (
         <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
@@ -170,7 +170,7 @@ export function AdminPricingForm() {
               </CardHeader>
               <CardContent className="flex flex-col gap-5 px-5 py-5">
                 <div><p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-muted-foreground">Usage allowances</p><p className="mt-1 text-xs text-muted-foreground">Leave a value blank to make that allowance unlimited.</p></div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
                 <NumberField
                   label="Listings"
                   value={row.maxListings}
@@ -254,5 +254,5 @@ function NumberField({
 }
 
 function HeroStat({ icon: Icon, value, label }: { icon: LucideIcon; value: string; label: string }) {
-  return <div className="min-w-28 rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur"><Icon className="mb-2 size-4 text-brand-mantis" /><p className="text-xl font-extrabold">{value}</p><p className="text-[9px] font-bold uppercase tracking-wider text-white/45">{label}</p></div>;
+  return <div className="min-w-0 flex-1 basis-[7.5rem] rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur sm:min-w-28 sm:flex-none"><Icon className="mb-2 size-4 text-brand-mantis" /><p className="text-xl font-extrabold">{value}</p><p className="text-[9px] font-bold uppercase tracking-wider text-white/45">{label}</p></div>;
 }

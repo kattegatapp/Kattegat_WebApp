@@ -26,7 +26,7 @@ export function AdminFooter() {
     "/privacy-policy";
 
   return (
-    <footer className="mt-auto border-t border-border/70 bg-white/70 px-4 py-4 backdrop-blur sm:px-8">
+    <footer className="shrink-0 border-t border-border/70 bg-white/70 px-4 py-2.5 backdrop-blur sm:px-8">
       <div className="flex flex-col gap-1 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>
           © {year} {legalName}. All rights reserved.

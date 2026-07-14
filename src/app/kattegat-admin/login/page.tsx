@@ -8,10 +8,10 @@ import { Separator } from "@/components/ui/separator";
 
 export default function AdminLoginPage() {
   return (
-    <main className="admin-login-scene relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12 sm:px-6">
+    <main className="admin-login-scene relative flex min-h-dvh items-center justify-center px-4 py-4 sm:px-6 sm:py-8 lg:py-12">
       <AdminLoginAtmosphere />
 
-      <div className="relative z-10 grid w-full max-w-5xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+      <div className="relative z-10 grid w-full max-w-5xl items-center gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div className="animate-in fade-in slide-in-from-bottom-4 hidden duration-700 lg:block">
           <Link href="/" className="group inline-flex items-center gap-3">
             <span className="relative flex h-14 w-14 items-center justify-center">
@@ -50,27 +50,23 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
-          <div className="animate-in fade-in slide-in-from-bottom-3 mb-7 flex flex-col items-center text-center duration-700 lg:hidden">
-            <Link href="/" className="group mb-5 flex flex-col items-center gap-3">
-              <span className="relative flex h-14 w-14 items-center justify-center">
-                <span className="admin-login-ring absolute inset-0 rounded-2xl bg-brand-mantis/25 blur-md" />
+        <div className="mx-auto flex w-full max-w-[420px] flex-col justify-center lg:mx-0 lg:justify-self-end">
+          <div className="animate-in fade-in slide-in-from-bottom-3 mb-4 flex flex-col items-center text-center duration-700 lg:hidden">
+            <Link href="/" className="group mb-2.5 flex flex-col items-center gap-2">
+              <span className="relative flex h-11 w-11 items-center justify-center">
+                <span className="admin-login-ring absolute inset-0 rounded-xl bg-brand-mantis/25 blur-md" />
                 <Image
                   src="/brand/app-icon.png"
                   alt="Kattegat"
-                  width={56}
-                  height={56}
-                  className="relative rounded-2xl ring-1 ring-white/20"
+                  width={44}
+                  height={44}
+                  className="relative rounded-xl ring-1 ring-white/20"
                   priority
                 />
               </span>
-              <span className="text-2xl font-extrabold tracking-tight text-white">Kattegat</span>
+              <span className="text-xl font-extrabold tracking-tight text-white">Kattegat</span>
             </Link>
-            <Badge className="mb-3 border-white/15 bg-white/10 text-white/80 backdrop-blur">
-              Private entrance
-            </Badge>
-            <h1 className="text-lg font-semibold text-white/90">Sign in to admin</h1>
-            <p className="mt-1.5 text-sm text-white/50">Your night starts behind the scenes.</p>
+            <p className="text-sm text-white/55">Staff sign in</p>
           </div>
 
           <div className="animate-in fade-in slide-in-from-bottom-4 delay-100 duration-700">

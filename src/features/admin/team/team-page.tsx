@@ -227,6 +227,7 @@ export function AdminTeamPage() {
   const [extraCapabilities, setExtraCapabilities] = useState<string[]>([]);
 
   const [resetTarget, setResetTarget] = useState<AdminStaffMember | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<AdminStaffMember | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [editMember, setEditMember] = useState<AdminStaffMember | null>(null);
   const [editRole, setEditRole] = useState<AdminRole>("ops_agent");
@@ -256,6 +257,19 @@ export function AdminTeamPage() {
 
   function roleDraftFor(role: AdminRoleCatalogItem) {
     return roleDraftOverrides[role.role] ?? role.permissionKeys;
+  }
+
+  /** Extras are only powers the chosen job type does not already include. */
+  function assignableBeyondRole(role: AdminRole) {
+    if (role === "super_admin") return [] as AdminAssignableCapability[];
+    const roleRow = catalog.roles.find((item) => item.role === role);
+    const held = new Set(roleRow ? roleDraftFor(roleRow) : []);
+    return assignable.filter((option) => !held.has(option.key));
+  }
+
+  function pruneExtrasToRole(role: AdminRole, extras: string[]) {
+    const allowed = new Set(assignableBeyondRole(role).map((option) => option.key));
+    return extras.filter((key) => allowed.has(key));
   }
 
   function resetInvite() {
@@ -316,6 +330,7 @@ export function AdminTeamPage() {
   const deactivateMutation = useMutation({
     mutationFn: (userId: string) => deactivateAdminStaff(userId),
     onSuccess: async () => {
+      setRemoveTarget(null);
       await queryClient.invalidateQueries({ queryKey: ["admin", "staff"] });
     },
   });
@@ -366,6 +381,8 @@ export function AdminTeamPage() {
   const isSuperAdmin = meQuery.data?.adminRole === "super_admin";
   const staff = staffQuery.data ?? [];
   const assignable = catalog.assignableCapabilities;
+  const inviteExtraOptions = assignableBeyondRole(adminRole);
+  const editExtraOptions = assignableBeyondRole(editRole);
   const sortedRoles = [...catalog.roles].sort(
     (a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role),
   );
@@ -493,7 +510,12 @@ export function AdminTeamPage() {
                           onClick={() => {
                             setEditMember(member);
                             setEditRole(member.adminRole);
-                            setEditExtras(member.extraCapabilities ?? []);
+                            setEditExtras(
+                              pruneExtrasToRole(
+                                member.adminRole,
+                                member.extraCapabilities ?? [],
+                              ),
+                            );
                             roleMutation.reset();
                           }}
                         >
@@ -518,16 +540,7 @@ export function AdminTeamPage() {
                             size="sm"
                             className="rounded-lg text-red-700 hover:bg-red-50 hover:text-red-800"
                             disabled={deactivateMutation.isPending}
-                            onClick={() => {
-                              if (
-                                !window.confirm(
-                                  `Remove ${member.email} from the control room?\n\nThey will not be able to sign in anymore.`,
-                                )
-                              ) {
-                                return;
-                              }
-                              deactivateMutation.mutate(member.userId);
-                            }}
+                            onClick={() => setRemoveTarget(member)}
                           >
                             <UserX />
                             Remove
@@ -684,7 +697,7 @@ export function AdminTeamPage() {
                 ? "Enter their email and a temporary password they can change later."
                 : inviteStep === 2
                   ? "Pick the closest match. You can fine-tune on the next step."
-                  : "Optional. Give this person a few more powers than their job type."}
+                  : "Optional. Only powers this job type does not already have — pick extras if needed."}
             </DialogDescription>
           </DialogHeader>
 
@@ -727,7 +740,9 @@ export function AdminTeamPage() {
               value={adminRole}
               onChange={(role) => {
                 setAdminRole(role);
-                if (role === "super_admin") setExtraCapabilities([]);
+                setExtraCapabilities((prev) =>
+                  role === "super_admin" ? [] : pruneExtrasToRole(role, prev),
+                );
               }}
               roles={ROLE_ORDER}
             />
@@ -738,9 +753,13 @@ export function AdminTeamPage() {
               <div className="rounded-xl border border-border bg-muted/40 px-4 py-5 text-sm text-muted-foreground">
                 Owners already have full access. No extras needed.
               </div>
+            ) : inviteExtraOptions.length === 0 ? (
+              <div className="rounded-xl border border-border bg-muted/40 px-4 py-5 text-sm text-muted-foreground">
+                This job type already includes every assignable power. No extras to add.
+              </div>
             ) : (
               <PermissionPicks
-                options={assignable}
+                options={inviteExtraOptions}
                 selected={extraCapabilities}
                 onChange={setExtraCapabilities}
               />
@@ -811,7 +830,8 @@ export function AdminTeamPage() {
           <DialogHeader>
             <DialogTitle>Change access</DialogTitle>
             <DialogDescription>
-              Update the job type for {editMember?.email}. You can also add a few extra powers.
+              Update the job type for {editMember?.email}. Extra powers only show what this job
+              type does not already include.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-5">
@@ -819,18 +839,24 @@ export function AdminTeamPage() {
               value={editRole}
               onChange={(role) => {
                 setEditRole(role);
-                if (role === "super_admin") setEditExtras([]);
+                setEditExtras((prev) =>
+                  role === "super_admin" ? [] : pruneExtrasToRole(role, prev),
+                );
               }}
               roles={ROLE_ORDER}
             />
-            {editRole !== "super_admin" && assignable.length > 0 ? (
+            {editRole !== "super_admin" && editExtraOptions.length > 0 ? (
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-brand-forest">Extra powers (optional)</p>
                 <PermissionPicks
-                  options={assignable}
+                  options={editExtraOptions}
                   selected={editExtras}
                   onChange={setEditExtras}
                 />
+              </div>
+            ) : editRole !== "super_admin" ? (
+              <div className="rounded-xl border border-border bg-muted/40 px-4 py-5 text-sm text-muted-foreground">
+                This job type already includes every assignable power. No extras to add.
               </div>
             ) : null}
             {roleMutation.isError ? (
@@ -920,6 +946,36 @@ export function AdminTeamPage() {
             >
               {resetMutation.isPending ? <Loader2 className="animate-spin" /> : null}
               Save password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(removeTarget)} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove staff access?</DialogTitle>
+            <DialogDescription>
+              {removeTarget?.email} will be removed from the control room and will no longer be
+              able to sign in. Their main account is not deleted.
+            </DialogDescription>
+          </DialogHeader>
+          {deactivateMutation.isError ? (
+            <p className="text-sm text-red-600">
+              {deactivateMutation.error instanceof Error
+                ? deactivateMutation.error.message
+                : "Could not remove staff access."}
+            </p>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemoveTarget(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              disabled={!removeTarget || deactivateMutation.isPending}
+              onClick={() => removeTarget && deactivateMutation.mutate(removeTarget.userId)}
+            >
+              {deactivateMutation.isPending ? <Loader2 className="animate-spin" /> : <UserX />}
+              Remove access
             </Button>
           </DialogFooter>
         </DialogContent>

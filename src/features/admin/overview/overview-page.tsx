@@ -11,6 +11,7 @@ import {
   ClipboardList,
   FileWarning,
   Loader2,
+  MessageSquare,
   Monitor,
   Settings2,
   Shield,
@@ -81,6 +82,11 @@ const ATTENTION_HREFS: Record<string, string> = {
   listings: `${adminPath("/listings")}?view=pending`,
   requirements: `${adminPath("/requirements")}?view=pending`,
   recommended: adminPath("/recommended-leads"),
+  founding: adminPath("/founding-members"),
+  vetted: adminPath("/white-glove-applications"),
+  vetted_chats: adminPath("/agent-requests"),
+  identity: adminPath("/identity-verifications"),
+  moderation: adminPath("/moderation"),
 };
 
 const GATE_ROWS: Array<{
@@ -136,7 +142,8 @@ export function AdminOverview() {
   const meQuery = useQuery({
     queryKey: ["admin", "me"],
     queryFn: fetchAdminMe,
-    staleTime: 5 * 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
     retry: false,
   });
   const overviewQuery = useQuery({
@@ -279,7 +286,7 @@ export function AdminOverview() {
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Card className="border-border/80 bg-white">
           <CardHeader className="pb-3">
-            <CardTitle className="text-brand-forest">Concierge queue</CardTitle>
+            <CardTitle className="text-brand-forest">Operations queue</CardTitle>
             <CardDescription>Service moments requiring an operational decision.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
@@ -500,7 +507,7 @@ function MarketplaceCharts({ kpis }: { kpis: AdminOverviewKpis }) {
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Profiles</span>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-5">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
           {audience.map((item, index) => (
             <span key={item.name} className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="size-2 rounded-full" style={{ backgroundColor: CHART_COLORS[index] }} />
@@ -730,5 +737,7 @@ function AttentionIcon({ name }: { name: string }) {
   if (name === "moderation") return <Shield className={className} />;
   if (name === "founding") return <Users className={className} />;
   if (name === "vetted") return <UserRound className={className} />;
+  if (name === "vetted_chats") return <MessageSquare className={className} />;
+  if (name === "recommended") return <Users className={className} />;
   return <AlertTriangle className={className} />;
 }

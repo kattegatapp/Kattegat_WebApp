@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -34,11 +34,13 @@ import {
 } from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import { adminPath } from "@/lib/admin/paths";
-import { loginAdmin } from "@/lib/api/admin";
+import { resetAdminQueryCache } from "@/lib/admin/query-cache";
+import { fetchAdminMe, loginAdmin } from "@/lib/api/admin";
 import { adminLoginSchema, type AdminLoginValues } from "@/lib/validations/admin";
 
 export function AdminLoginForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<AdminLoginValues>({
     resolver: zodResolver(adminLoginSchema),
@@ -50,28 +52,36 @@ export function AdminLoginForm() {
 
   const mutation = useMutation({
     mutationFn: loginAdmin,
-    onSuccess: () => router.replace(adminPath()),
+    onSuccess: async () => {
+      // Drop prior staff identity/data before entering the panel.
+      resetAdminQueryCache(queryClient);
+      await queryClient.fetchQuery({
+        queryKey: ["admin", "me"],
+        queryFn: fetchAdminMe,
+      });
+      router.replace(adminPath());
+    },
   });
 
   const emailInvalid = Boolean(form.formState.errors.email);
   const passwordInvalid = Boolean(form.formState.errors.password);
 
   return (
-    <Card className="admin-login-panel relative gap-0 rounded-[1.35rem] border-0 bg-transparent py-0 text-white ring-0 shadow-none [--card-spacing:--spacing(6)]">
+    <Card className="admin-login-panel relative gap-0 rounded-[1.35rem] border-0 bg-transparent py-0 text-white ring-0 shadow-none [--card-spacing:--spacing(4)] sm:[--card-spacing:--spacing(6)]">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-10 top-0 z-10 h-px bg-gradient-to-r from-transparent via-brand-mantis/70 to-transparent"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-brand-mantis/15 blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 hidden h-40 w-40 rounded-full bg-brand-mantis/15 blur-3xl sm:block"
       />
 
-      <CardHeader className="relative border-b border-white/10 pb-5">
-        <CardTitle className="text-xl font-extrabold tracking-tight text-white">
+      <CardHeader className="relative border-b border-white/10 pb-3 sm:pb-5">
+        <CardTitle className="text-lg font-extrabold tracking-tight text-white sm:text-xl">
           Sign in
         </CardTitle>
-        <CardDescription className="text-white/55">
+        <CardDescription className="hidden text-white/55 sm:block">
           Step behind the velvet rope with your staff credentials.
         </CardDescription>
         <CardAction>
@@ -81,7 +91,7 @@ export function AdminLoginForm() {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="relative pt-6">
+      <CardContent className="relative pt-4 sm:pt-6">
         <form
           id="admin-login-form"
           onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
@@ -136,7 +146,7 @@ export function AdminLoginForm() {
                   <InputGroupButton
                     type="button"
                     size="icon-sm"
-                    className="cursor-pointer rounded-lg border border-white/10 bg-white/8 text-white shadow-sm hover:border-brand-mantis/40 hover:bg-brand-mantis/15 hover:text-brand-mantis focus-visible:border-brand-mantis/60 focus-visible:ring-brand-mantis/30"
+                    className="size-9 cursor-pointer rounded-lg border border-white/10 bg-white/8 text-white shadow-sm hover:border-brand-mantis/40 hover:bg-brand-mantis/15 hover:text-brand-mantis focus-visible:border-brand-mantis/60 focus-visible:ring-brand-mantis/30"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     aria-pressed={showPassword}
                     title={showPassword ? "Hide password" : "Show password"}
@@ -178,7 +188,7 @@ export function AdminLoginForm() {
               </Alert>
             ) : null}
 
-            <FieldSeparator className="*:data-[slot=field-separator-content]:bg-transparent *:data-[slot=field-separator-content]:px-0 *:data-[slot=field-separator-content]:text-white/35 [&>div]:bg-white/10">
+            <FieldSeparator className="hidden *:data-[slot=field-separator-content]:bg-transparent *:data-[slot=field-separator-content]:px-0 *:data-[slot=field-separator-content]:text-white/35 sm:flex [&>div]:bg-white/10">
               Private access
             </FieldSeparator>
 
@@ -196,7 +206,7 @@ export function AdminLoginForm() {
         </form>
       </CardContent>
 
-      <CardFooter className="relative justify-center border-white/10 bg-transparent text-[11px] text-white/40">
+      <CardFooter className="relative hidden justify-center border-white/10 bg-transparent text-[11px] text-white/40 sm:flex">
         <ShieldCheck className="size-3 text-brand-mantis/70" />
         Restricted to Kattegat operations staff
       </CardFooter>

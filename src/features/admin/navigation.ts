@@ -10,19 +10,24 @@ import {
   Megaphone,
   Search,
   Settings2,
+  Shield,
   Tags,
   ToggleLeft,
   Users,
   UserCog,
   Crown,
+  ConciergeBell,
   HandHeart,
   BriefcaseBusiness,
   ListChecks,
+  ScrollText,
+  Sparkles,
   type LucideIcon,
 } from "lucide-react";
 
 import { adminPath } from "@/lib/admin/paths";
 import type { AdminOverviewKpis } from "@/lib/api/admin";
+import { hasAnyCapability, type AdminAccessSubject } from "@/lib/admin/capabilities";
 
 export type AdminSettingsSectionKey =
   | "brand"
@@ -42,6 +47,7 @@ export type AdminNavBadgeKey =
   | "moderation"
   | "founding"
   | "vetted"
+  | "vettedChats"
   | "recommended";
 
 export type AdminNavItem = {
@@ -51,11 +57,27 @@ export type AdminNavItem = {
   description: string;
   /** When set, sidebar shows a live count from overview KPIs. */
   badgeKey?: AdminNavBadgeKey;
+  /**
+   * Minimum access: user needs ANY of these capabilities (super_admin always passes).
+   * Empty / omitted = visible to every authenticated admin.
+   */
+  anyOf?: readonly string[];
+  /** When true, only super_admin sees this destination. */
+  superAdminOnly?: boolean;
 };
 
 export type AdminSettingsNavItem = AdminNavItem & {
   section: AdminSettingsSectionKey;
 };
+
+export function canAccessAdminNavItem(
+  item: Pick<AdminNavItem, "anyOf" | "superAdminOnly">,
+  subject: AdminAccessSubject | null | undefined,
+): boolean {
+  if (item.superAdminOnly) return subject?.adminRole === "super_admin";
+  if (!item.anyOf?.length) return true;
+  return hasAnyCapability(subject, item.anyOf);
+}
 
 export function resolveAdminNavBadgeCount(
   badgeKey: AdminNavBadgeKey,
@@ -75,6 +97,8 @@ export function resolveAdminNavBadgeCount(
       return n(kpis.foundingQueue);
     case "vetted":
       return n(kpis.vettedQueue);
+    case "vettedChats":
+      return n(kpis.vettedChatsQueue);
     case "recommended":
       return n(kpis.recommendedLeadsQueue);
     default:
@@ -144,12 +168,14 @@ export const adminNavItems: AdminNavItem[] = [
     icon: ClipboardCheck,
     description: "Listing and requirement approval queues",
     badgeKey: "approvals",
+    anyOf: ["moderation.write"],
   },
   {
     title: "Waitlist",
     href: adminPath("/waitlist"),
     icon: ListChecks,
     description: "People awaiting platform access",
+    anyOf: ["users.read"],
   },
   {
     title: "Recommended Leads",
@@ -157,6 +183,7 @@ export const adminNavItems: AdminNavItem[] = [
     icon: HandHeart,
     description: "Member referrals for the team to qualify",
     badgeKey: "recommended",
+    anyOf: ["growth.write"],
   },
   {
     title: "Founding Members",
@@ -164,24 +191,51 @@ export const adminNavItems: AdminNavItem[] = [
     icon: Crown,
     description: "Review founding contributor applications",
     badgeKey: "founding",
+    anyOf: ["growth.write"],
+  },
+  {
+    title: "Vetted chats",
+    href: adminPath("/agent-requests"),
+    icon: ConciergeBell,
+    description: "Buyer ↔ Kattegat.Vetted ↔ seller middleman chats",
+    badgeKey: "vettedChats",
+    anyOf: ["chat.admin"],
+  },
+  {
+    title: "White Glove applications",
+    href: adminPath("/white-glove-applications"),
+    icon: Sparkles,
+    description: "Review sellers applying for managed White Glove service",
+    badgeKey: "vetted",
+    anyOf: ["growth.write"],
+  },
+  {
+    title: "Accepted Applications",
+    href: adminPath("/accepted-applications"),
+    icon: BadgeCheck,
+    description: "White Glove sellers approved for managed service",
+    anyOf: ["growth.write"],
   },
   {
     title: "Listings",
     href: adminPath("/listings"),
     icon: Building2,
     description: "Search listings and manage availability",
+    anyOf: ["moderation.write"],
   },
   {
     title: "Requirements",
     href: adminPath("/requirements"),
     icon: BriefcaseBusiness,
     description: "Search buyer requirements and manage availability",
+    anyOf: ["moderation.write"],
   },
   {
     title: "Users",
     href: adminPath("/users"),
     icon: UserCog,
     description: "Search and manage platform accounts",
+    anyOf: ["users.read"],
   },
   {
     title: "Identity Verification",
@@ -189,30 +243,50 @@ export const adminNavItems: AdminNavItem[] = [
     icon: BadgeCheck,
     description: "Review seller identity applications",
     badgeKey: "identity",
+    anyOf: ["moderation.write"],
+  },
+  {
+    title: "Moderation reports",
+    href: adminPath("/moderation"),
+    icon: Shield,
+    description: "Review member-reported content",
+    badgeKey: "moderation",
+    anyOf: ["moderation.write"],
   },
   {
     title: "Settings",
     href: adminPath("/settings"),
     icon: Settings2,
     description: "Brand, features, and operations config",
+    anyOf: ["settings.read", "settings.write"],
   },
   {
     title: "Communications",
     href: adminPath("/communications"),
     icon: Megaphone,
     description: "Send targeted push and email announcements",
+    anyOf: ["growth.write"],
   },
   {
     title: "Pricing",
     href: adminPath("/pricing"),
     icon: Tags,
     description: "Seller plan feature limits",
+    anyOf: ["pricing.read", "pricing.write"],
   },
   {
     title: "Control Room",
     href: adminPath("/team"),
     icon: Users,
     description: "People who can use this console",
+    superAdminOnly: true,
+  },
+  {
+    title: "Audit Logs",
+    href: adminPath("/audit-logs"),
+    icon: ScrollText,
+    description: "Review administrator actions and security events",
+    superAdminOnly: true,
   },
 ];
 
@@ -257,6 +331,9 @@ export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumb[] {
   const routes: Array<[string, AdminBreadcrumb[]]> = [
     [adminPath("/approvals/listings"), [{ title: "Approvals", href: adminPath("/approvals") }, { title: "Listing approvals" }]],
     [adminPath("/approvals/requirements"), [{ title: "Approvals", href: adminPath("/approvals") }, { title: "Requirement approvals" }]],
+    [adminPath("/agent-requests"), [{ title: "Vetted" }, { title: "Vetted chats" }]],
+    [adminPath("/white-glove-applications"), [{ title: "Vetted" }, { title: "White Glove applications" }]],
+    [adminPath("/accepted-applications"), [{ title: "Vetted" }, { title: "Accepted Applications" }]],
     [adminPath("/settings/brand"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Brand" }]],
     [adminPath("/settings/metadata"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Metadata" }]],
     [adminPath("/settings/links"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Links" }]],
@@ -265,11 +342,20 @@ export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumb[] {
     [adminPath("/settings/email"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Email" }]],
   ];
 
+  if (pathname.startsWith(`${adminPath("/users")}/`) && pathname.endsWith("/chat")) {
+    return [
+      { title: "Admin", href: root },
+      { title: "Users", href: adminPath("/users") },
+      { title: "User profile", href: pathname.replace(/\/chat\/?$/, "") },
+      { title: "Direct chat" },
+    ];
+  }
+
   if (pathname.startsWith(`${adminPath("/users")}/`)) {
     return [{ title: "Admin", href: root }, { title: "Users", href: adminPath("/users") }, { title: "User profile" }];
   }
 
-  const child = routes.find(([path]) => pathname === path);
+  const child = routes.find(([path]) => pathname === path || pathname.startsWith(`${path}/`));
   if (child) return [{ title: "Admin", href: root }, ...child[1]];
 
   const current = getAdminNavItem(pathname);

@@ -132,7 +132,7 @@ export function SettingsSaveBar({
   onSave: () => void;
 }) {
   return (
-    <div className="sticky bottom-3 z-10 mt-6 rounded-2xl border border-border/80 bg-white/90 px-4 py-3 shadow-[0_16px_45px_rgb(0_57_18/0.12)] backdrop-blur-xl">
+    <div className="sticky bottom-3 z-10 mt-6 rounded-2xl border border-border/80 bg-white/90 px-4 py-3 shadow-[0_16px_45px_rgb(0_57_18/0.12)] backdrop-blur-xl mb-[max(0px,env(safe-area-inset-bottom))]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-h-5 text-sm">
           {isSuccess ? (
@@ -145,7 +145,7 @@ export function SettingsSaveBar({
             <span className="text-muted-foreground">Changes apply when you save this tab.</span>
           ) : null}
         </div>
-        <Button onClick={onSave} disabled={isPending} className="h-10 rounded-xl px-5 sm:min-w-36">
+        <Button onClick={onSave} disabled={isPending} className="h-11 w-full rounded-xl px-5 sm:h-10 sm:w-auto sm:min-w-36">
           {isPending ? <Loader2 className="animate-spin" /> : <Save />}
           Save changes
         </Button>

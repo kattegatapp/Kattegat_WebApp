@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment } from "react";
 
 import { getAdminBreadcrumbs, getAdminNavItem } from "@/features/admin/navigation";
+import { hasAnyCapability } from "@/lib/admin/capabilities";
+import { resetAdminQueryCache } from "@/lib/admin/query-cache";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
@@ -44,6 +46,7 @@ import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
 import { clearAdminToken, fetchAdminMe, fetchAdminSettings } from "@/lib/api/admin";
 import { fallbackAppSettings } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
+import { AdminNotificationsMenu } from "@/features/admin/shell/notifications-menu";
 
 function roleLabel(role: string | null | undefined) {
   if (!role) return "Admin";
@@ -79,13 +82,15 @@ function initialsFrom(me: {
 export function AdminHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const current = getAdminNavItem(pathname);
   const breadcrumbs = getAdminBreadcrumbs(pathname);
 
   const meQuery = useQuery({
     queryKey: ["admin", "me"],
     queryFn: fetchAdminMe,
-    staleTime: 10 * 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
     retry: false,
   });
 
@@ -97,6 +102,8 @@ export function AdminHeader() {
   });
 
   const me = meQuery.data;
+  const canApprovals = hasAnyCapability(me, ["moderation.write"]);
+  const canSettings = hasAnyCapability(me, ["settings.read", "settings.write"]);
   const brand = settingsQuery.data?.brand ?? fallbackAppSettings.brand;
   const links = settingsQuery.data?.links ?? fallbackAppSettings.links;
   const websiteUrl = links.webAppUrl?.trim() || "/";
@@ -104,41 +111,83 @@ export function AdminHeader() {
   const supportEmail = brand.supportEmail?.trim() || fallbackAppSettings.brand.supportEmail;
 
   async function logout() {
-    await clearAdminToken();
-    router.replace(ADMIN_LOGIN_PATH);
+    try {
+      await clearAdminToken();
+    } finally {
+      resetAdminQueryCache(queryClient);
+      router.replace(ADMIN_LOGIN_PATH);
+    }
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-[4.5rem] shrink-0 items-center gap-2 border-b border-border/70 bg-white/85 shadow-[0_1px_0_rgb(255_255_255/0.8)] backdrop-blur-xl transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
-      <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
-        <SidebarTrigger className="-ml-1 rounded-xl border border-border/70 bg-white shadow-sm hover:bg-muted" />
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-1.5 border-b border-border/70 bg-white/85 shadow-[0_1px_0_rgb(255_255_255/0.8)] backdrop-blur-xl transition-[width,height] ease-linear sm:h-[4.5rem] sm:gap-2 group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5 px-2 sm:gap-2 sm:px-4">
+        <SidebarTrigger className="-ml-0.5 size-10 shrink-0 rounded-xl border border-border/70 bg-white shadow-sm hover:bg-muted sm:size-8" />
         <Separator
           orientation="vertical"
-          className="mr-2 data-[orientation=vertical]:h-4"
+          className="mr-1 hidden data-[orientation=vertical]:h-4 sm:mr-2 sm:block"
         />
-        <div className="min-w-0"><Breadcrumb className="min-w-0"><BreadcrumbList>{breadcrumbs.map((item, index) => <Fragment key={`${item.title}-${index}`}>{index > 0 ? <BreadcrumbSeparator className="hidden sm:block" /> : null}<BreadcrumbItem className={index === 0 ? "hidden sm:block" : undefined}>{item.href ? <BreadcrumbLink render={<Link href={item.href} />}>{item.title}</BreadcrumbLink> : <BreadcrumbPage className="max-w-40 truncate sm:max-w-none">{item.title}</BreadcrumbPage>}</BreadcrumbItem></Fragment>)}</BreadcrumbList></Breadcrumb>{current?.description ? <p className="mt-0.5 hidden max-w-xl truncate text-[11px] text-muted-foreground lg:block">{current.description}</p> : null}</div>
+        <div className="min-w-0 flex-1">
+          <Breadcrumb className="min-w-0">
+            <BreadcrumbList>
+              {breadcrumbs.map((item, index) => (
+                <Fragment key={`${item.title}-${index}`}>
+                  {index > 0 ? <BreadcrumbSeparator className="hidden sm:block" /> : null}
+                  <BreadcrumbItem className={index === 0 ? "hidden sm:block" : undefined}>
+                    {item.href ? (
+                      <BreadcrumbLink render={<Link href={item.href} />}>{item.title}</BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage className="max-w-[9.5rem] truncate sm:max-w-none">
+                        {item.title}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+          {current?.description ? (
+            <p className="mt-0.5 hidden max-w-xl truncate text-[11px] text-muted-foreground lg:block">
+              {current.description}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex items-center gap-1 px-4 sm:gap-1.5">
+      <div className="flex shrink-0 items-center gap-0.5 px-2 sm:gap-1.5 sm:px-4">
         <HeaderIconLink
           href={websiteUrl}
           external
           label="Open website"
-          className="hidden sm:inline-flex"
+          className="hidden md:inline-flex"
         >
           <ExternalLink className="size-4" />
           <span className="hidden lg:inline">Website</span>
         </HeaderIconLink>
 
-        <HeaderIconLink href={`${adminPath("/listings")}?view=pending`} label="Approvals">
-          <ClipboardCheck className="size-4" />
-          <span className="hidden xl:inline">Approvals</span>
-        </HeaderIconLink>
+        {canApprovals ? (
+          <HeaderIconLink
+            href={`${adminPath("/listings")}?view=pending`}
+            label="Approvals"
+            className="hidden sm:inline-flex"
+          >
+            <ClipboardCheck className="size-4" />
+            <span className="hidden xl:inline">Approvals</span>
+          </HeaderIconLink>
+        ) : null}
 
-        <HeaderIconLink href={adminPath("/settings/brand")} label="Settings">
-          <Settings2 className="size-4" />
-          <span className="hidden xl:inline">Settings</span>
-        </HeaderIconLink>
+        {canSettings ? (
+          <HeaderIconLink
+            href={adminPath("/settings/brand")}
+            label="Settings"
+            className="hidden sm:inline-flex"
+          >
+            <Settings2 className="size-4" />
+            <span className="hidden xl:inline">Settings</span>
+          </HeaderIconLink>
+        ) : null}
+
+        <AdminNotificationsMenu />
 
         <Separator orientation="vertical" className="mx-1 hidden h-4 sm:block" />
 
@@ -179,33 +228,62 @@ export function AdminHeader() {
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<Link href={adminPath("/account")} />}>
+              <DropdownMenuItem
+                nativeButton={false}
+                render={<Link href={adminPath("/account")} />}
+              >
                 <UserRound />
                 My profile
               </DropdownMenuItem>
               <DropdownMenuItem
+                nativeButton={false}
                 render={<Link href={`${adminPath("/account")}?tab=security`} />}
               >
                 <KeyRound />
                 Change password
               </DropdownMenuItem>
+              {canApprovals ? (
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={<Link href={`${adminPath("/listings")}?view=pending`} />}
+                  className="sm:hidden"
+                >
+                  <ClipboardCheck />
+                  Approvals
+                </DropdownMenuItem>
+              ) : null}
+              {canSettings ? (
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={<Link href={adminPath("/settings/brand")} />}
+                  className="sm:hidden"
+                >
+                  <Settings2 />
+                  Settings
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
+                nativeButton={false}
                 render={<a href={websiteUrl} target="_blank" rel="noreferrer" />}
               >
                 <ExternalLink />
                 Open website
               </DropdownMenuItem>
               <DropdownMenuItem
+                nativeButton={false}
                 render={<a href={privacyUrl} target="_blank" rel="noreferrer" />}
               >
                 <ExternalLink />
                 Privacy policy
               </DropdownMenuItem>
               {supportEmail ? (
-                <DropdownMenuItem render={<a href={`mailto:${supportEmail}`} />}>
+                <DropdownMenuItem
+                  nativeButton={false}
+                  render={<a href={`mailto:${supportEmail}`} />}
+                >
                   <ExternalLink />
                   Email support
                 </DropdownMenuItem>
@@ -239,7 +317,7 @@ function HeaderIconLink({
   className?: string;
 }) {
   const classes = cn(
-    "inline-flex h-9 items-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-brand-forest/5 hover:text-brand-forest",
+    "inline-flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-brand-forest/5 hover:text-brand-forest sm:h-9",
     className,
   );
 

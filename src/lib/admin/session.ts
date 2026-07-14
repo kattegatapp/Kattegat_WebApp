@@ -20,7 +20,7 @@ export function unauthorizedAdminResponse() {
       success: false,
       error: { message: "Admin session required", code: "ADMIN_SESSION_REQUIRED" },
     },
-    { status: 401 },
+    { status: 401, headers: { "Cache-Control": "private, no-store" } },
   );
 }
 
@@ -72,7 +72,10 @@ export async function proxyAdminBackend(
       success: false,
       error: { message: "Invalid API response", code: "INVALID_RESPONSE" },
     },
-    { status: response.status },
+    {
+      status: response.status,
+      headers: { "Cache-Control": "private, no-store" },
+    },
   );
 }
 

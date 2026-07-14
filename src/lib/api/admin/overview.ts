@@ -28,6 +28,8 @@ export interface AdminOverviewKpis {
   pendingModerationReports: number;
   foundingQueue: number;
   vettedQueue: number;
+  /** Open Contact Agent / middleman chat cases (new + in progress + contacted). */
+  vettedChatsQueue: number;
   foundingMembersTotal: number;
   vettedMembersTotal: number;
   premiumSellersTotal: number;
@@ -118,6 +120,7 @@ const KPI_DEFAULTS: AdminOverviewKpis = {
   pendingModerationReports: 0,
   foundingQueue: 0,
   vettedQueue: 0,
+  vettedChatsQueue: 0,
   foundingMembersTotal: 0,
   vettedMembersTotal: 0,
   premiumSellersTotal: 0,
