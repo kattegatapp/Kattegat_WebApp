@@ -133,15 +133,46 @@ export function AdminPricingForm() {
     mutationFn: ({ tier, input }: { tier: SellerTier; input: UpdatePlanFeaturesInput }) =>
       updatePlanFeatures(tier, input),
     onSuccess: (value) => {
-      setDrafts((current) => ({ ...current, [value.tier]: withPriceDefaults(value) }));
+      setDrafts((current) => {
+        const pending = current[value.tier];
+        if (!pending) {
+          return { ...current, [value.tier]: withPriceDefaults(value) };
+        }
+        // If the overlay still matches what we just persisted, adopt the server row.
+        // Otherwise keep the newer local edits.
+        const submittedLooksCurrent =
+          pending.maxListings === value.maxListings &&
+          pending.maxPhotosPerListing === value.maxPhotosPerListing &&
+          pending.maxVideoLinksPerListing === value.maxVideoLinksPerListing &&
+          pending.maxProfileMedia === value.maxProfileMedia &&
+          pending.monthlyPriceFils === value.monthlyPriceFils &&
+          pending.canReceiveReviews === value.canReceiveReviews &&
+          pending.canChatDirectly === value.canChatDirectly &&
+          pending.socialLinkOut === value.socialLinkOut &&
+          pending.prioritySearch === value.prioritySearch;
+        return {
+          ...current,
+          [value.tier]: submittedLooksCurrent ? withPriceDefaults(value) : pending,
+        };
+      });
       queryClient.invalidateQueries({ queryKey: ["admin", "pricing"] });
     },
   });
 
   function updateField<K extends keyof PlanFeatures>(tier: SellerTier, key: K, value: PlanFeatures[K]) {
-    const row = getRow(tier);
-    if (!row) return;
-    setDrafts((current) => ({ ...current, [tier]: { ...row, [key]: value } }));
+    // Read the latest draft inside the updater. Capturing `getRow()` outside loses
+    // earlier fields when two edits flush in the same tick (last write wins on a
+    // stale base row).
+    setDrafts((current) => {
+      const previous =
+        current[tier] ??
+        (query.data ? query.data.find((row) => row.tier === tier) : undefined);
+      if (!previous) return current;
+      return {
+        ...current,
+        [tier]: { ...withPriceDefaults(previous), [key]: value },
+      };
+    });
   }
 
   function save(tier: SellerTier) {

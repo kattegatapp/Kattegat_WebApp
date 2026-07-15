@@ -41,9 +41,13 @@ export function useAdminSettingsSection<K extends keyof UpdateAdminSettingsInput
   const mutation = useMutation({
     mutationFn: (input: NonNullable<UpdateAdminSettingsInput[K]>) =>
       updateAdminSettings({ [section]: input } as UpdateAdminSettingsInput),
-    onSuccess: (value) => {
-      setDraft(value[section as keyof AdminSettings] as AdminSettings[K & keyof AdminSettings]);
+    onSuccess: (value, variables) => {
       queryClient.setQueryData(["admin", "settings"], value);
+      setDraft((current) => {
+        if (!current) return null;
+        // Keep any edits made while the request was in flight.
+        return JSON.stringify(current) === JSON.stringify(variables) ? null : current;
+      });
     },
   });
 
@@ -51,8 +55,17 @@ export function useAdminSettingsSection<K extends keyof UpdateAdminSettingsInput
     key: F,
     value: NonNullable<typeof sectionData>[F],
   ) {
-    if (!sectionData) return;
-    setDraft({ ...sectionData, [key]: value });
+    // Functional update so rapid consecutive toggles compose instead of each
+    // call spreading a stale sectionData captured before earlier setStates flush.
+    setDraft((previous) => {
+      const base =
+        previous ??
+        (query.data
+          ? (query.data[section as keyof AdminSettings] as AdminSettings[K & keyof AdminSettings])
+          : null);
+      if (!base) return previous;
+      return { ...base, [key]: value };
+    });
   }
 
   return {
