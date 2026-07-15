@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { adminPath } from "@/lib/admin/paths";
 
-/** Legacy path — listing/requirement queues live under Approvals. */
+/** Legacy path — queues live under Listings / Requirements ?view=pending. */
 export default async function AdminReviewsRedirectPage({
   searchParams,
 }: {

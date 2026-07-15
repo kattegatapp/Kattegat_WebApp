@@ -204,6 +204,60 @@ body {
   animation: line-grow 1.4s ease-out forwards;
 }
 
+/* Waitlist success celebration */
+@keyframes waitlist-check-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.45);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes waitlist-float {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0) scale(0.7);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--waitlist-x, 0), -120px, 0) scale(1);
+  }
+}
+
+@keyframes waitlist-soft-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.08);
+  }
+}
+
+.animate-waitlist-check {
+  animation: waitlist-check-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-waitlist-float {
+  animation: waitlist-float 2.4s ease-out both;
+}
+
+.animate-waitlist-glow {
+  animation: waitlist-soft-glow 3.2s ease-in-out infinite;
+}
+
 /* Admin login — futuristic scene */
 @keyframes aurora-shift {
   0%,
@@ -295,6 +349,9 @@ body {
   .animate-drift-reverse,
   .animate-pulse-ring::after,
   .animate-line-grow,
+  .animate-waitlist-check,
+  .animate-waitlist-float,
+  .animate-waitlist-glow,
   .admin-login-aurora,
   .admin-login-beam,
   .admin-login-grid,

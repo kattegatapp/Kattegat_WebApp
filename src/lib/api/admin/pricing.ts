@@ -8,6 +8,8 @@ export interface PlanFeatures {
   maxPhotosPerListing: number | null;
   maxVideoLinksPerListing: number | null;
   maxProfileMedia: number | null;
+  /** Monthly plan price in fils. Null = free / not publicly priced. */
+  monthlyPriceFils: number | null;
   canReceiveReviews: boolean;
   canChatDirectly: boolean;
   socialLinkOut: boolean;

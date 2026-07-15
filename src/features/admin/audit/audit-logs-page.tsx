@@ -53,14 +53,14 @@ function title(value: string | null | undefined) {
 
 function actionTone(action: string) {
   const value = action.toLowerCase();
-  if (/test_email|email_configuration/.test(value)) return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800";
+  if (/test_email|email_configuration/.test(value)) return "border-sky-200 bg-sky-50 text-sky-800";
   if (/communication|notification|message/.test(value)) return "border-cyan-200 bg-cyan-50 text-cyan-800";
-  if (/login|logout|password|session/.test(value)) return "border-indigo-200 bg-indigo-50 text-indigo-800";
+  if (/login|logout|password|session/.test(value)) return "border-brand-blue/20 bg-[rgb(28_71_89/0.08)] text-brand-blue";
   if (/impersonate|view_as/.test(value)) return "border-orange-200 bg-orange-50 text-orange-900";
   if (/delete|remove|reject|ban|suspend|fail|deactivate/.test(value)) return "border-red-200 bg-red-50 text-red-800";
   if (/approve|accept|restore|reactivate|success/.test(value)) return "border-emerald-200 bg-emerald-50 text-emerald-800";
   if (/create|invite|add/.test(value)) return "border-teal-200 bg-teal-50 text-teal-800";
-  if (/settings|feature_flag|pricing|plan/.test(value)) return "border-violet-200 bg-violet-50 text-violet-800";
+  if (/settings|feature_flag|pricing|plan/.test(value)) return "border-brand-forest/15 bg-brand-forest/5 text-brand-forest";
   if (/resolve|review|moderation/.test(value)) return "border-amber-200 bg-amber-50 text-amber-900";
   if (/update|change|edit|upsert/.test(value)) return "border-blue-200 bg-blue-50 text-blue-800";
   return "border-blue-200 bg-blue-50 text-blue-800";
@@ -68,10 +68,10 @@ function actionTone(action: string) {
 
 function categoryTone(category: string | null) {
   const value = category?.toLowerCase() ?? "";
-  if (/email|communication|notification/.test(value)) return "bg-fuchsia-100 text-fuchsia-800";
+  if (/email|communication|notification/.test(value)) return "bg-sky-100 text-sky-800";
   if (/user|seller|staff|profile/.test(value)) return "bg-sky-100 text-sky-800";
   if (/listing|requirement|category/.test(value)) return "bg-amber-100 text-amber-900";
-  if (/settings|feature|pricing|plan/.test(value)) return "bg-violet-100 text-violet-800";
+  if (/settings|feature|pricing|plan/.test(value)) return "bg-brand-forest/10 text-brand-forest";
   if (/moderation|verification|report/.test(value)) return "bg-rose-100 text-rose-800";
   return "bg-slate-100 text-slate-700";
 }

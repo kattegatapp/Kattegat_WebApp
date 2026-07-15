@@ -1,7 +1,6 @@
 import {
   Building2,
   BadgeCheck,
-  ClipboardCheck,
   KeyRound,
   LayoutDashboard,
   Link2,
@@ -163,14 +162,6 @@ export const adminNavItems: AdminNavItem[] = [
     description: "KPIs, queues, and system gates",
   },
   {
-    title: "Approvals",
-    href: adminPath("/approvals"),
-    icon: ClipboardCheck,
-    description: "Listing and requirement approval queues",
-    badgeKey: "approvals",
-    anyOf: ["moderation.write"],
-  },
-  {
     title: "Waitlist",
     href: adminPath("/waitlist"),
     icon: ListChecks,
@@ -329,8 +320,9 @@ export type AdminBreadcrumb = { title: string; href?: string };
 export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumb[] {
   const root = adminPath();
   const routes: Array<[string, AdminBreadcrumb[]]> = [
-    [adminPath("/approvals/listings"), [{ title: "Approvals", href: adminPath("/approvals") }, { title: "Listing approvals" }]],
-    [adminPath("/approvals/requirements"), [{ title: "Approvals", href: adminPath("/approvals") }, { title: "Requirement approvals" }]],
+    [adminPath("/approvals/listings"), [{ title: "Listings", href: adminPath("/listings") }, { title: "Awaiting approval" }]],
+    [adminPath("/approvals/requirements"), [{ title: "Requirements", href: adminPath("/requirements") }, { title: "Awaiting approval" }]],
+    [adminPath("/approvals"), [{ title: "Listings", href: adminPath("/listings") }, { title: "Awaiting approval" }]],
     [adminPath("/agent-requests"), [{ title: "Vetted" }, { title: "Vetted chats" }]],
     [adminPath("/white-glove-applications"), [{ title: "Vetted" }, { title: "White Glove applications" }]],
     [adminPath("/accepted-applications"), [{ title: "Vetted" }, { title: "Accepted Applications" }]],

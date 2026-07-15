@@ -41,10 +41,10 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { ADMIN_LOGIN_PATH } from "@/lib/admin/paths";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
   createAdminStaff,
   deactivateAdminStaff,
-  fetchAdminMe,
   fetchAdminRoleCatalog,
   fetchAdminStaff,
   resetAdminStaffPassword,
@@ -89,7 +89,7 @@ const ROLE_FRIENDLY: Record<
   moderator: {
     title: "Reviewer",
     blurb: "Reviews content and trust & safety items.",
-    tone: "bg-violet-100 text-violet-950",
+    tone: "bg-[rgb(28_71_89/0.12)] text-brand-blue",
   },
 };
 
@@ -235,7 +235,7 @@ export function AdminTeamPage() {
   const [roleDraftOverrides, setRoleDraftOverrides] = useState<Record<string, string[]>>({});
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
-  const meQuery = useQuery({ queryKey: ["admin", "me"], queryFn: fetchAdminMe, retry: false });
+  const meQuery = useQuery({ ...ADMIN_ME_QUERY_OPTIONS });
   const staffQuery = useQuery({
     queryKey: ["admin", "staff"],
     queryFn: fetchAdminStaff,

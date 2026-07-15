@@ -36,6 +36,7 @@ export interface PublicAppSettings {
     referralsEnabled: boolean;
     recommendationsEnabled: boolean;
     paymentsEnabled: boolean;
+    reviewsEnabled: boolean;
     chatEnabled: boolean;
     contactAgentEnabled: boolean;
     identityVerificationRequired: boolean;
@@ -63,6 +64,13 @@ export interface PublicAppSettings {
     platformFee: number;
     allowedCountries: string[];
     blockedEmailDomains: string[];
+    /** Discovery ranking weights — White Glove / Premium / Starter only. */
+    rankingWeightFeatured: number;
+    rankingWeightReviews: number;
+    rankingWeightProPriority: number;
+    rankingWeightRecency: number;
+    rankingWeightNewcomer: number;
+    rankingNewcomerDays: number;
   };
   updatedAt: string;
 }
@@ -103,13 +111,14 @@ export const fallbackAppSettings: PublicAppSettings = {
     sellerSignupEnabled: true,
     referralsEnabled: true,
     recommendationsEnabled: true,
-    paymentsEnabled: true,
+    paymentsEnabled: false,
+    reviewsEnabled: false,
     chatEnabled: true,
     contactAgentEnabled: true,
     identityVerificationRequired: true,
     listingModerationEnabled: true,
     requirementModerationEnabled: true,
-    featuredPlacementEnabled: true,
+    featuredPlacementEnabled: false,
     pushNotificationsEnabled: true,
     emailNotificationsEnabled: true,
     freeAccessMode: false,
@@ -130,6 +139,12 @@ export const fallbackAppSettings: PublicAppSettings = {
     platformFee: 0,
     allowedCountries: ["United Arab Emirates"],
     blockedEmailDomains: [],
+    rankingWeightFeatured: 100,
+    rankingWeightReviews: 40,
+    rankingWeightProPriority: 30,
+    rankingWeightRecency: 20,
+    rankingWeightNewcomer: 10,
+    rankingNewcomerDays: 30,
   },
   updatedAt: new Date(0).toISOString(),
 };

@@ -333,7 +333,7 @@ export function SwitchField({
           <p className="text-xs leading-5 text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch aria-label={label} checked={checked} onCheckedChange={onChange} />
     </div>
   );
 }

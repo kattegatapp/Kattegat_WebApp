@@ -55,11 +55,10 @@ export function AdminAppSidebar({
       </SidebarContent>
 
       <div className="group-data-[collapsible=icon]:hidden mx-3 mb-4 rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-white">
-        <div className="mb-2 flex items-center gap-2 text-xs font-semibold">
-          <span className="relative flex size-2"><span className="absolute inline-flex size-full animate-ping rounded-full bg-brand-mantis opacity-50" /><span className="relative inline-flex size-2 rounded-full bg-brand-mantis" /></span>
-          Systems online
-        </div>
-        <p className="text-[11px] leading-4 text-white/45">Live operations and moderation workspace.</p>
+        <p className="text-xs font-semibold">Command center</p>
+        <p className="mt-1 text-[11px] leading-4 text-white/45">
+          Operations and moderation workspace for the Kattegat team.
+        </p>
       </div>
 
       <SidebarRail />

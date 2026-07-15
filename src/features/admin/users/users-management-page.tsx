@@ -27,6 +27,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,8 +35,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAdminAccess } from "@/features/admin/access/require-capability";
 import { formatAdminAccessError } from "@/lib/admin/capabilities";
 import { adminPath } from "@/lib/admin/paths";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
-  fetchAdminMe,
   fetchManagedUser,
   fetchManagedUsers,
   updateManagedUser,
@@ -78,7 +79,7 @@ export function UsersManagementPage({
     queryFn: () => fetchManagedUsers(q, page, { role, status }),
     retry: false,
   });
-  const me = useQuery({ queryKey: ["admin", "me"], queryFn: fetchAdminMe, retry: false });
+  const me = useQuery({ ...ADMIN_ME_QUERY_OPTIONS });
   const detail = useQuery({
     queryKey: ["admin", "user", selectedId],
     queryFn: () => fetchManagedUser(selectedId!),
@@ -122,8 +123,15 @@ export function UsersManagementPage({
             }}
           >
             <div className="relative flex-1">
-              <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Label htmlFor="users-search" className="sr-only">
+                Search users
+              </Label>
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden
+              />
               <Input
+                id="users-search"
                 className="h-11 pl-9"
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}

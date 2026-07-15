@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatBudgetRange, formatFilsAsAed } from "@/lib/admin/money";
 import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
 import { ApiRequestError } from "@/lib/api/client";
 import {
@@ -90,17 +91,8 @@ function formatWhenShort(value: string | null | undefined) {
 }
 
 function formatBudget(min: number | null, max: number | null) {
-  const toAed = (fils: number) =>
-    new Intl.NumberFormat("en-AE", {
-      style: "currency",
-      currency: "AED",
-      maximumFractionDigits: 0,
-    }).format(fils / 100);
-
   if (min == null && max == null) return "Budget not set";
-  if (min != null && max != null) return `${toAed(min)} – ${toAed(max)}`;
-  if (min != null) return `From ${toAed(min)}`;
-  return `Up to ${toAed(max!)}`;
+  return formatBudgetRange(min, max);
 }
 
 function formatListingPricing(pricing: Record<string, unknown> | null | undefined) {
@@ -110,11 +102,7 @@ function formatListingPricing(pricing: Record<string, unknown> | null | undefine
   if (typeof amount !== "number" || !Number.isFinite(amount)) {
     return unit ? `Unit: ${unit}` : "Not set";
   }
-  const aed = new Intl.NumberFormat("en-AE", {
-    style: "currency",
-    currency: "AED",
-    maximumFractionDigits: 0,
-  }).format(amount / 100);
+  const aed = formatFilsAsAed(amount);
   return unit ? `${aed} / ${unit}` : aed;
 }
 
@@ -242,7 +230,11 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       {!embedded ? <div className="space-y-2">
         <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
-          {mode === "listings" ? "Listing approvals" : mode === "requirements" ? "Requirement approvals" : "Approvals"}
+          {mode === "listings"
+            ? "Listings awaiting approval"
+            : mode === "requirements"
+              ? "Requirements awaiting approval"
+              : "Awaiting approval"}
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
           Scan the queue, open an item to review the full details, then approve or reject.

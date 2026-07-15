@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
 
           <h1 className="mt-5 max-w-md text-4xl font-extrabold leading-[1.05] tracking-[-0.03em] text-white xl:text-5xl">
             Run the night.
-            <span className="mt-2 block bg-gradient-to-r from-white via-brand-mantis to-[#9b7cff] bg-clip-text text-transparent">
+            <span className="mt-2 block bg-gradient-to-r from-white via-brand-mantis to-[rgb(72_220_129)] bg-clip-text text-transparent">
               Behind the scenes.
             </span>
           </h1>

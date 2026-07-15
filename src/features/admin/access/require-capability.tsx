@@ -3,12 +3,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, ShieldOff } from "lucide-react";
 import type { ReactNode } from "react";
-
-import { Button } from "@/components/ui/button";
-import { adminPath } from "@/lib/admin/paths";
-import { hasAnyCapability, isSuperAdmin } from "@/lib/admin/capabilities";
-import { fetchAdminMe } from "@/lib/api/admin";
 import Link from "next/link";
+
+import {
+  AdminSessionExpired,
+  isAdminSessionError,
+} from "@/features/admin/shared/query-state";
+import { Button } from "@/components/ui/button";
+import { hasAnyCapability, isSuperAdmin } from "@/lib/admin/capabilities";
+import { adminPath } from "@/lib/admin/paths";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 
 export function AccessDenied({
   title = "You do not have access",
@@ -35,11 +39,7 @@ export function AccessDenied({
 
 export function useAdminAccess(anyOf: readonly string[] = []) {
   const meQuery = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: fetchAdminMe,
-    staleTime: 0,
-    refetchOnMount: "always",
-    retry: false,
+    ...ADMIN_ME_QUERY_OPTIONS,
   });
 
   const subject = meQuery.data;
@@ -52,6 +52,7 @@ export function useAdminAccess(anyOf: readonly string[] = []) {
     me: subject,
     isPending: meQuery.isPending,
     isError: meQuery.isError,
+    error: meQuery.error,
     isSuperAdmin: isSuperAdmin(subject),
     allowed,
     can: (capabilities: readonly string[]) => hasAnyCapability(subject, capabilities),
@@ -80,9 +81,22 @@ export function RequireCapability({
 
   if (access.isPending) {
     return (
-      <div className="flex min-h-56 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-brand-forest" />
+      <div className="flex min-h-56 items-center justify-center" role="status" aria-live="polite">
+        <Loader2 className="size-6 animate-spin text-brand-forest" aria-hidden />
+        <span className="sr-only">Checking access</span>
       </div>
+    );
+  }
+
+  if (access.isError) {
+    if (isAdminSessionError(access.error)) {
+      return <AdminSessionExpired />;
+    }
+    return (
+      <AccessDenied
+        title="Could not verify access"
+        description="We could not confirm your permissions right now. Try again, or sign in again if the problem continues."
+      />
     );
   }
 

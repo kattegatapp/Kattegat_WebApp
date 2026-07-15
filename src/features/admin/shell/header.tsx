@@ -9,12 +9,13 @@ import {
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Fragment } from "react";
 
 import { getAdminBreadcrumbs, getAdminNavItem } from "@/features/admin/navigation";
 import { hasAnyCapability } from "@/lib/admin/capabilities";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import { resetAdminQueryCache } from "@/lib/admin/query-cache";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -43,7 +44,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
-import { clearAdminToken, fetchAdminMe, fetchAdminSettings } from "@/lib/api/admin";
+import { clearAdminToken, fetchAdminSettings } from "@/lib/api/admin";
 import { fallbackAppSettings } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { AdminNotificationsMenu } from "@/features/admin/shell/notifications-menu";
@@ -81,17 +82,24 @@ function initialsFrom(me: {
 /** Header: breadcrumbs, quick links, and account dropdown. */
 export function AdminHeader() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const current = getAdminNavItem(pathname);
-  const breadcrumbs = getAdminBreadcrumbs(pathname);
+  const awaitingApproval = searchParams.get("view") === "pending";
+  const breadcrumbs = (() => {
+    const base = getAdminBreadcrumbs(pathname);
+    if (
+      awaitingApproval &&
+      (pathname === adminPath("/listings") || pathname === adminPath("/requirements"))
+    ) {
+      return [...base, { title: "Awaiting approval" }];
+    }
+    return base;
+  })();
 
   const meQuery = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: fetchAdminMe,
-    staleTime: 0,
-    refetchOnMount: "always",
-    retry: false,
+    ...ADMIN_ME_QUERY_OPTIONS,
   });
 
   const settingsQuery = useQuery({
@@ -102,7 +110,7 @@ export function AdminHeader() {
   });
 
   const me = meQuery.data;
-  const canApprovals = hasAnyCapability(me, ["moderation.write"]);
+  const canAwaitingApproval = hasAnyCapability(me, ["moderation.write"]);
   const canSettings = hasAnyCapability(me, ["settings.read", "settings.write"]);
   const brand = settingsQuery.data?.brand ?? fallbackAppSettings.brand;
   const links = settingsQuery.data?.links ?? fallbackAppSettings.links;
@@ -165,14 +173,14 @@ export function AdminHeader() {
           <span className="hidden lg:inline">Website</span>
         </HeaderIconLink>
 
-        {canApprovals ? (
+        {canAwaitingApproval ? (
           <HeaderIconLink
             href={`${adminPath("/listings")}?view=pending`}
-            label="Approvals"
+            label="Awaiting approval"
             className="hidden sm:inline-flex"
           >
             <ClipboardCheck className="size-4" />
-            <span className="hidden xl:inline">Approvals</span>
+            <span className="hidden xl:inline">Awaiting approval</span>
           </HeaderIconLink>
         ) : null}
 
@@ -242,14 +250,14 @@ export function AdminHeader() {
                 <KeyRound />
                 Change password
               </DropdownMenuItem>
-              {canApprovals ? (
+              {canAwaitingApproval ? (
                 <DropdownMenuItem
                   nativeButton={false}
                   render={<Link href={`${adminPath("/listings")}?view=pending`} />}
                   className="sm:hidden"
                 >
                   <ClipboardCheck />
-                  Approvals
+                  Awaiting approval
                 </DropdownMenuItem>
               ) : null}
               {canSettings ? (

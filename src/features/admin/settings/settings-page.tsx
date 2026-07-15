@@ -89,7 +89,12 @@ export function AdminSettingsPage({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-col gap-6",
+        tab === "features" ? "max-w-7xl" : "max-w-5xl",
+      )}
+    >
       <div className="space-y-2">
         <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
           Settings

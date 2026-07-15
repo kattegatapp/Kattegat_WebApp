@@ -42,6 +42,7 @@ export interface AdminOverviewGates {
   maintenanceMode: boolean;
   freeAccessMode: boolean;
   paymentsEnabled: boolean;
+  reviewsEnabled: boolean;
   referralsEnabled: boolean;
   listingModerationEnabled: boolean;
   identityVerificationRequired: boolean;

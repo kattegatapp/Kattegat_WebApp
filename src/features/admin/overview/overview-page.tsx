@@ -52,9 +52,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
   fetchAdminOverview,
-  fetchAdminMe,
   type AdminOverviewAttentionItem,
   type AdminOverviewGates,
   type AdminOverviewKpis,
@@ -106,6 +106,7 @@ const GATE_ROWS: Array<{
   { key: "waitlistEnabled", label: "Waitlist", onLabel: "Open", offLabel: "Closed" },
   { key: "freeAccessMode", label: "Free access", onLabel: "On", offLabel: "Off" },
   { key: "paymentsEnabled", label: "Payments", onLabel: "On", offLabel: "Off" },
+  { key: "reviewsEnabled", label: "Reviews", onLabel: "On", offLabel: "Off" },
   { key: "referralsEnabled", label: "Referrals", onLabel: "On", offLabel: "Off" },
   {
     key: "listingModerationEnabled",
@@ -140,11 +141,7 @@ function severityClass(severity: AdminOverviewAttentionItem["severity"]) {
 export function AdminOverview() {
   const router = useRouter();
   const meQuery = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: fetchAdminMe,
-    staleTime: 0,
-    refetchOnMount: "always",
-    retry: false,
+    ...ADMIN_ME_QUERY_OPTIONS,
   });
   const overviewQuery = useQuery({
     queryKey: ["admin", "overview"],
@@ -214,7 +211,7 @@ export function AdminOverview() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <div className="relative overflow-hidden rounded-[2rem] bg-[#062418] text-white shadow-[0_28px_80px_rgb(0_57_18/0.22)]">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_82%_10%,rgb(111_219_66/0.2),transparent_28%),linear-gradient(115deg,transparent_50%,rgb(255_255_255/0.035))]" />
-        <div aria-hidden className="absolute -bottom-24 left-1/3 size-64 rounded-full bg-[#9b7cff]/10 blur-3xl" />
+        <div aria-hidden className="absolute -bottom-24 left-1/3 size-64 rounded-full bg-[rgb(28_71_89/0.18)] blur-3xl" />
         <div className="relative grid gap-7 px-5 py-7 sm:px-8 sm:py-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
             <div className="mb-5 flex flex-wrap items-center gap-2">
@@ -439,13 +436,13 @@ function QuickLinksDialog() {
 }
 
 const CHART_COLORS = [
-  "#35a853", // green
+  "#35a853", // mantis-adjacent
   "#2878d0", // blue
-  "#8b5cf6", // violet
+  "#1C4759", // astronaut blue
   "#e59b28", // amber
   "#dc5a5a", // red
   "#0891b2", // cyan
-  "#db4f9a", // pink
+  "#48DC81", // emerald
 ];
 
 function MarketplaceCharts({ kpis }: { kpis: AdminOverviewKpis }) {

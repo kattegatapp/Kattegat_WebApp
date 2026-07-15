@@ -18,7 +18,7 @@ export function AdminLoginAtmosphere() {
       <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgb(2_3_8/0.08),transparent_45%,rgb(2_3_8/0.72))]" />
 
       <div className="admin-login-aurora absolute -left-1/4 top-[-20%] h-[70%] w-[65%] rounded-full bg-[radial-gradient(circle,rgb(111_219_66/0.16),transparent_62%)] blur-3xl" />
-      <div className="admin-login-aurora absolute -right-1/4 bottom-[-30%] h-[70%] w-[60%] rounded-full bg-[radial-gradient(circle,rgb(91_55_194/0.22),transparent_62%)] blur-3xl [animation-delay:-4s]" />
+      <div className="admin-login-aurora absolute -right-1/4 bottom-[-30%] h-[70%] w-[60%] rounded-full bg-[radial-gradient(circle,rgb(28_71_89/0.28),transparent_62%)] blur-3xl [animation-delay:-4s]" />
 
       <div
         className="absolute inset-0 opacity-[0.06]"

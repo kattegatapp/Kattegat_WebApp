@@ -42,7 +42,8 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { adminPath } from "@/lib/admin/paths";
-import { fetchAdminMe, fetchAdminOverview } from "@/lib/api/admin";
+import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
+import { fetchAdminOverview } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
 
 type DropdownItem = {
@@ -57,7 +58,6 @@ type DropdownItem = {
 export function AdminNavMain() {
   const pathname = usePathname();
   const overviewHref = adminPath();
-  const approvalsHref = adminPath("/approvals");
   const waitlistHref = adminPath("/waitlist");
   const usersHref = adminPath("/users");
   const identityVerificationsHref = adminPath("/identity-verifications");
@@ -73,11 +73,7 @@ export function AdminNavMain() {
   const auditLogsHref = adminPath("/audit-logs");
 
   const meQuery = useQuery({
-    queryKey: ["admin", "me"],
-    queryFn: fetchAdminMe,
-    staleTime: 0,
-    refetchOnMount: "always",
-    retry: false,
+    ...ADMIN_ME_QUERY_OPTIONS,
   });
   const me = meQuery.data;
 
@@ -94,9 +90,7 @@ export function AdminNavMain() {
   }
 
   const operationsItems = adminNavItems.filter(
-    (item) =>
-      visible(item) &&
-      (item.href === overviewHref || item.href === approvalsHref || item.href === waitlistHref),
+    (item) => visible(item) && (item.href === overviewHref || item.href === waitlistHref),
   );
   const userManagementItems = adminNavItems.filter(
     (item) =>
@@ -208,9 +202,7 @@ export function AdminNavMain() {
           Operations
         </SidebarGroupLabel>
         <SidebarMenu>
-          {operationsItems
-            .filter((item) => item.href !== approvalsHref)
-            .map((item) => (
+          {operationsItems.map((item) => (
               <AdminNavLink
                 key={item.href}
                 item={item}

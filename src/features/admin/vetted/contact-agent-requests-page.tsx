@@ -262,11 +262,15 @@ export function ContactAgentRequestsPage() {
             </div>
           </div>
           <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/35" />
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-white/35"
+              aria-hidden
+            />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search conversations…"
+              aria-label="Search conversations"
               className="h-11 rounded-2xl border-white/10 bg-white/5 pl-9 text-white placeholder:text-white/35"
             />
           </div>

@@ -120,6 +120,54 @@ export function SettingsOperationsForm({ embedded = false }: { embedded?: boolea
             className="sm:col-span-2"
           />
         </SettingsGroup>
+
+        <SettingsGroup
+          title="Discovery ranking"
+          description="Control how services and sellers appear in search and on Home. Order follows your plans: White Glove, then Premium, then Starter — with reviews, freshness, and a short newcomer boost. Raise a weight to strengthen that signal."
+        >
+          <NumberField
+            label="White Glove curated weight"
+            value={sectionData.rankingWeightFeatured ?? 100}
+            step="1"
+            hint="Home feed only — lifts White Glove (managed) sellers above Premium and Starter."
+            onChange={(value) => updateField("rankingWeightFeatured", value ?? 100)}
+          />
+          <NumberField
+            label="Reviews weight"
+            value={sectionData.rankingWeightReviews ?? 40}
+            step="1"
+            hint="Stronger ratings with more reviews surface higher."
+            onChange={(value) => updateField("rankingWeightReviews", value ?? 40)}
+          />
+          <NumberField
+            label="Premium priority weight"
+            value={sectionData.rankingWeightProPriority ?? 30}
+            step="1"
+            hint="Uses Pricing → Priority search for Premium/Pro (and Launch access when on)."
+            onChange={(value) => updateField("rankingWeightProPriority", value ?? 30)}
+          />
+          <NumberField
+            label="Recency weight"
+            value={sectionData.rankingWeightRecency ?? 20}
+            step="1"
+            hint="Newer live listings surface higher."
+            onChange={(value) => updateField("rankingWeightRecency", value ?? 20)}
+          />
+          <NumberField
+            label="Newcomer weight"
+            value={sectionData.rankingWeightNewcomer ?? 10}
+            step="1"
+            hint="Small boost so new sellers can still get a first review."
+            onChange={(value) => updateField("rankingWeightNewcomer", value ?? 10)}
+          />
+          <NumberField
+            label="Newcomer window (days)"
+            value={sectionData.rankingNewcomerDays ?? 30}
+            step="1"
+            hint="Sellers created within this window (or with zero reviews) get the newcomer boost."
+            onChange={(value) => updateField("rankingNewcomerDays", value ?? 30)}
+          />
+        </SettingsGroup>
       </SettingsPanel>
 
       <SettingsSaveBar
