@@ -1,3 +1,5 @@
+import { getPublicAppSettings } from "@/lib/api/settings";
+
 const BACKEND_API_URL = (
   process.env.KATTEGAT_API_URL ??
   process.env.NEXT_PUBLIC_API_URL ??
@@ -15,6 +17,23 @@ function errorResponse(message: string, status: number, code: string) {
 }
 
 export async function POST(request: Request) {
+  // Hard gate: closed waitlist or maintenance — reject before proxying.
+  const settings = await getPublicAppSettings();
+  if (settings.features.maintenanceMode) {
+    return errorResponse(
+      settings.features.maintenanceMessage || "Kattegat is temporarily unavailable.",
+      503,
+      "MAINTENANCE_MODE",
+    );
+  }
+  if (!settings.features.waitlistEnabled) {
+    return errorResponse(
+      "The waitlist is closed.",
+      404,
+      "WAITLIST_DISABLED",
+    );
+  }
+
   let payload: unknown;
 
   try {
@@ -73,4 +92,9 @@ export async function POST(request: Request) {
       "WAITLIST_BACKEND_UNAVAILABLE",
     );
   }
+}
+
+/** No other methods when waitlist is a write-only public endpoint. */
+export function GET() {
+  return errorResponse("Not found", 404, "NOT_FOUND");
 }

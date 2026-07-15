@@ -11,3 +11,4 @@ export * from "@/lib/api/admin/content";
 export * from "@/lib/api/admin/communications";
 export * from "@/lib/api/admin/audit";
 export * from "@/lib/api/admin/moderation";
+export * from "@/lib/api/admin/system";

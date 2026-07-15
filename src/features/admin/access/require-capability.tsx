@@ -1,15 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, ShieldOff } from "lucide-react";
+import { ShieldOff } from "lucide-react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import {
   AdminSessionExpired,
   isAdminSessionError,
 } from "@/features/admin/shared/query-state";
-import { Button } from "@/components/ui/button";
 import { hasAnyCapability, isSuperAdmin } from "@/lib/admin/capabilities";
 import { adminPath } from "@/lib/admin/paths";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
@@ -22,15 +22,20 @@ export function AccessDenied({
   description?: string;
 }) {
   return (
-    <div className="mx-auto flex min-h-72 w-full max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
-      <span className="flex size-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-900">
+    <div className="ios-glass-pane mx-auto flex min-h-72 w-full max-w-lg flex-col items-center justify-center gap-4 rounded-[1.5rem] px-6 py-10 text-center">
+      <span className="flex size-14 items-center justify-center rounded-[1.15rem] border border-amber-200/80 bg-amber-50/80 text-amber-900 backdrop-blur-xl">
         <ShieldOff className="size-7" />
       </span>
       <div className="space-y-2">
-        <h1 className="text-xl font-extrabold tracking-tight text-brand-forest">{title}</h1>
-        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+        <h1 className="text-xl font-extrabold tracking-tight text-zinc-900">{title}</h1>
+        <p className="text-sm leading-6 text-zinc-600">{description}</p>
       </div>
-      <Button nativeButton={false} render={<Link href={adminPath()} />}>
+      <Button
+        className="rounded-full border-white/80 bg-white/55 backdrop-blur-xl"
+        variant="outline"
+        nativeButton={false}
+        render={<Link href={adminPath()} />}
+      >
         Back to Operations
       </Button>
     </div>
@@ -81,8 +86,7 @@ export function RequireCapability({
 
   if (access.isPending) {
     return (
-      <div className="flex min-h-56 items-center justify-center" role="status" aria-live="polite">
-        <Loader2 className="size-6 animate-spin text-brand-forest" aria-hidden />
+      <div className="min-h-40" role="status" aria-live="polite" aria-busy="true">
         <span className="sr-only">Checking access</span>
       </div>
     );

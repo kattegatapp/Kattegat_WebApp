@@ -81,7 +81,7 @@ export function WaitlistPage() {
           }
         />
       ) : (
-        <Card className="overflow-hidden border-border/70 bg-white">
+        <Card className="ios-glass-pane overflow-hidden border-white/80 bg-transparent">
           <div className="admin-table-scroll">
             <Table className="min-w-[44rem]">
               <TableHeader>

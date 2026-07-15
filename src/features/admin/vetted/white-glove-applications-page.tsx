@@ -69,7 +69,7 @@ function PageIntro({
   return (
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
           {title}
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{description}</p>
@@ -85,7 +85,7 @@ function PageIntro({
 
 function EmptyState({ title, description }: { title: string; description: string }) {
   return (
-    <Card className="border-dashed border-border/80 bg-white/70">
+    <Card className="ios-glass-pane border-dashed border-white/70 bg-transparent">
       <CardContent className="flex min-h-56 flex-col items-center justify-center px-6 py-12 text-center">
         <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-brand-forest/5 text-brand-forest">
           <Inbox className="size-7" />
@@ -115,7 +115,7 @@ function ApplicationCard({
   const budget = formatBudget(item.budget);
 
   return (
-    <Card className="border-border/70 bg-white shadow-[0_10px_35px_rgb(0_57_18/0.05)]">
+    <Card className="ios-glass-pane border-white/80 bg-transparent shadow-[0_10px_35px_rgb(0_57_18/0.05)]">
       <CardHeader>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
           <div className="min-w-0">
@@ -271,16 +271,12 @@ export function WhiteGloveApplicationsPage() {
   });
 
   if (query.isPending) {
-    return (
-      <div className="flex min-h-56 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-brand-forest" />
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (query.error) {
     return (
-      <Alert className="border-red-200 bg-red-50 text-red-800">
+      <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
         <X />
         <AlertTitle>Could not load White Glove applications</AlertTitle>
         <AlertDescription>
@@ -303,14 +299,14 @@ export function WhiteGloveApplicationsPage() {
       />
 
       {mutation.isSuccess ? (
-        <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
+        <Alert className="ios-glass-pane rounded-2xl border-emerald-200/60 bg-emerald-50/35 text-emerald-950 backdrop-blur-xl">
           <CircleCheck />
           <AlertTitle>Application updated</AlertTitle>
           <AlertDescription>The White Glove queue reflects your decision.</AlertDescription>
         </Alert>
       ) : null}
       {mutation.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <X />
           <AlertTitle>Update failed</AlertTitle>
           <AlertDescription>
@@ -320,7 +316,7 @@ export function WhiteGloveApplicationsPage() {
       ) : null}
 
       {queue.length ? (
-        <Card className="border-border/70 bg-white">
+        <Card className="ios-glass-pane border-white/80 bg-transparent">
           <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-brand-forest">Application status</p>
@@ -409,16 +405,12 @@ export function AcceptedWhiteGloveApplicationsPage() {
   });
 
   if (query.isPending) {
-    return (
-      <div className="flex min-h-56 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-brand-forest" />
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (query.error) {
     return (
-      <Alert className="border-red-200 bg-red-50 text-red-800">
+      <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
         <X />
         <AlertTitle>Could not load accepted applications</AlertTitle>
         <AlertDescription>

@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ConciergeBell,
   ImageIcon,
-  Loader2,
   MessagesSquare,
   Search,
   Sparkles,
@@ -15,6 +14,7 @@ import { useMemo, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ContactAgentCaseWorkspace } from "@/features/admin/vetted/contact-agent-case-workspace";
 import { formatAdminAccessError } from "@/lib/admin/capabilities";
@@ -290,9 +290,7 @@ export function ContactAgentRequestsPage() {
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {query.isPending ? (
-            <div className="flex min-h-48 items-center justify-center">
-              <Loader2 className="size-6 animate-spin text-brand-mantis" />
-            </div>
+            <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>
           ) : query.isError ? (
             <Alert className="m-3 border-red-200 bg-red-50 text-red-800">
               <XCircle />

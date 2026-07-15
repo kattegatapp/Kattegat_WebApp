@@ -8,7 +8,6 @@ import {
   Clock3,
   FileJson,
   Filter,
-  Loader2,
   MonitorSmartphone,
   RotateCcw,
   Search,
@@ -118,7 +117,7 @@ export function AdminAuditLogsPage() {
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-brand-blue">
             <ShieldCheck className="size-4" /> Governance
           </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">Audit logs</h1>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">Audit logs</h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Review administrative actions, security events, affected records, and actor details.
           </p>
@@ -128,7 +127,7 @@ export function AdminAuditLogsPage() {
         </Badge>
       </div>
 
-      <Card className="border-border/70 bg-white">
+      <Card className="ios-glass-pane border-white/80 bg-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base text-brand-forest"><Filter className="size-4" />Find an event</CardTitle>
           <CardDescription>Search by administrator, action, record ID, or event summary.</CardDescription>
@@ -161,7 +160,7 @@ export function AdminAuditLogsPage() {
       </Card>
 
       {unsupported ? (
-        <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+        <Alert className="ios-glass-pane rounded-2xl border-amber-200/60 bg-amber-50/35 text-amber-950 backdrop-blur-xl">
           <AlertTriangle />
           <AlertTitle>The audit-log service is not connected yet</AlertTitle>
           <AlertDescription>
@@ -169,17 +168,17 @@ export function AdminAuditLogsPage() {
           </AlertDescription>
         </Alert>
       ) : query.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <AlertTriangle />
           <AlertTitle>Audit logs could not be loaded</AlertTitle>
           <AlertDescription>{query.error instanceof Error ? query.error.message : "Please try again."}</AlertDescription>
         </Alert>
       ) : query.isPending ? (
-        <div className="flex min-h-64 items-center justify-center" role="status"><Loader2 className="size-7 animate-spin text-brand-forest" /><span className="sr-only">Loading audit logs</span></div>
+        <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>
       ) : !query.data.items.length ? (
-        <Card className="border-dashed bg-white/70"><CardContent className="flex min-h-64 flex-col items-center justify-center px-6 text-center"><ShieldCheck className="size-10 text-brand-forest" /><p className="mt-3 font-bold text-brand-forest">{filtered ? "No events match these filters" : "No audit events recorded"}</p><p className="mt-1 max-w-md text-sm text-muted-foreground">{filtered ? "Try a broader search or clear the filters." : "Administrative and security activity will appear here when recorded by the backend."}</p></CardContent></Card>
+        <Card className="ios-glass-pane border-dashed border-white/70 bg-transparent"><CardContent className="flex min-h-64 flex-col items-center justify-center px-6 text-center"><ShieldCheck className="size-10 text-brand-forest" /><p className="mt-3 font-bold text-brand-forest">{filtered ? "No events match these filters" : "No audit events recorded"}</p><p className="mt-1 max-w-md text-sm text-muted-foreground">{filtered ? "Try a broader search or clear the filters." : "Administrative and security activity will appear here when recorded by the backend."}</p></CardContent></Card>
       ) : (
-        <Card className="overflow-hidden border-border/70 bg-white">
+        <Card className="ios-glass-pane overflow-hidden border-white/80 bg-transparent">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader><TableRow><TableHead>Event</TableHead><TableHead>Administrator</TableHead><TableHead>Resource</TableHead><TableHead>Time</TableHead><TableHead className="text-right">Details</TableHead></TableRow></TableHeader>

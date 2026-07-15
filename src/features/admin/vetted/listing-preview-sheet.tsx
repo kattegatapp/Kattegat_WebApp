@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ImageIcon, Loader2, MapPin, Tag } from "lucide-react";
+import { ImageIcon, MapPin, Tag } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -114,9 +114,7 @@ export function ListingPreviewSheet({
           </div>
 
           {query.isPending ? (
-            <div className="flex min-h-24 items-center justify-center">
-              <Loader2 className="size-5 animate-spin text-brand-forest" />
-            </div>
+            <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>
           ) : null}
 
           {query.isError ? (

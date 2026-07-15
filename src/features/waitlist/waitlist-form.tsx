@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Crown, Heart, Loader2, PartyPopper, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2, Crown, Heart, PartyPopper, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type CSSProperties } from "react";
@@ -466,18 +466,34 @@ export function WaitlistForm() {
             </div>
           ) : null}
 
+          {mutation.isPending ? (
+            <div
+              className="mt-7 h-1 w-full overflow-hidden rounded-full bg-brand-forest/10"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <div className="animate-line-loader h-full w-[38%] rounded-full bg-gradient-to-r from-brand-mantis via-brand-emerald to-brand-blue shadow-[0_0_12px_rgb(111_219_66/0.4)]" />
+              <span className="sr-only">Submitting waitlist application</span>
+            </div>
+          ) : null}
+
           <Button
             type="submit"
             size="lg"
             disabled={mutation.isPending}
-            className="mt-7 h-14 w-full rounded-2xl text-base font-extrabold transition-transform hover:scale-[1.01] active:scale-[0.99]"
+            className={cn(
+              "h-14 w-full rounded-2xl text-base font-extrabold transition-transform hover:scale-[1.01] active:scale-[0.99]",
+              mutation.isPending ? "mt-4" : "mt-7",
+            )}
           >
-            {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            {role === "seller"
-              ? "Join as a seller"
-              : role === "buyer"
-                ? "Join as a buyer"
-                : "Choose a role to continue"}
+            {mutation.isPending
+              ? "Submitting…"
+              : role === "seller"
+                ? "Join as a seller"
+                : role === "buyer"
+                  ? "Join as a buyer"
+                  : "Choose a role to continue"}
           </Button>
         </form>
       </CardContent>

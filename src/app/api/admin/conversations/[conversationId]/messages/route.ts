@@ -1,14 +1,28 @@
-import { NextResponse } from "next/server";
-
+import { requireAdminCapability } from "@/lib/admin/require-capability";
 import { proxyAdminBackend } from "@/lib/admin/session";
+import { NextResponse } from "next/server";
 import { validateChatMessageInput } from "@/lib/sanitize/chat-message";
 
-export async function GET(_request: Request, context: { params: Promise<{ conversationId: string }> }) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ conversationId: string }> },
+) {
+  const denied = await requireAdminCapability(["chat.admin"]);
+  if (denied) return denied;
+
   const { conversationId } = await context.params;
-  return proxyAdminBackend(`/chat/conversations/${encodeURIComponent(conversationId)}/messages`);
+  return proxyAdminBackend(
+    `/admin/conversations/${encodeURIComponent(conversationId)}/messages`,
+  );
 }
 
-export async function POST(request: Request, context: { params: Promise<{ conversationId: string }> }) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ conversationId: string }> },
+) {
+  const denied = await requireAdminCapability(["chat.admin"]);
+  if (denied) return denied;
+
   const { conversationId } = await context.params;
 
   let payload: unknown;
@@ -45,13 +59,15 @@ export async function POST(request: Request, context: { params: Promise<{ conver
         { status: 400 },
       );
     }
-    return proxyAdminBackend(`/chat/conversations/${encodeURIComponent(conversationId)}/messages`, {
-      method: "POST",
-      body: JSON.stringify({ body: validated.value, type: "text" }),
-    });
+    return proxyAdminBackend(
+      `/admin/conversations/${encodeURIComponent(conversationId)}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify({ body: validated.value, type: "text" }),
+      },
+    );
   }
 
-  // Image: only HTTPS URLs, no credentials, no hostile markup in the string.
   try {
     const url = new URL(body.trim());
     if (url.protocol !== "https:" || url.username || url.password) {
@@ -64,8 +80,11 @@ export async function POST(request: Request, context: { params: Promise<{ conver
     );
   }
 
-  return proxyAdminBackend(`/chat/conversations/${encodeURIComponent(conversationId)}/messages`, {
-    method: "POST",
-    body: JSON.stringify({ body: body.trim(), type: "image" }),
-  });
+  return proxyAdminBackend(
+    `/admin/conversations/${encodeURIComponent(conversationId)}/messages`,
+    {
+      method: "POST",
+      body: JSON.stringify({ body: body.trim(), type: "image" }),
+    },
+  );
 }

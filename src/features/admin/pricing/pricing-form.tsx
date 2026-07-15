@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { formatFilsAsAed } from "@/lib/admin/money";
-import { ADMIN_LOGIN_PATH } from "@/lib/admin/paths";
+import { goToAdminLogin } from "@/lib/admin/session-client";
 import {
   fetchPlanFeatures,
   updatePlanFeatures,
@@ -133,15 +133,41 @@ export function AdminPricingForm() {
     mutationFn: ({ tier, input }: { tier: SellerTier; input: UpdatePlanFeaturesInput }) =>
       updatePlanFeatures(tier, input),
     onSuccess: (value) => {
-      setDrafts((current) => ({ ...current, [value.tier]: withPriceDefaults(value) }));
+      setDrafts((current) => {
+        const pending = current[value.tier];
+        if (!pending) {
+          return { ...current, [value.tier]: withPriceDefaults(value) };
+        }
+        const submittedLooksCurrent =
+          pending.maxListings === value.maxListings &&
+          pending.maxPhotosPerListing === value.maxPhotosPerListing &&
+          pending.maxVideoLinksPerListing === value.maxVideoLinksPerListing &&
+          pending.maxProfileMedia === value.maxProfileMedia &&
+          pending.monthlyPriceFils === value.monthlyPriceFils &&
+          pending.canReceiveReviews === value.canReceiveReviews &&
+          pending.canChatDirectly === value.canChatDirectly &&
+          pending.socialLinkOut === value.socialLinkOut &&
+          pending.prioritySearch === value.prioritySearch;
+        return {
+          ...current,
+          [value.tier]: submittedLooksCurrent ? withPriceDefaults(value) : pending,
+        };
+      });
       queryClient.invalidateQueries({ queryKey: ["admin", "pricing"] });
     },
   });
 
   function updateField<K extends keyof PlanFeatures>(tier: SellerTier, key: K, value: PlanFeatures[K]) {
-    const row = getRow(tier);
-    if (!row) return;
-    setDrafts((current) => ({ ...current, [tier]: { ...row, [key]: value } }));
+    setDrafts((current) => {
+      const previous =
+        current[tier] ??
+        (query.data ? query.data.find((row) => row.tier === tier) : undefined);
+      if (!previous) return current;
+      return {
+        ...current,
+        [tier]: { ...withPriceDefaults(previous), [key]: value },
+      };
+    });
   }
 
   function save(tier: SellerTier) {
@@ -164,11 +190,7 @@ export function AdminPricingForm() {
   }
 
   if (query.isPending) {
-    return (
-      <div className="flex min-h-64 items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-brand-forest" />
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (query.isError || TIER_ORDER.some((tier) => !getRow(tier))) {
@@ -176,7 +198,7 @@ export function AdminPricingForm() {
       query.error instanceof ApiRequestError && query.error.status === 401;
     return (
       <div className="mx-auto max-w-2xl space-y-4">
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <Settings />
           <AlertTitle>
             {unauthorized ? "Please sign in again" : "Could not load plan features"}
@@ -188,7 +210,7 @@ export function AdminPricingForm() {
           </AlertDescription>
         </Alert>
         {unauthorized ? (
-          <Button onClick={() => router.replace(ADMIN_LOGIN_PATH)}>Back to login</Button>
+          <Button onClick={() => void goToAdminLogin((path) => router.replace(path))}>Back to login</Button>
         ) : (
           <Button variant="outline" onClick={() => void query.refetch()}>
             Try again
@@ -204,21 +226,17 @@ export function AdminPricingForm() {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <section className="relative overflow-hidden rounded-[1.5rem] bg-[#062418] p-5 text-white shadow-[0_26px_80px_rgb(0_57_18/0.22)] sm:rounded-[2rem] sm:p-8">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(circle_at_88%_0%,rgb(111_219_66/0.25),transparent_36%),linear-gradient(125deg,transparent_45%,rgb(255_255_255/0.04))]"
-        />
+      <section className="ios-glass-pane relative overflow-hidden rounded-[1.5rem] px-5 py-5 text-zinc-900 sm:rounded-[2rem] sm:px-8 sm:py-8">
         <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <div className="max-w-2xl min-w-0">
-            <Badge className="mb-4 border-white/10 bg-white/10 text-brand-mantis">
+            <Badge className="ios-glass-chip mb-4 border-0 text-zinc-800">
               <Layers3 />
               Commercial controls
             </Badge>
-            <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">
+            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
               Design the value of every plan.
             </h1>
-            <p className="mt-3 text-sm leading-6 text-white/65">
+            <p className="mt-3 text-sm leading-6 text-zinc-600">
               Set practical limits and premium capabilities for Starter, Pro and White Glove
               sellers. Pro’s monthly price is editable below and saved with the rest of the plan.
               Free access mode temporarily overrides feature baselines.
@@ -232,7 +250,7 @@ export function AdminPricingForm() {
       </section>
 
       {mutation.isSuccess ? (
-        <Alert className="border-emerald-200 bg-emerald-50 text-emerald-800">
+        <Alert className="ios-glass-pane rounded-2xl border-emerald-200/60 bg-emerald-50/35 text-emerald-950 backdrop-blur-xl">
           <Save />
           <AlertTitle>Saved</AlertTitle>
           <AlertDescription className="text-emerald-800/80">
@@ -241,7 +259,7 @@ export function AdminPricingForm() {
         </Alert>
       ) : null}
       {mutation.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <Settings />
           <AlertTitle>Save failed</AlertTitle>
           <AlertDescription className="text-red-800/80">
@@ -389,14 +407,19 @@ export function AdminPricingForm() {
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => save(tier)}
-                  disabled={saving}
-                  className={cn("mt-auto h-11 font-bold", style.button)}
-                >
-                  {saving ? <Loader2 className="animate-spin" /> : <Save />}
-                  Save {TIER_LABEL[tier]}
-                </Button>
+                <div className="mt-auto -mx-5 -mb-5 border-t border-brand-mantis/25 bg-gradient-to-r from-brand-mantis/15 via-brand-emerald/10 to-brand-mantis/15 px-5 py-4">
+                  <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-brand-forest/70">
+                    Finance · commit this plan
+                  </p>
+                  <Button
+                    onClick={() => save(tier)}
+                    disabled={saving}
+                    className="h-12 w-full rounded-full border-0 bg-brand-mantis px-6 text-base font-extrabold text-brand-forest shadow-[0_10px_28px_rgb(111_219_66/0.5)] ring-2 ring-brand-forest/20 ring-offset-2 ring-offset-[#eef8e8] transition-[transform,box-shadow,filter] hover:bg-[#7ee34f] hover:shadow-[0_14px_34px_rgb(111_219_66/0.6)] active:scale-[0.98] disabled:opacity-70"
+                  >
+                    {saving ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
+                    Save {TIER_LABEL[tier]}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
@@ -528,10 +551,10 @@ function HeroStat({
   label: string;
 }) {
   return (
-    <div className="min-w-0 flex-1 basis-[7.5rem] rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur sm:min-w-28 sm:flex-none">
-      <Icon className="mb-2 size-4 text-brand-mantis" />
-      <p className="text-xl font-extrabold">{value}</p>
-      <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">{label}</p>
+    <div className="ios-glass-chip min-w-0 flex-1 basis-[7.5rem] rounded-2xl px-4 py-3 sm:min-w-28 sm:flex-none">
+      <Icon className="mb-2 size-4 text-zinc-700" />
+      <p className="text-xl font-extrabold text-zinc-900">{value}</p>
+      <p className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">{label}</p>
     </div>
   );
 }

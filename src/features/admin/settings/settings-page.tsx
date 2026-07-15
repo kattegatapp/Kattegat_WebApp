@@ -96,7 +96,7 @@ export function AdminSettingsPage({
       )}
     >
       <div className="space-y-2">
-        <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
           Settings
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -108,7 +108,7 @@ export function AdminSettingsPage({
         {!fixedTab ? <div className="overflow-x-auto pb-1">
           <TabsList
             variant="default"
-            className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-border/70 bg-white p-1 shadow-sm sm:min-w-0"
+            className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-white/80 bg-white/45 p-1 shadow-sm backdrop-blur-xl sm:min-w-0"
           >
             {SETTINGS_TABS.map((item) => {
               const active = tab === item.value;

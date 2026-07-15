@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   fetchModerationReports,
@@ -47,16 +48,12 @@ export function ModerationReportsPage() {
   });
 
   if (query.isPending) {
-    return (
-      <div className="flex min-h-56 items-center justify-center">
-        <Loader2 className="size-6 animate-spin text-brand-forest" />
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (query.error) {
     return (
-      <Alert className="border-red-200 bg-red-50 text-red-800">
+      <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
         <X />
         <AlertTitle>Could not load moderation reports</AlertTitle>
         <AlertDescription>
@@ -73,7 +70,7 @@ export function ModerationReportsPage() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
             Moderation reports
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -109,7 +106,7 @@ export function ModerationReportsPage() {
       </div>
 
       {mutation.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <X />
           <AlertTitle>Report was not updated</AlertTitle>
           <AlertDescription>
@@ -119,7 +116,7 @@ export function ModerationReportsPage() {
       ) : null}
 
       {!items.length ? (
-        <Card className="border-dashed border-border/80 bg-white/70">
+        <Card className="ios-glass-pane border-dashed border-white/70 bg-transparent">
           <CardContent className="flex min-h-56 flex-col items-center justify-center px-6 py-12 text-center">
             <span className="mb-4 flex size-14 items-center justify-center rounded-2xl bg-brand-forest/5 text-brand-forest">
               <Inbox className="size-7" />
@@ -139,7 +136,7 @@ export function ModerationReportsPage() {
           {items.map((item) => {
             const pending = mutation.isPending && mutation.variables?.id === item.id;
             return (
-              <Card key={item.id} className="border-border/70 bg-white">
+              <Card key={item.id} className="ios-glass-pane border-white/80 bg-transparent">
                 <CardHeader>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">

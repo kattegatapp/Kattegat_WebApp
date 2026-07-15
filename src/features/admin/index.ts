@@ -34,4 +34,11 @@ export {
   type AdminSettingsSectionKey,
 } from "@/features/admin/navigation";
 
+export {
+  AdminGlassCanvas,
+  AdminGlassPane,
+  ADMIN_GLASS_CARD,
+  ADMIN_GLASS_CHIP,
+} from "@/features/admin/shared/glass";
+
 export { AccessDenied, RequireCapability, useAdminAccess } from "@/features/admin/access/require-capability";

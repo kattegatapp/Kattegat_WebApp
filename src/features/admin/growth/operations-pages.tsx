@@ -156,7 +156,7 @@ export function RecommendedLeadsPage() {
         count={query.data?.length}
       />
       {mutation.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <X />
           <AlertTitle>The lead was not updated</AlertTitle>
           <AlertDescription>
@@ -191,7 +191,7 @@ export function RecommendedLeadsPage() {
           return (
             <Card
               key={lead.id}
-              className="border-border/70 bg-white shadow-[0_10px_35px_rgb(0_57_18/0.05)]"
+              className="border-border/70 ios-glass-pane border-white/80 bg-transparent"
             >
               <CardHeader className="border-b border-border/60 pb-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
@@ -199,7 +199,7 @@ export function RecommendedLeadsPage() {
                     <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                       Referred client
                     </p>
-                    <CardTitle className="text-lg font-bold text-brand-forest">
+                    <CardTitle className="text-lg font-extrabold text-zinc-900">
                       {lead.clientName}
                     </CardTitle>
                     <CardDescription>
@@ -418,7 +418,7 @@ export function FoundingMembersPage() {
         count={applications.length}
       />
       {mutation.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <X />
           <AlertTitle>The founding member was not updated</AlertTitle>
           <AlertDescription>
@@ -427,7 +427,7 @@ export function FoundingMembersPage() {
         </Alert>
       ) : null}
       {applications.length ? (
-        <Card className="border-border/70 bg-white">
+        <Card className="ios-glass-pane border-white/80 bg-transparent">
           <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-bold text-brand-forest">
@@ -477,7 +477,7 @@ export function FoundingMembersPage() {
             const completed =
               item.status === "accepted" || item.status === "rejected";
             return (
-              <Card key={item.id} className="border-border/70 bg-white">
+              <Card key={item.id} className="ios-glass-pane border-white/80 bg-transparent">
                 <CardHeader>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">

@@ -40,7 +40,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatBudgetRange, formatFilsAsAed } from "@/lib/admin/money";
-import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
+import { adminPath } from "@/lib/admin/paths";
+import { goToAdminLogin } from "@/lib/admin/session-client";
 import { ApiRequestError } from "@/lib/api/client";
 import {
   approveListing,
@@ -207,12 +208,12 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
   if (sessionError) {
     return (
       <div className="mx-auto max-w-xl space-y-4">
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <Shield />
           <AlertTitle>Please sign in again</AlertTitle>
           <AlertDescription>We could not load the approval queues.</AlertDescription>
         </Alert>
-        <Button onClick={() => router.replace(ADMIN_LOGIN_PATH)}>Back to login</Button>
+        <Button onClick={() => void goToAdminLogin((path) => router.replace(path))}>Back to login</Button>
       </div>
     );
   }
@@ -229,7 +230,7 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6">
       {!embedded ? <div className="space-y-2">
-        <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
           {mode === "listings"
             ? "Listings awaiting approval"
             : mode === "requirements"
@@ -243,7 +244,7 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
 
       <Tabs value={tab} onValueChange={onTabChange} className="gap-5">
         {!mode ? <div className="overflow-x-auto pb-1">
-          <TabsList className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-border/70 bg-white p-1 shadow-sm sm:min-w-0">
+          <TabsList className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-white/80 bg-white/45 p-1 shadow-sm backdrop-blur-xl sm:min-w-0">
             <TabsTrigger
               value="listings"
               className={cn(
@@ -384,7 +385,7 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
                 )}
               </div>
 
-              <SheetFooter className="border-t border-border/70 bg-white">
+              <SheetFooter className="border-t border-white/60 bg-white/45 backdrop-blur-xl">
                 {(approveListingMutation.isError || approveRequirementMutation.isError) && (
                   <p className="w-full text-sm text-red-600">
                     {approveListingMutation.error instanceof Error
@@ -520,16 +521,15 @@ export function AdminApprovalsPage({ mode, embedded = false }: { mode?: Approval
 
 function LoadingState({ label }: { label: string }) {
   return (
-    <div className="flex min-h-48 flex-col items-center justify-center gap-3">
-      <Loader2 className="h-6 w-6 animate-spin text-brand-forest" />
-      <p className="text-sm text-muted-foreground">{label}</p>
+    <div className="min-h-40" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">{label}</span>
     </div>
   );
 }
 
 function QueueError({ message }: { message: string }) {
   return (
-    <Alert className="border-amber-200 bg-amber-50 text-amber-950">
+    <Alert className="ios-glass-pane rounded-2xl border-amber-200/60 bg-amber-50/35 text-amber-950 backdrop-blur-xl">
       <Shield />
       <AlertTitle>Could not open this queue</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
@@ -665,7 +665,7 @@ function DescriptionBlock({ description }: { description: string | null }) {
         Description
       </p>
       {description?.trim() ? (
-        <p className="rounded-xl border border-border/70 bg-white px-3 py-2.5 text-sm leading-6 text-foreground/85">
+        <p className="ios-glass-chip rounded-xl px-3 py-2.5 text-sm leading-6 text-foreground/85">
           {description}
         </p>
       ) : (

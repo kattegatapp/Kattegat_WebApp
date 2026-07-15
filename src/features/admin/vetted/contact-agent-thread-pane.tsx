@@ -342,8 +342,7 @@ export function ContactAgentThreadPane({
             </p>
           </div>
         ) : threadQuery.isPending || !conversationId ? (
-          <div className="flex min-h-40 flex-col items-center justify-center gap-2 text-sm text-brand-forest/70">
-            <Loader2 className="size-5 animate-spin" />
+          <div className="flex min-h-40 items-center justify-center text-sm text-brand-forest/70">
             Opening chat…
           </div>
         ) : threadQuery.isError ? (
@@ -354,8 +353,8 @@ export function ContactAgentThreadPane({
             </Button>
           </div>
         ) : messagesQuery.isPending ? (
-          <div className="flex min-h-40 items-center justify-center">
-            <Loader2 className="size-5 animate-spin text-brand-forest" />
+          <div className="min-h-40" role="status" aria-live="polite" aria-busy="true">
+            <span className="sr-only">Loading messages</span>
           </div>
         ) : messages.length ? (
           messages.map((message, index) => {

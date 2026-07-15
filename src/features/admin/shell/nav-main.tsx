@@ -71,6 +71,7 @@ export function AdminNavMain() {
   const listingsHref = adminPath("/listings");
   const requirementsHref = adminPath("/requirements");
   const auditLogsHref = adminPath("/audit-logs");
+  const systemHref = adminPath("/system");
 
   const meQuery = useQuery({
     ...ADMIN_ME_QUERY_OPTIONS,
@@ -117,10 +118,11 @@ export function AdminNavMain() {
       !vettedDeskHrefs.includes(item.href) &&
       !contentItems.includes(item) &&
       item.href !== settingsHref &&
-      item.href !== auditLogsHref,
+      item.href !== auditLogsHref &&
+      item.href !== systemHref,
   );
   const governanceItems = adminNavItems.filter(
-    (item) => visible(item) && item.href === auditLogsHref,
+    (item) => visible(item) && (item.href === auditLogsHref || item.href === systemHref),
   );
   const showSettings = canAccessAdminNavItem(
     { anyOf: ["settings.read", "settings.write"] },

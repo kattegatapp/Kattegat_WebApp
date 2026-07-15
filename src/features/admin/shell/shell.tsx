@@ -3,6 +3,7 @@
 import { Suspense, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
+import { AdminGlassCanvas } from "@/features/admin/shared/glass";
 import { AdminAppSidebar } from "@/features/admin/shell/app-sidebar";
 import { AdminFooter } from "@/features/admin/shell/footer";
 import { AdminHeader } from "@/features/admin/shell/header";
@@ -14,9 +15,17 @@ import { cn } from "@/lib/utils";
 function AdminHeaderFallback() {
   return (
     <div
-      className="sticky top-0 z-30 h-14 shrink-0 border-b border-border/70 bg-white/85 sm:h-[4.5rem]"
+      className="admin-header-glass sticky top-0 z-30 h-14 shrink-0 border-b sm:h-[4.5rem]"
       aria-hidden
     />
+  );
+}
+
+function AdminFooterFallback() {
+  return (
+    <footer className="admin-footer-glass shrink-0 border-t px-4 py-2.5 sm:px-8" aria-hidden>
+      <div className="h-4" />
+    </footer>
   );
 }
 
@@ -33,9 +42,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <a href="#admin-content" className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg bg-brand-forest px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform focus:translate-y-0">Skip to main content</a>
+        <a
+          href="#admin-content"
+          className="fixed left-3 top-3 z-[100] -translate-y-20 rounded-lg bg-brand-forest px-4 py-2 text-sm font-bold text-white shadow-lg transition-transform focus:translate-y-0"
+        >
+          Skip to main content
+        </a>
         <AdminAppSidebar />
-        <SidebarInset className="admin-shell admin-shell-frame flex flex-col overflow-hidden bg-[#f4f7f5]">
+        <SidebarInset className="admin-shell admin-shell-frame flex flex-col overflow-hidden bg-[#eef3f0]">
           <Suspense fallback={<AdminHeaderFallback />}>
             <AdminHeader />
           </Suspense>
@@ -46,15 +60,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
               "relative flex min-h-0 flex-1 flex-col outline-none",
               isImmersiveChat
                 ? "overflow-hidden p-0"
-                : "overflow-y-auto overflow-x-hidden px-3 py-3 sm:px-6 lg:px-8 lg:py-4",
+                : "overflow-y-auto overflow-x-hidden px-2.5 py-2.5 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5",
             )}
           >
-            {!isImmersiveChat ? (
-              <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-mantis/6 to-transparent" />
-            ) : null}
-            <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+            {isImmersiveChat ? (
+              <div className="relative flex min-h-0 flex-1 flex-col">{children}</div>
+            ) : (
+              <AdminGlassCanvas>
+                {children}
+              </AdminGlassCanvas>
+            )}
           </main>
-          {isImmersiveChat ? null : <AdminFooter />}
+          {isImmersiveChat ? null : (
+            <Suspense fallback={<AdminFooterFallback />}>
+              <AdminFooter />
+            </Suspense>
+          )}
         </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>

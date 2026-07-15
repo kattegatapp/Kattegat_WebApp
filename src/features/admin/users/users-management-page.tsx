@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -100,7 +101,7 @@ export function UsersManagementPage({
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
             User accounts
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -186,7 +187,7 @@ export function UsersManagementPage({
       {users.isPending ? (
         <Loading />
       ) : users.isError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <XCircle />
           <AlertTitle>Could not load users</AlertTitle>
           <AlertDescription>
@@ -648,11 +649,7 @@ function UserFilter({
   );
 }
 function Loading() {
-  return (
-    <div className="flex min-h-56 items-center justify-center">
-      <Loader2 className="size-6 animate-spin text-brand-forest" />
-    </div>
-  );
+  return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
 }
 function Empty({ filtered }: { filtered: boolean }) {
   return (

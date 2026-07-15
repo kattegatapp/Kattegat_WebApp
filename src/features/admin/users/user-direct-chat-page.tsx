@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import { Textarea } from "@/components/ui/textarea";
 import { adminPath } from "@/lib/admin/paths";
 import {
@@ -184,11 +185,7 @@ export function UserDirectChatPage({ userId }: { userId: string }) {
   const messages = messagesQuery.data ?? [];
 
   if (userQuery.isPending) {
-    return (
-      <div className="flex h-full min-h-0 flex-1 items-center justify-center bg-[#07140e]">
-        <Loader2 className="size-6 animate-spin text-brand-mantis" />
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (userQuery.isError || !user) {
@@ -261,8 +258,7 @@ export function UserDirectChatPage({ userId }: { userId: string }) {
         }}
       >
         {threadQuery.isPending || !conversationId ? (
-          <div className="flex min-h-48 flex-col items-center justify-center gap-2 text-sm text-brand-forest/70">
-            <Loader2 className="size-5 animate-spin" />
+          <div className="flex min-h-48 items-center justify-center text-sm text-brand-forest/70">
             Opening chat…
           </div>
         ) : threadQuery.isError ? (
@@ -273,8 +269,8 @@ export function UserDirectChatPage({ userId }: { userId: string }) {
             </Button>
           </div>
         ) : messagesQuery.isPending ? (
-          <div className="flex min-h-48 items-center justify-center">
-            <Loader2 className="size-5 animate-spin text-brand-forest" />
+          <div className="min-h-48" role="status" aria-live="polite" aria-busy="true">
+            <span className="sr-only">Loading messages</span>
           </div>
         ) : messages.length ? (
           messages.map((message, index) => {

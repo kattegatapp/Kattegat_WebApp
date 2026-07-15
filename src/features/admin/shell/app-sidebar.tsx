@@ -18,6 +18,7 @@ import { adminPath } from "@/lib/admin/paths";
 /**
  * App sidebar — brand + primary nav only.
  * Account (password / log out) lives in the header avatar menu.
+ * Server details live on `/system`.
  */
 export function AdminAppSidebar({
   ...props
@@ -43,7 +44,9 @@ export function AdminAppSidebar({
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-bold tracking-tight">Kattegat</span>
-                <span className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">Command center</span>
+                <span className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-white/45">
+                  Command center
+                </span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -53,13 +56,6 @@ export function AdminAppSidebar({
       <SidebarContent className="px-2 py-3">
         <AdminNavMain />
       </SidebarContent>
-
-      <div className="group-data-[collapsible=icon]:hidden mx-3 mb-4 rounded-2xl border border-white/10 bg-white/[0.06] p-3 text-white">
-        <p className="text-xs font-semibold">Command center</p>
-        <p className="mt-1 text-[11px] leading-4 text-white/45">
-          Operations and moderation workspace for the Kattegat team.
-        </p>
-      </div>
 
       <SidebarRail />
     </Sidebar>

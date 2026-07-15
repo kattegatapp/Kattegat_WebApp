@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ADMIN_LOGIN_PATH } from "@/lib/admin/paths";
+import { goToAdminLogin } from "@/lib/admin/session-client";
 import {
   fetchAdminSettings,
   type AdminSettings,
@@ -41,9 +41,13 @@ export function useAdminSettingsSection<K extends keyof UpdateAdminSettingsInput
   const mutation = useMutation({
     mutationFn: (input: NonNullable<UpdateAdminSettingsInput[K]>) =>
       updateAdminSettings({ [section]: input } as UpdateAdminSettingsInput),
-    onSuccess: (value) => {
-      setDraft(value[section as keyof AdminSettings] as AdminSettings[K & keyof AdminSettings]);
+    onSuccess: (value, variables) => {
       queryClient.setQueryData(["admin", "settings"], value);
+      setDraft((current) => {
+        if (!current) return null;
+        // Keep any edits made while the request was in flight.
+        return JSON.stringify(current) === JSON.stringify(variables) ? null : current;
+      });
     },
   });
 
@@ -51,8 +55,17 @@ export function useAdminSettingsSection<K extends keyof UpdateAdminSettingsInput
     key: F,
     value: NonNullable<typeof sectionData>[F],
   ) {
-    if (!sectionData) return;
-    setDraft({ ...sectionData, [key]: value });
+    // Functional update so rapid consecutive toggles compose instead of each
+    // call spreading a stale sectionData captured before earlier setStates flush.
+    setDraft((previous) => {
+      const base =
+        previous ??
+        (query.data
+          ? (query.data[section as keyof AdminSettings] as AdminSettings[K & keyof AdminSettings])
+          : null);
+      if (!base) return previous;
+      return { ...base, [key]: value };
+    });
   }
 
   return {
@@ -83,13 +96,13 @@ export function SettingsSessionGate({
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <Alert className="border-red-200 bg-red-50 text-red-800">
+      <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
         <Settings />
         <AlertTitle>{title}</AlertTitle>
         <AlertDescription>{description}</AlertDescription>
       </Alert>
       {showLogin ? (
-        <Button onClick={() => router.replace(ADMIN_LOGIN_PATH)}>Back to login</Button>
+        <Button onClick={() => void goToAdminLogin((path) => router.replace(path))}>Back to login</Button>
       ) : null}
       {children}
     </div>
@@ -111,9 +124,8 @@ export function SettingsLoadError({ error }: { error: unknown }) {
 
 export function SettingsLoading() {
   return (
-    <div className="flex min-h-64 flex-col items-center justify-center gap-3">
-      <Loader2 className="h-7 w-7 animate-spin text-brand-forest" />
-      <p className="text-sm text-muted-foreground">Loading settings…</p>
+    <div className="min-h-40" role="status" aria-live="polite" aria-busy="true">
+      <span className="sr-only">Loading settings…</span>
     </div>
   );
 }
@@ -132,21 +144,30 @@ export function SettingsSaveBar({
   onSave: () => void;
 }) {
   return (
-    <div className="sticky bottom-3 z-10 mt-6 rounded-2xl border border-border/80 bg-white/90 px-4 py-3 shadow-[0_16px_45px_rgb(0_57_18/0.12)] backdrop-blur-xl mb-[max(0px,env(safe-area-inset-bottom))]">
+    <div className="ios-glass-pane sticky bottom-3 z-20 mt-6 mb-[max(0px,env(safe-area-inset-bottom))] rounded-[1.25rem] border-white/80 px-4 py-3.5 shadow-[0_18px_50px_rgb(0_57_18/0.12)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-h-5 text-sm">
           {isSuccess ? (
-            <span className="text-emerald-700">Saved successfully.</span>
+            <span className="font-semibold text-emerald-700">Saved successfully.</span>
           ) : null}
           {isError ? (
-            <span className="text-red-600">{errorMessage ?? "Could not save. Try again."}</span>
+            <span className="font-semibold text-red-700">
+              {errorMessage ?? "Could not save. Try again."}
+            </span>
           ) : null}
           {!isSuccess && !isError ? (
-            <span className="text-muted-foreground">Changes apply when you save this tab.</span>
+            <span className="font-medium text-zinc-600">
+              Ready when you are — tap{" "}
+              <span className="font-extrabold text-zinc-900">Save changes</span> to apply.
+            </span>
           ) : null}
         </div>
-        <Button onClick={onSave} disabled={isPending} className="h-11 w-full rounded-xl px-5 sm:h-10 sm:w-auto sm:min-w-36">
-          {isPending ? <Loader2 className="animate-spin" /> : <Save />}
+        <Button
+          onClick={onSave}
+          disabled={isPending}
+          className="h-12 w-full rounded-full border-0 bg-brand-mantis px-6 text-base font-extrabold text-brand-forest shadow-[0_10px_28px_rgb(111_219_66/0.45)] ring-2 ring-brand-mantis/40 ring-offset-2 ring-offset-white/40 transition-[transform,box-shadow,filter] hover:bg-[#7ee34f] hover:shadow-[0_14px_34px_rgb(111_219_66/0.55)] active:scale-[0.98] disabled:opacity-70 sm:h-11 sm:w-auto sm:min-w-44"
+        >
+          {isPending ? <Loader2 className="size-5 animate-spin" /> : <Save className="size-5" />}
           Save changes
         </Button>
       </div>
@@ -165,9 +186,9 @@ export function SettingsPanel({
 }) {
   return (
     <div className="space-y-5">
-      <div className="space-y-1">
-        <h2 className="text-lg font-bold text-brand-forest">{title}</h2>
-        <p className="text-sm leading-6 text-muted-foreground">{description}</p>
+      <div className="ios-glass-pane space-y-1 rounded-[1.35rem] px-4 py-4 sm:rounded-[1.5rem] sm:px-5">
+        <h2 className="text-lg font-extrabold text-zinc-900">{title}</h2>
+        <p className="text-sm leading-6 text-zinc-600">{description}</p>
       </div>
       {children}
     </div>
@@ -188,14 +209,14 @@ export function SettingsGroup({
   return (
     <section
       className={cn(
-        "rounded-2xl border border-border/70 bg-white p-4 shadow-[0_8px_30px_rgb(0_57_18/0.045)] sm:p-5",
+        "ios-glass-pane rounded-[1.35rem] border-white/80 p-4 sm:rounded-[1.5rem] sm:p-5",
         className,
       )}
     >
       <div className="mb-4 space-y-1">
-        <h3 className="text-sm font-semibold text-brand-forest">{title}</h3>
+        <h3 className="text-sm font-extrabold text-zinc-900">{title}</h3>
         {description ? (
-          <p className="text-xs leading-5 text-muted-foreground">{description}</p>
+          <p className="text-xs leading-5 text-zinc-600">{description}</p>
         ) : null}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">{children}</div>
@@ -216,9 +237,9 @@ export function FieldBlock({
 }) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <Label className="text-sm font-medium text-brand-forest">{label}</Label>
+      <Label className="text-sm font-semibold text-zinc-800">{label}</Label>
       {children}
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="text-xs text-zinc-500">{hint}</p> : null}
     </div>
   );
 }

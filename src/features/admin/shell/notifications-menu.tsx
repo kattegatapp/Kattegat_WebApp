@@ -81,7 +81,7 @@ export function AdminNotificationsMenu() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative size-10 rounded-xl text-muted-foreground hover:bg-brand-forest/5 hover:text-brand-forest sm:size-9"
+            className="relative size-10 rounded-xl border border-transparent text-zinc-600 hover:border-white/70 hover:bg-white/45 hover:text-zinc-900 hover:backdrop-blur-xl sm:size-9"
             aria-label={pendingCount ? `${pendingCount} admin items need attention` : "Admin notifications"}
           />
         }
@@ -91,25 +91,31 @@ export function AdminNotificationsMenu() {
           <span className="absolute -right-1 -top-1 isolate flex min-w-4 items-center justify-center">
             <span
               aria-hidden
-              className="absolute inset-0 -z-10 rounded-full bg-red-500/65 motion-safe:animate-ping"
+              className="absolute inset-0 -z-10 rounded-full bg-red-500/40 motion-safe:animate-ping"
             />
-            <span className="flex min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold leading-4 text-white shadow-sm ring-2 ring-white">
+            <span className="flex min-w-4 items-center justify-center rounded-full border border-white/70 bg-red-500/85 px-1 text-[9px] font-bold leading-4 text-white shadow-sm backdrop-blur-md ring-2 ring-white/60">
               {pendingCount > 99 ? "99+" : pendingCount}
             </span>
           </span>
         ) : null}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[min(24rem,calc(100vw-1rem))] rounded-xl p-1.5">
+      <DropdownMenuContent
+        align="end"
+        className="ios-glass-pane w-[min(24rem,calc(100vw-1rem))] rounded-2xl border-white/70 bg-transparent p-1.5 text-zinc-900 shadow-[0_24px_60px_rgb(0_57_18/0.14)] ring-0 backdrop-blur-2xl"
+      >
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center justify-between gap-3 px-2 py-2">
             <span>
-              <span className="block font-bold text-brand-forest">Notifications</span>
-              <span className="block text-xs font-normal text-muted-foreground">Live operations requiring attention</span>
+              <span className="block font-bold text-zinc-900">Notifications</span>
+              <span className="block text-xs font-normal text-zinc-600">
+                Live operations requiring attention
+              </span>
             </span>
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
+              className="rounded-full hover:bg-white/50"
               aria-label="Refresh notifications"
               disabled={query.isFetching}
               onClick={(event) => {
@@ -122,46 +128,60 @@ export function AdminNotificationsMenu() {
             </Button>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-white/50" />
         <DropdownMenuGroup className="max-h-80 overflow-y-auto">
           {query.isError ? (
-            <div className="px-3 py-6 text-center text-sm text-red-700">Notifications could not be loaded.</div>
+            <div className="px-3 py-6 text-center text-sm text-red-700">
+              Notifications could not be loaded.
+            </div>
           ) : query.isPending ? (
-            <div className="flex justify-center py-8"><Loader2 className="size-5 animate-spin text-brand-forest" /></div>
+            <div className="px-3 py-6 text-center text-sm text-zinc-600" role="status">
+              Loading…
+            </div>
           ) : items.length ? (
             items.map((item) => (
               <DropdownMenuItem
                 key={item.key}
                 nativeButton={false}
-                className="items-start gap-3 rounded-lg px-3 py-3"
+                className="items-start gap-3 rounded-xl px-3 py-3 focus:bg-white/55 data-highlighted:bg-white/55"
                 render={<Link href={routeFor(item.key)} />}
               >
-                <span className={cn(
-                  "mt-1 size-2 shrink-0 rounded-full",
-                  item.severity === "high" ? "bg-red-500" : item.severity === "medium" ? "bg-amber-500" : "bg-brand-mantis",
-                )} />
+                <span
+                  className={cn(
+                    "mt-1 size-2 shrink-0 rounded-full",
+                    item.severity === "high"
+                      ? "bg-red-500"
+                      : item.severity === "medium"
+                        ? "bg-amber-500"
+                        : "bg-brand-mantis",
+                  )}
+                />
                 <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground">{item.label}</span>
-                  <span className="block text-xs text-muted-foreground">{item.count} item{item.count === 1 ? "" : "s"} waiting</span>
+                  <span className="block font-semibold text-zinc-900">{item.label}</span>
+                  <span className="block text-xs text-zinc-600">
+                    {item.count} item{item.count === 1 ? "" : "s"} waiting
+                  </span>
                 </span>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-bold">{item.count}</span>
+                <span className="ios-glass-chip rounded-full px-2 py-0.5 text-xs font-bold text-zinc-800">
+                  {item.count}
+                </span>
               </DropdownMenuItem>
             ))
           ) : (
             <div className="px-4 py-8 text-center">
               <CheckCheck className="mx-auto size-6 text-emerald-600" />
-              <p className="mt-2 font-semibold text-brand-forest">You’re all caught up</p>
-              <p className="mt-1 text-xs text-muted-foreground">No operational queues need attention.</p>
+              <p className="mt-2 font-semibold text-zinc-900">You’re all caught up</p>
+              <p className="mt-1 text-xs text-zinc-600">No operational queues need attention.</p>
             </div>
           )}
         </DropdownMenuGroup>
         {items.length ? (
           <>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-white/50" />
             <DropdownMenuGroup>
               <DropdownMenuItem
                 nativeButton={false}
-                className="justify-center rounded-lg"
+                className="justify-center rounded-xl font-semibold text-zinc-800 focus:bg-white/55 data-highlighted:bg-white/55"
                 render={<Link href={adminPath()} />}
               >
                 View operations dashboard

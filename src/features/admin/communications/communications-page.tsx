@@ -153,19 +153,15 @@ export function AdminCommunicationsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-      <section className="relative overflow-hidden rounded-[2rem] bg-[#062418] p-6 text-white shadow-[0_24px_70px_rgb(0_57_18/0.2)] sm:p-8">
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-[radial-gradient(circle_at_85%_0%,rgb(111_219_66/0.24),transparent_35%)]"
-        />
+      <section className="ios-glass-pane relative overflow-hidden rounded-[2rem] px-6 py-6 text-zinc-900 sm:px-8 sm:py-8">
         <div className="relative max-w-2xl">
-          <Badge className="mb-4 bg-white/10 text-brand-mantis">
+          <Badge className="ios-glass-chip mb-4 border-0 text-zinc-800">
             Communications centre
           </Badge>
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">
             Reach the right members clearly.
           </h1>
-          <p className="mt-2 text-sm leading-6 text-white/65">
+          <p className="mt-2 text-sm leading-6 text-zinc-600">
             Create one targeted announcement and deliver it by push
             notification, email, or both.
           </p>
@@ -365,7 +361,7 @@ export function AdminCommunicationsPage() {
               </p>
             </div>
             {send.isSuccess ? (
-              <Alert className="border-emerald-200 bg-emerald-50 text-emerald-900">
+              <Alert className="ios-glass-pane rounded-2xl border-emerald-200/60 bg-emerald-50/35 text-emerald-950 backdrop-blur-xl">
                 <CheckCircle2 />
                 <AlertTitle>Announcement sent</AlertTitle>
                 <AlertDescription>

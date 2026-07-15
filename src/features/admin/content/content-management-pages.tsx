@@ -78,7 +78,7 @@ function Filters({
   const searchId = "content-search";
 
   return (
-    <Card className="border-border/70 bg-white">
+    <Card className="ios-glass-pane border-white/80 bg-transparent">
       <CardContent className="space-y-4 p-4">
         <form
           className="flex flex-col gap-2 sm:flex-row"
@@ -167,7 +167,7 @@ function ManagementViews({
   const base = adminPath(`/${kind}`);
 
   return (
-    <div className="flex w-full max-w-full flex-wrap gap-1 rounded-2xl border border-border/70 bg-white p-1 shadow-sm sm:inline-flex sm:w-fit sm:flex-nowrap sm:rounded-full">
+    <div className="flex w-full max-w-full flex-wrap gap-1 rounded-2xl border border-white/80 bg-white/45 p-1 shadow-sm backdrop-blur-xl sm:inline-flex sm:w-fit sm:flex-nowrap sm:rounded-full">
       <Button
         size="sm"
         className="h-10 flex-1 sm:h-8 sm:flex-none"
@@ -309,7 +309,7 @@ export function ListingsManagementPage() {
             const pending = mutation.isPending && mutation.variables?.id === item.id;
 
             return (
-              <Card key={item.id} className="overflow-hidden border-border/70 bg-white">
+              <Card key={item.id} className="ios-glass-pane overflow-hidden border-white/80 bg-transparent">
                 <CardHeader className="border-b border-border/60">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -464,7 +464,7 @@ export function RequirementsManagementPage() {
             const pending = mutation.isPending && mutation.variables?.id === item.id;
 
             return (
-              <Card key={item.id} className="border-border/70 bg-white">
+              <Card key={item.id} className="ios-glass-pane border-white/80 bg-transparent">
                 <CardHeader className="border-b border-border/60">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">

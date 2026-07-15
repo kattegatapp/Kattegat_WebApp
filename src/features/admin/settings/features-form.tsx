@@ -69,7 +69,8 @@ const FEATURE_META: Partial<
   },
   waitlistEnabled: {
     label: "Waitlist registration",
-    description: "Accept new waitlist applications from the website.",
+    description:
+      "On: home shows the launch waitlist experience and /waitlist is open. Off: home switches to the production company site and /waitlist is blocked (404).",
     icon: DoorOpen,
   },
   buyerSignupEnabled: {
@@ -279,20 +280,16 @@ export function SettingsFeaturesForm({ embedded = false }: { embedded?: boolean 
   const body = (
     <>
       <div className="space-y-5">
-        <section className="relative overflow-hidden rounded-[1.75rem] bg-[#062418] p-5 text-white shadow-[0_24px_70px_rgb(0_57_18/0.2)] sm:p-7">
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgb(111_219_66/0.22),transparent_34%),linear-gradient(130deg,transparent_40%,rgb(255_255_255/0.04))]"
-          />
+        <section className="ios-glass-pane relative overflow-hidden rounded-[1.75rem] px-5 py-5 text-zinc-900 sm:px-7 sm:py-7">
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <Badge className="mb-4 border-white/10 bg-white/10 text-brand-mantis">
+              <Badge className="ios-glass-chip mb-4 border-0 text-zinc-800">
                 Platform controls
               </Badge>
-              <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              <h2 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
                 Shape the live product experience.
               </h2>
-              <p className="mt-2 text-sm leading-6 text-white/65">
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
                 Manage access, marketplace services, approvals and communications without releasing
                 a new version of the app.
               </p>
@@ -342,7 +339,7 @@ export function SettingsFeaturesForm({ embedded = false }: { embedded?: boolean 
           </CardHeader>
           <CardContent className="space-y-4">
             {sectionData.maintenanceMode ? (
-              <Alert className="border-amber-300 bg-white/70 text-amber-950">
+              <Alert className="ios-glass-pane rounded-2xl border-amber-200/60 bg-amber-50/35 text-amber-950 backdrop-blur-xl">
                 <TriangleAlert />
                 <AlertTitle>Customer access will be restricted</AlertTitle>
                 <AlertDescription>
@@ -519,9 +516,9 @@ function FeatureControl({
 
 function SummaryStat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur">
-      <p className="text-2xl font-extrabold text-white">{value}</p>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{label}</p>
+    <div className="ios-glass-chip rounded-2xl px-4 py-3">
+      <p className="text-2xl font-extrabold text-zinc-900">{value}</p>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{label}</p>
     </div>
   );
 }

@@ -51,12 +51,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    if (isLogin && authed) {
-      const homeUrl = request.nextUrl.clone();
-      homeUrl.pathname = `/${ADMIN_PORTAL_PATH}`;
-      homeUrl.search = "";
-      return NextResponse.redirect(homeUrl);
-    }
+    // Always allow /login even when a cookie is present. A stale/forged cookie used
+    // to redirect login → home and trap Session Expired ("Back to login") in a loop.
+    // Valid sessions are still enforced by BFF Bearer checks on panel data routes.
 
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = `/${ADMIN_INTERNAL_PATH}${rest}`;

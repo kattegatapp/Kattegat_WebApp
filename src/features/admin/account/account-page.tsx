@@ -17,7 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ADMIN_LOGIN_PATH, adminPath } from "@/lib/admin/paths";
+import { adminPath } from "@/lib/admin/paths";
+import { goToAdminLogin } from "@/lib/admin/session-client";
 import { ApiRequestError } from "@/lib/api/client";
 import {
   changeOwnAdminPassword,
@@ -73,12 +74,12 @@ export function AdminAccountPage() {
   ) {
     return (
       <div className="mx-auto max-w-xl space-y-4">
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <Shield />
           <AlertTitle>Please sign in again</AlertTitle>
           <AlertDescription>We could not load your account.</AlertDescription>
         </Alert>
-        <Button onClick={() => router.replace(ADMIN_LOGIN_PATH)}>Back to login</Button>
+        <Button onClick={() => void goToAdminLogin((path) => router.replace(path))}>Back to login</Button>
       </div>
     );
   }
@@ -86,7 +87,7 @@ export function AdminAccountPage() {
   if (profileQuery.isError || !profileQuery.data) {
     return (
       <div className="mx-auto max-w-xl space-y-4">
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <UserRound />
           <AlertTitle>Could not load profile</AlertTitle>
           <AlertDescription>
@@ -106,7 +107,7 @@ export function AdminAccountPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+        <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
           Account
         </h1>
         <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -137,7 +138,7 @@ export function AdminAccountPage() {
 
       <Tabs value={tab} onValueChange={onTabChange} className="gap-5">
         <div className="overflow-x-auto pb-1">
-          <TabsList className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-border/70 bg-white p-1 shadow-sm sm:min-w-0">
+          <TabsList className="flex h-12 w-full min-w-max items-stretch justify-start gap-1 rounded-full border border-white/80 bg-white/45 p-1 shadow-sm backdrop-blur-xl sm:min-w-0">
             <TabsTrigger
               value="profile"
               className={cn(
@@ -415,23 +416,27 @@ function FormSaveBar({
   icon?: React.ReactNode;
 }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-1 mt-2 border-t border-border/80 bg-background/95 px-1 py-4 backdrop-blur">
+    <div className="ios-glass-pane sticky bottom-3 z-20 -mx-1 mt-2 rounded-[1.25rem] border-white/80 px-4 py-3.5 shadow-[0_18px_50px_rgb(0_57_18/0.12)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-h-5 text-sm">
-          {isSuccess ? <span className="text-emerald-700">{successLabel}</span> : null}
+          {isSuccess ? (
+            <span className="font-semibold text-emerald-700">{successLabel}</span>
+          ) : null}
           {isError ? (
-            <span className="text-red-600">{errorMessage ?? "Could not save. Try again."}</span>
+            <span className="font-semibold text-red-700">
+              {errorMessage ?? "Could not save. Try again."}
+            </span>
           ) : null}
           {!isSuccess && !isError ? (
-            <span className="text-muted-foreground">{idleLabel}</span>
+            <span className="font-medium text-zinc-600">{idleLabel}</span>
           ) : null}
         </div>
         <Button
           type="submit"
           disabled={isPending || disabled}
-          className="h-10 rounded-xl px-5 sm:min-w-40"
+          className="h-12 w-full rounded-full border-0 bg-brand-mantis px-6 text-base font-extrabold text-brand-forest shadow-[0_10px_28px_rgb(111_219_66/0.45)] ring-2 ring-brand-mantis/40 ring-offset-2 ring-offset-white/40 transition-[transform,box-shadow,filter] hover:bg-[#7ee34f] hover:shadow-[0_14px_34px_rgb(111_219_66/0.55)] active:scale-[0.98] disabled:opacity-70 sm:h-11 sm:w-auto sm:min-w-44"
         >
-          {isPending ? <Loader2 className="animate-spin" /> : (icon ?? <Save />)}
+          {isPending ? <Loader2 className="size-5 animate-spin" /> : (icon ?? <Save className="size-5" />)}
           {label}
         </Button>
       </div>

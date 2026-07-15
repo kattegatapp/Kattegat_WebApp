@@ -40,7 +40,8 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ADMIN_LOGIN_PATH } from "@/lib/admin/paths";
+
+import { goToAdminLogin } from "@/lib/admin/session-client";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
   createAdminStaff,
@@ -336,12 +337,7 @@ export function AdminTeamPage() {
   });
 
   if (meQuery.isPending || staffQuery.isPending || rolesQuery.isPending) {
-    return (
-      <div className="flex min-h-64 flex-col items-center justify-center gap-3">
-        <Loader2 className="h-7 w-7 animate-spin text-brand-forest" />
-        <p className="text-sm text-muted-foreground">Loading control room…</p>
-      </div>
-    );
+    return <div className="min-h-40" role="status" aria-live="polite" aria-busy="true"><span className="sr-only">Loading</span></div>;
   }
 
   if (meQuery.isError || staffQuery.isError || rolesQuery.isError) {
@@ -349,7 +345,7 @@ export function AdminTeamPage() {
     const unauthorized = error instanceof ApiRequestError && error.status === 401;
     return (
       <div className="mx-auto max-w-xl space-y-4">
-        <Alert className="border-red-200 bg-red-50 text-red-800">
+        <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <Shield />
           <AlertTitle>
             {unauthorized ? "Please sign in again" : "Could not load control room"}
@@ -361,7 +357,7 @@ export function AdminTeamPage() {
           </AlertDescription>
         </Alert>
         {unauthorized ? (
-          <Button onClick={() => router.replace(ADMIN_LOGIN_PATH)}>Back to login</Button>
+          <Button onClick={() => void goToAdminLogin((path) => router.replace(path))}>Back to login</Button>
         ) : (
           <Button
             variant="outline"
@@ -391,7 +387,7 @@ export function AdminTeamPage() {
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-forest sm:text-3xl">
+          <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">
             Control Room
           </h1>
           <p className="max-w-xl text-sm leading-6 text-muted-foreground">
@@ -598,7 +594,7 @@ export function AdminTeamPage() {
 
       {isSuperAdmin && assignable.length > 0 ? (
         <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-          <Card className="border-border/80 bg-white">
+          <Card className="ios-glass-pane border-white/80 bg-transparent">
             <CardHeader className="pb-3">
               <CollapsibleTrigger
                 className={cn(

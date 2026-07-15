@@ -48,6 +48,7 @@ import { clearAdminToken, fetchAdminSettings } from "@/lib/api/admin";
 import { fallbackAppSettings } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { AdminNotificationsMenu } from "@/features/admin/shell/notifications-menu";
+import { HeaderProgressLine } from "@/features/admin/shell/header-progress";
 
 function roleLabel(role: string | null | undefined) {
   if (!role) return "Admin";
@@ -128,9 +129,10 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-1.5 border-b border-border/70 bg-white/85 shadow-[0_1px_0_rgb(255_255_255/0.8)] backdrop-blur-xl transition-[width,height] ease-linear sm:h-[4.5rem] sm:gap-2 group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+    <header className="admin-header-glass relative sticky top-0 z-30 flex h-14 shrink-0 items-center gap-1.5 border-b shadow-[0_1px_0_rgb(255_255_255/0.8)] transition-[width,height] ease-linear sm:h-[4.5rem] sm:gap-2 group-has-data-[collapsible=icon]/sidebar-wrapper:h-16">
+      <HeaderProgressLine />
       <div className="flex min-w-0 flex-1 items-center gap-1.5 px-2 sm:gap-2 sm:px-4">
-        <SidebarTrigger className="-ml-0.5 size-10 shrink-0 rounded-xl border border-border/70 bg-white shadow-sm hover:bg-muted sm:size-8" />
+        <SidebarTrigger className="-ml-0.5 size-10 shrink-0 rounded-xl border border-white/80 bg-white/55 shadow-sm backdrop-blur-xl hover:bg-white/75 sm:size-8" />
         <Separator
           orientation="vertical"
           className="mr-1 hidden data-[orientation=vertical]:h-4 sm:mr-2 sm:block"

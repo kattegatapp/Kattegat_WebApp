@@ -20,6 +20,7 @@ import {
   BriefcaseBusiness,
   ListChecks,
   ScrollText,
+  Server,
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
@@ -278,6 +279,12 @@ export const adminNavItems: AdminNavItem[] = [
     icon: ScrollText,
     description: "Review administrator actions and security events",
     superAdminOnly: true,
+  },
+  {
+    title: "Server details",
+    href: adminPath("/system"),
+    icon: Server,
+    description: "Runtime, languages, API health, and stack map",
   },
 ];
 
