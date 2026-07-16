@@ -5,6 +5,7 @@ import {
   ADMIN_PORTAL_PATH,
   ADMIN_SESSION_COOKIE,
 } from "@/lib/admin/constants";
+import { resolveBackendApiUrl } from "@/lib/api/settings";
 
 function hasAdminSession(request: NextRequest) {
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value?.trim();
@@ -21,7 +22,32 @@ function unauthorizedJson() {
   );
 }
 
-export function proxy(request: NextRequest) {
+function isWaitlistOnlyPublicPath(pathname: string) {
+  return pathname === "/" || pathname === "/waitlist" || pathname.startsWith("/waitlist/");
+}
+
+/** Cached public settings probe for the waitlist lock (edge-friendly). */
+async function isWaitlistModeEnabled(): Promise<boolean> {
+  try {
+    const response = await fetch(`${resolveBackendApiUrl()}/api/settings`, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 30 },
+    });
+    if (!response.ok) return false;
+    const body = (await response.json()) as {
+      success?: boolean;
+      data?: { features?: { waitlistEnabled?: boolean; maintenanceMode?: boolean } };
+    };
+    if (!body.success || !body.data?.features) return false;
+    // Maintenance already handled by pages; waitlist lock is for pre-launch only.
+    return Boolean(body.data.features.waitlistEnabled);
+  } catch {
+    // If settings are unreachable, do not lock the whole site from the edge.
+    return false;
+  }
+}
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Never serve the internal filesystem route publicly.
@@ -58,6 +84,15 @@ export function proxy(request: NextRequest) {
     const rewriteUrl = request.nextUrl.clone();
     rewriteUrl.pathname = `/${ADMIN_INTERNAL_PATH}${rest}`;
     return NextResponse.rewrite(rewriteUrl);
+  }
+
+  // Pre-launch lock: when waitlist registration is on, only `/`, `/waitlist`, and
+  // the admin portal remain reachable. Deep links like /services redirect home.
+  if (!isWaitlistOnlyPublicPath(pathname) && (await isWaitlistModeEnabled())) {
+    const homeUrl = request.nextUrl.clone();
+    homeUrl.pathname = "/";
+    homeUrl.search = "";
+    return NextResponse.redirect(homeUrl);
   }
 
   return NextResponse.next();

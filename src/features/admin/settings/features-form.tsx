@@ -70,7 +70,7 @@ const FEATURE_META: Partial<
   waitlistEnabled: {
     label: "Waitlist registration",
     description:
-      "On: home shows the launch waitlist experience and /waitlist is open. Off: home switches to the production company site and /waitlist is blocked (404).",
+      "On: home shows the launch waitlist, /waitlist stays open, and every other public page (services, contact, etc.) redirects to home. Admin portal stays available. Off: full marketing site is public and /waitlist returns 404.",
     icon: DoorOpen,
   },
   buyerSignupEnabled: {
