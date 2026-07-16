@@ -15,7 +15,6 @@ import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/compone
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Reveal } from "@/components/motion/reveal";
-import { SiteFooter } from "@/features/marketing/site-footer";
 import { KATTEGAT_SOCIALS } from "@/features/marketing/socials";
 import { WaitlistForm } from "@/features/waitlist";
 import { cn } from "@/lib/utils";
@@ -114,7 +113,7 @@ export function LaunchHome() {
           <Sparkles className="pointer-events-none absolute right-[12%] top-[63%] h-4 w-4 text-brand-forest/18" />
 
           <header className="animate-in fade-in slide-in-from-top-4 relative z-10 flex items-center justify-between gap-4 duration-700">
-            <Link href="/" className="flex min-w-0 items-center">
+            <div className="flex min-w-0 items-center">
               <Image
                 src="/brand/logo/logo-horizontal-alternative.png"
                 alt="Kattegat"
@@ -123,7 +122,7 @@ export function LaunchHome() {
                 className="h-auto w-40 sm:w-52"
                 priority
               />
-            </Link>
+            </div>
             <div className="flex items-center gap-3">
               <Badge className="hidden border-brand-forest/10 bg-white/60 text-brand-forest/70 backdrop-blur sm:inline-flex">
                 Launching Soon · Dubai
@@ -355,8 +354,6 @@ export function LaunchHome() {
           </Reveal>
         </div>
       </section>
-
-      <SiteFooter />
     </main>
   );
 }
