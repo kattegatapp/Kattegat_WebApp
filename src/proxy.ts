@@ -33,17 +33,17 @@ async function isWaitlistModeEnabled(): Promise<boolean> {
       headers: { Accept: "application/json" },
       next: { revalidate: 30 },
     });
-    if (!response.ok) return false;
+    // Fail closed: unreachable/invalid settings keep the public site locked.
+    if (!response.ok) return true;
     const body = (await response.json()) as {
       success?: boolean;
       data?: { features?: { waitlistEnabled?: boolean; maintenanceMode?: boolean } };
     };
-    if (!body.success || !body.data?.features) return false;
+    if (!body.success || !body.data?.features) return true;
     // Maintenance already handled by pages; waitlist lock is for pre-launch only.
     return Boolean(body.data.features.waitlistEnabled);
   } catch {
-    // If settings are unreachable, do not lock the whole site from the edge.
-    return false;
+    return true;
   }
 }
 
