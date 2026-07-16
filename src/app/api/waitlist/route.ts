@@ -1,10 +1,6 @@
-import { getPublicAppSettings } from "@/lib/api/settings";
+import { getPublicAppSettings, resolveBackendApiUrl } from "@/lib/api/settings";
 
-const BACKEND_API_URL = (
-  process.env.KATTEGAT_API_URL ??
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:3000"
-).replace(/\/$/, "");
+const BACKEND_API_URL = resolveBackendApiUrl();
 
 function errorResponse(message: string, status: number, code: string) {
   return Response.json(

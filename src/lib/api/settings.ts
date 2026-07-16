@@ -151,11 +151,45 @@ export const fallbackAppSettings: PublicAppSettings = {
   updatedAt: new Date(0).toISOString(),
 };
 
+export function resolveBackendApiUrl(): string {
+  const configured = (
+    process.env.KATTEGAT_API_URL ??
+    process.env.NEXT_PUBLIC_API_URL ??
+    ""
+  )
+    .trim()
+    .replace(/\/$/, "");
+
+  const isProdRuntime =
+    process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+
+  // Never call localhost from a hosted web deploy — that fails closed into the
+  // maintenance screen even when the real API has waitlist/maintenance open.
+  if (configured && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configured)) {
+    return configured;
+  }
+
+  if (isProdRuntime) {
+    return "https://api.kattegat.app";
+  }
+
+  return configured || "http://localhost:3000";
+}
+
 export async function getPublicAppSettings(): Promise<PublicAppSettings> {
+  const backendUrl = resolveBackendApiUrl();
+
   try {
-    const backendUrl = (process.env.KATTEGAT_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
-    return await apiFetch<PublicAppSettings>("/api/settings", { cache: "no-store" }, { baseUrl: backendUrl });
-  } catch {
+    return await apiFetch<PublicAppSettings>(
+      "/api/settings",
+      { cache: "no-store" },
+      { baseUrl: backendUrl },
+    );
+  } catch (error) {
+    console.error("[settings] failed to load public app settings", {
+      backendUrl,
+      message: error instanceof Error ? error.message : String(error),
+    });
     return fallbackAppSettings;
   }
 }
