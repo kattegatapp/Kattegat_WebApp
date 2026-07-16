@@ -1,4 +1,4 @@
-import { apiFetch } from "@/lib/api/client";
+import { apiFetch, ApiRequestError } from "@/lib/api/client";
 
 export interface PublicAppSettings {
   brand: {
@@ -189,6 +189,8 @@ export async function getPublicAppSettings(): Promise<PublicAppSettings> {
     console.error("[settings] failed to load public app settings", {
       backendUrl,
       message: error instanceof Error ? error.message : String(error),
+      code: error instanceof ApiRequestError ? error.code : undefined,
+      status: error instanceof ApiRequestError ? error.status : undefined,
     });
     return fallbackAppSettings;
   }
