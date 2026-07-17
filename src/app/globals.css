@@ -675,9 +675,105 @@ body {
   }
 }
 
-@keyframes hero-breathe {
-  from { transform: scale(1); }
-  to { transform: scale(1.045); }
+@keyframes proof-orbit-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-2rem, 1.5rem, 0) rotate(10deg); }
+}
+
+@keyframes proof-orbit-reverse-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(2rem, -1.25rem, 0) rotate(-9deg); }
+}
+
+@keyframes proof-glow-float {
+  0%, 100% { opacity: 0.45; transform: translate3d(0, 0, 0) scale(1); }
+  50% { opacity: 0.8; transform: translate3d(1.5rem, -1rem, 0) scale(1.12); }
+}
+
+@keyframes proof-particle-float {
+  0%, 100% { opacity: 0.35; transform: translateY(0) scale(0.9); }
+  50% { opacity: 0.9; transform: translateY(-1.25rem) scale(1.15); }
+}
+
+@keyframes proof-light-sweep {
+  0% { opacity: 0; transform: translateX(-30%) skewX(-16deg); }
+  20% { opacity: 0.55; }
+  55%, 100% { opacity: 0; transform: translateX(520%) skewX(-16deg); }
+}
+
+.proof-orbit { animation: 12s ease-in-out infinite proof-orbit-drift; }
+.proof-orbit-reverse { animation: 14s ease-in-out infinite proof-orbit-reverse-drift; }
+.proof-glow { animation: 8s ease-in-out infinite proof-glow-float; }
+.proof-glow-reverse { animation: 10s ease-in-out infinite reverse proof-glow-float; }
+.proof-particle { animation: 4.5s ease-in-out infinite proof-particle-float; }
+.proof-sweep { animation: 9s ease-in-out infinite proof-light-sweep; }
+
+@keyframes category-grid-shift {
+  from { background-position: 0 0; }
+  to { background-position: 48px 48px; }
+}
+
+@keyframes category-aura-float {
+  0%, 100% { opacity: 0.45; transform: translate3d(0, 0, 0) scale(1); }
+  50% { opacity: 0.8; transform: translate3d(2rem, -1.5rem, 0) scale(1.08); }
+}
+
+@keyframes category-ring-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-1.25rem, 1rem, 0) rotate(12deg); }
+}
+
+@keyframes category-dot-pulse {
+  0%, 100% { opacity: 0.3; transform: translateY(0) scale(0.85); }
+  50% { opacity: 0.9; transform: translateY(-1rem) scale(1.2); }
+}
+
+.category-grid {
+  background-image:
+    linear-gradient(rgb(0 57 18 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 57 18 / 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: 20s linear infinite category-grid-shift;
+}
+
+.category-aura { animation: 11s ease-in-out infinite category-aura-float; }
+.category-aura-reverse { animation: 13s ease-in-out infinite reverse category-aura-float; }
+.category-ring { animation: 9s ease-in-out infinite category-ring-float; }
+.category-ring-reverse { animation: 12s ease-in-out infinite reverse category-ring-float; }
+.category-dot { animation: 4s ease-in-out infinite category-dot-pulse; }
+
+/* Keep the production hero deterministic after a hard refresh. These rules
+   intentionally mirror the desktop composition rather than relying on a
+   chain of responsive utility overrides. */
+@media (min-width: 1024px) {
+  .production-header-surface {
+    background-color: #ffffff !important;
+    border-color: rgb(0 57 18 / 0.1) !important;
+    color: #003912 !important;
+    border-radius: 9999px !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .production-hero-content {
+    align-items: center !important;
+    padding-top: 8rem !important;
+    padding-bottom: 3rem !important;
+  }
+
+  .production-hero-copy {
+    max-width: 44rem !important;
+  }
+
+  .production-hero-title {
+    max-width: 9.5ch !important;
+    font-size: clamp(5.75rem, 6vw, 7rem) !important;
+    line-height: 0.88 !important;
+  }
+
+  .production-hero-description {
+    max-width: 36rem !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -697,7 +793,19 @@ body {
   .admin-system-sheen,
   .admin-load-chip,
   .overview-bar-fill,
-  .overview-donut {
+  .overview-donut,
+  .proof-orbit,
+  .proof-orbit-reverse,
+  .proof-glow,
+  .proof-glow-reverse,
+  .proof-particle,
+  .proof-sweep,
+  .category-grid,
+  .category-aura,
+  .category-aura-reverse,
+  .category-ring,
+  .category-ring-reverse,
+  .category-dot {
     animation: none;
   }
 }

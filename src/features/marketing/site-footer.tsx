@@ -47,25 +47,29 @@ export function SiteFooter({
   );
 
   return (
-    <footer className="mt-4 border-t border-brand-forest/10 bg-brand-forest text-white">
-      <div className="mx-auto max-w-[1344px] px-5 py-14 sm:px-8 sm:py-16">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_1fr_1fr]">
-          <div>
-            <Link href="/" className="inline-block">
+    <footer className="border-t border-white/10 bg-brand-forest text-white">
+      <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-12 lg:grid-cols-[1.35fr_0.75fr_1fr_0.75fr]">
+          <div className="col-span-2 lg:col-span-1">
+            <Link
+              href="/"
+              aria-label={`${brandName} home`}
+              className="inline-flex focus-visible:outline-2 focus-visible:outline-brand-mantis"
+            >
               <Image
                 src="/brand/logo/logo-horizontal-alternative.png"
                 alt={brandName}
                 width={220}
                 height={68}
-                className="h-12 w-auto"
+                className="h-10 w-auto object-contain sm:h-11"
               />
             </Link>
-            <p className="mt-5 max-w-sm text-sm leading-7 text-white/65">
+            <p className="mt-4 max-w-md text-sm leading-7 text-white/65 lg:max-w-sm">
               Dubai&apos;s entertainment and hospitality marketplace. Hire
               trusted talent directly — or get discovered for the next brief —
               without agency commission on the booking.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-wrap items-center gap-2 sm:gap-3">
               {appStoreUrl ? (
                 <a
                   href={appStoreUrl}
@@ -99,13 +103,28 @@ export function SiteFooter({
                 </a>
               ) : null}
             </div>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.04] p-4 lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l-2 lg:border-brand-mantis/70 lg:bg-transparent lg:py-0 lg:pr-0">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
+                Customer care
+              </p>
+              <a
+                href={`mailto:${supportEmail}`}
+                className="mt-2 inline-block break-all text-sm font-semibold text-white transition hover:text-brand-mantis"
+              >
+                {supportEmail}
+              </a>
+              <p className="mt-1 text-xs leading-5 text-white/50">
+                Dubai, UAE · Replies within one business day
+              </p>
+            </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
               Explore
             </p>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-3.5">
               {exploreLinks.map(([label, href]) => (
                 <li key={href}>
                   <Link
@@ -119,11 +138,11 @@ export function SiteFooter({
             </ul>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
               Legal &amp; support
             </p>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-3.5">
               {legalAndSupportLinks.map(([label, href]) => (
                 <li key={href}>
                   <Link
@@ -137,11 +156,11 @@ export function SiteFooter({
             </ul>
           </div>
 
-          <div>
+          <div className="col-span-2 border-t border-white/10 pt-7 lg:col-span-1 lg:border-0 lg:pt-0">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
               Follow us
             </p>
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-3 lg:block lg:space-y-3">
               {socialLinks.map((social) => (
                 <li key={social.href}>
                   <a
@@ -155,33 +174,21 @@ export function SiteFooter({
                 </li>
               ))}
             </ul>
-            <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
-              Customer care
-            </p>
-            <a
-              href={`mailto:${supportEmail}`}
-              className="mt-3 inline-block text-sm font-semibold text-white/70 transition hover:text-brand-mantis"
-            >
-              {supportEmail}
-            </a>
-            <p className="mt-2 text-xs leading-5 text-white/45">
-              Dubai, UAE · Replies within one business day
-            </p>
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-5 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col items-center gap-5 border-t border-white/10 pt-7 text-center sm:mt-14 sm:flex-row sm:items-start sm:justify-between sm:text-left">
           <Image
             src="/brand/logo/brandmark-alternative.png"
-            alt=""
-            width={40}
-            height={40}
-            className="size-10 rounded-xl opacity-90"
+            alt={`${brandName} logo`}
+            width={32}
+            height={39}
+            className="h-9 w-auto object-contain opacity-90"
           />
-          <div className="text-xs leading-6 text-white/45 sm:text-right">
+          <div className="max-w-3xl text-xs leading-6 text-white/50 sm:text-right">
             <p>
-              © {new Date().getFullYear()} {brandName} · Hidden Diversion
-              Recreational Services · Built in Dubai
+              © {new Date().getFullYear()} {brandName}. Hidden Diversion Recreational
+              Services. Built in Dubai, UAE.
             </p>
             <p>
               By using Kattegat, you agree to our{" "}

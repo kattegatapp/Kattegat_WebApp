@@ -1,6 +1,7 @@
-import { LaunchHome, ProductHome } from "@/features/marketing";
+import { ProductHome } from "@/features/marketing";
 import { MaintenanceState } from "@/components/status/error-state";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import { getFeaturedSellers } from "@/lib/api/marketing";
 
 export default async function Home() {
   const settings = await getPublicAppSettings();
@@ -9,10 +10,8 @@ export default async function Home() {
     return <MaintenanceState message={settings.features.maintenanceMessage} />;
   }
 
-  // Admin "Waitlist registration" gate: on → launch waitlist home; off → production marketing site.
-  if (settings.features.waitlistEnabled) {
-    return <LaunchHome />;
-  }
-
-  return <ProductHome settings={settings} />;
+  // The public homepage is always the production marketing site. Waitlist
+  // registration remains available on its dedicated `/waitlist` route.
+  const featuredSellers = await getFeaturedSellers();
+  return <ProductHome settings={settings} featuredSellers={featuredSellers} />;
 }

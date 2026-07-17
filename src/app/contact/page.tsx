@@ -19,7 +19,7 @@ export default async function ContactPage() {
     <MarketingPageShell
       eyebrow="Contact us"
       title="Let’s start a useful conversation."
-      description="Questions about joining, finding the right provider, partnerships, or platform support? Send a note and the right person will respond."
+      description="Questions about joining, finding the right seller, partnerships, or platform support? Send a note and the right person will respond."
     >
       <section className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[0.9fr_1.2fr]">
         <div className="space-y-4">
@@ -31,7 +31,7 @@ export default async function ContactPage() {
               [
                 MessageSquare,
                 "Best for",
-                "Hiring help, provider onboarding, partnerships, and support",
+                "Hiring help, seller onboarding, partnerships, and support",
               ],
             ] as const
           ).map(([Icon, label, value]) => (

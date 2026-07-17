@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 const TOPICS: { value: ContactFormValues["topic"]; label: string }[] = [
   { value: "hiring", label: "I want to hire talent" },
-  { value: "joining", label: "I want to join as a provider" },
+  { value: "joining", label: "I want to join as a seller" },
   { value: "partnership", label: "Partnership or press" },
   { value: "support", label: "Product / account support" },
   { value: "other", label: "Something else" },

@@ -16,29 +16,28 @@ import { cn } from "@/lib/utils";
 
 const SLIDES = [
   {
-    image: "/assets/hero-slides/hero-vocalist.png",
-    alt: "Live vocalist performing at a Dubai rooftop lounge",
-    label: "Live vocalists",
+    image: "/assets/landing-slides/live-drummer.jpg",
+    alt: "Live drummer performing at a Dubai venue",
+    label: "Live musicians",
+    position: "object-[58%_22%] lg:object-[62%_20%]",
   },
   {
-    image: "/assets/hero-slides/hero-dj-saxophone.png",
-    alt: "DJ and saxophonist above the Dubai skyline",
+    image: "/assets/landing-slides/live-vocalist.jpg",
+    alt: "Vocalist performing live in Dubai",
+    label: "Vocalists & hosts",
+    position: "object-[54%_20%] lg:object-[60%_18%]",
+  },
+  {
+    image: "/assets/landing-slides/live-guitarist.jpg",
+    alt: "Guitarist ready to perform at a Dubai venue",
+    label: "Solo performers",
+    position: "object-[52%_22%] lg:object-[60%_20%]",
+  },
+  {
+    image: "/assets/landing-slides/live-dj.jpg",
+    alt: "DJ performing a live set in Dubai",
     label: "DJs & live sets",
-  },
-  {
-    image: "/assets/hero-slides/hero-percussionist.png",
-    alt: "Percussionist on a terrace facing the Burj Khalifa",
-    label: "Percussion & bands",
-  },
-  {
-    image: "/assets/hero-slides/hero-magician.png",
-    alt: "Magician at a private event",
-    label: "Signature entertainment",
-  },
-  {
-    image: "/assets/hero-slides/hero-harpist.png",
-    alt: "Harpist in an elegant skyline lounge",
-    label: "Elegant live music",
+    position: "object-[52%_22%] lg:object-[60%_20%]",
   },
 ] as const;
 
@@ -64,7 +63,7 @@ export function HeroCarousel({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative h-full w-full overflow-hidden rounded-[1.75rem] bg-brand-forest sm:rounded-[2rem]",
+        "relative h-screen min-h-screen w-full overflow-hidden rounded-[1.75rem] bg-brand-forest sm:rounded-[2rem]",
         className,
       )}
     >
@@ -72,30 +71,45 @@ export function HeroCarousel({ className }: { className?: string }) {
         setApi={setApi}
         opts={{ loop: true }}
         plugins={[autoplay]}
-        className="h-full w-full [&_[data-slot=carousel-content]]:h-full [&_[data-slot=carousel-content]>div]:h-full"
+        style={{ height: "100dvh", minHeight: "100dvh" }}
+        className="h-screen min-h-screen w-full [&_[data-slot=carousel-content]]:h-[100dvh] [&_[data-slot=carousel-content]]:min-h-[100dvh] [&_[data-slot=carousel-content]>div]:h-[100dvh] [&_[data-slot=carousel-content]>div]:min-h-[100dvh]"
       >
-        <CarouselContent className="ml-0 h-full">
+        <CarouselContent
+          style={{ height: "100dvh", minHeight: "100dvh" }}
+          className="ml-0 h-screen min-h-screen"
+        >
           {SLIDES.map((slide, index) => (
-            <CarouselItem key={slide.image} className="relative h-full min-h-[18rem] basis-full pl-0 sm:min-h-[24rem] lg:min-h-[32rem]">
+            <CarouselItem
+              key={slide.image}
+              style={{ height: "100dvh", minHeight: "100dvh" }}
+              className="relative h-screen min-h-screen basis-full overflow-hidden pl-0"
+            >
               <Image
                 src={slide.image}
                 alt={slide.alt}
-                fill
+                width={1800}
+                height={2400}
                 priority={index === 0}
-                sizes="(min-width: 1280px) 1200px, 100vw"
-                className="object-cover object-center"
+                sizes="100vw"
+                className={cn("absolute inset-0 size-full object-cover", slide.position)}
               />
             </CarouselItem>
           ))}
         </CarouselContent>
 
         <CarouselPrevious
-          onClick={() => autoplay.reset()}
-          className="left-3 top-1/2 z-20 hidden size-10 -translate-y-1/2 border-white/25 bg-black/30 text-white backdrop-blur-md hover:bg-black/45 hover:text-white sm:flex sm:left-4"
+          onClick={() => {
+            api?.scrollPrev();
+            autoplay.reset();
+          }}
+          className="left-5 top-1/2 z-40 hidden size-11 -translate-y-1/2 border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-md hover:bg-black/65 hover:text-white md:flex"
         />
         <CarouselNext
-          onClick={() => autoplay.reset()}
-          className="right-3 top-1/2 z-20 hidden size-10 -translate-y-1/2 border-white/25 bg-black/30 text-white backdrop-blur-md hover:bg-black/45 hover:text-white sm:flex sm:right-4"
+          onClick={() => {
+            api?.scrollNext();
+            autoplay.reset();
+          }}
+          className="right-5 top-1/2 z-40 hidden size-11 -translate-y-1/2 border-white/30 bg-black/45 text-white shadow-lg backdrop-blur-md hover:bg-black/65 hover:text-white md:flex"
         />
       </Carousel>
 
@@ -104,7 +118,7 @@ export function HeroCarousel({ className }: { className?: string }) {
         className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10"
       />
 
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center justify-between gap-3 p-4 sm:p-5">
+      <div className="absolute inset-x-0 bottom-0 z-40 flex items-center justify-between gap-3 p-4 sm:p-5">
         <span className="rounded-full bg-black/40 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-white backdrop-blur-md">
           {SLIDES[current]?.label}
         </span>
