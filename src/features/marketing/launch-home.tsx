@@ -375,6 +375,12 @@ export function LaunchHome() {
           >
             Delete Account
           </Link>
+          <Link
+            href="/support"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 transition-colors hover:bg-brand-forest/5 hover:text-brand-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+          >
+            Support
+          </Link>
         </nav>
       </footer>
     </main>

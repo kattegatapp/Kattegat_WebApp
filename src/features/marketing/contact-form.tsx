@@ -30,6 +30,8 @@ type ContactFormProps = {
 
 export function ContactForm({ supportEmail }: ContactFormProps) {
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [website, setWebsite] = useState("");
   const form = useForm<ContactFormDraft>({
     resolver: zodResolver(contactSchema) as Resolver<ContactFormDraft>,
     defaultValues: {
@@ -42,28 +44,34 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
     },
   });
 
-  function onSubmit(values: ContactFormDraft) {
+  async function onSubmit(values: ContactFormDraft) {
     const parsed = contactSchema.parse(values);
-    const topicLabel =
-      TOPICS.find((topic) => topic.value === parsed.topic)?.label ?? parsed.topic;
+    setSubmitError(null);
 
-    const body = [
-      `Name: ${parsed.fullName}`,
-      `Email: ${parsed.email}`,
-      parsed.phone ? `Phone: ${parsed.phone}` : null,
-      parsed.company ? `Company: ${parsed.company}` : null,
-      `Topic: ${topicLabel}`,
-      "",
-      parsed.message,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...parsed, website }),
+      });
+      const body = (await response.json()) as {
+        success?: boolean;
+        error?: { message?: string };
+      };
 
-    const mailto = new URL(`mailto:${supportEmail}`);
-    mailto.searchParams.set("subject", `Kattegat enquiry — ${topicLabel}`);
-    mailto.searchParams.set("body", body);
-    window.location.href = mailto.toString();
-    setSent(true);
+      if (!response.ok || !body.success) {
+        throw new Error(body.error?.message || "We could not send your message.");
+      }
+
+      setSent(true);
+      form.reset();
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : `We could not send your message. Email ${supportEmail} instead.`,
+      );
+    }
   }
 
   // eslint-disable-next-line react-hooks/incompatible-library -- RHF watch is intentionally stateful
@@ -76,11 +84,10 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <CheckCircle2 className="size-7" />
         </span>
         <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.03em]">
-          Your message is ready to send
+          Message sent
         </h3>
         <p className="mt-3 text-sm leading-7 text-brand-forest/65">
-          We opened your email app with the details filled in. Send it there, or
-          write again to {supportEmail}.
+          Thanks for contacting Kattegat. Our team will reply to the email address you provided.
         </p>
         <Button
           type="button"
@@ -102,6 +109,17 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
       className="rounded-[1.75rem] border border-brand-forest/10 bg-white p-6 shadow-[0_18px_50px_rgb(0_57_18/0.08)] sm:p-8"
       noValidate
     >
+      <div hidden aria-hidden="true">
+        <input
+          id="website"
+          name="website"
+          type="text"
+          value={website}
+          onChange={(event) => setWebsite(event.target.value)}
+          autoComplete="off"
+          tabIndex={-1}
+        />
+      </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field
           id="fullName"
@@ -111,7 +129,9 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <Input
             id="fullName"
             autoComplete="name"
-            className="h-11 rounded-xl border-brand-forest/15"
+            aria-invalid={Boolean(form.formState.errors.fullName)}
+            aria-describedby={form.formState.errors.fullName ? "fullName-error" : undefined}
+            className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("fullName")}
           />
         </Field>
@@ -124,7 +144,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
             id="email"
             type="email"
             autoComplete="email"
-            className="h-11 rounded-xl border-brand-forest/15"
+            className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("email")}
           />
         </Field>
@@ -137,7 +157,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
             id="phone"
             type="tel"
             autoComplete="tel"
-            className="h-11 rounded-xl border-brand-forest/15"
+            className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("phone")}
           />
         </Field>
@@ -149,7 +169,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <Input
             id="company"
             autoComplete="organization"
-            className="h-11 rounded-xl border-brand-forest/15"
+            className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("company")}
           />
         </Field>
@@ -209,11 +229,21 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
 
       <Button
         type="submit"
+        disabled={form.formState.isSubmitting}
         className="mt-7 h-12 w-full rounded-xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white sm:w-auto"
       >
-        Send message
+        {form.formState.isSubmitting ? "Sending…" : "Send message"}
         <Send className="size-4" />
       </Button>
+      {submitError ? (
+        <p role="alert" className="mt-4 text-sm font-semibold text-red-700">
+          {submitError}{" "}
+          <a href={`mailto:${supportEmail}`} className="underline underline-offset-4">
+            Email us directly
+          </a>
+          .
+        </p>
+      ) : null}
     </form>
   );
 }
@@ -230,16 +260,16 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <div className="flex min-w-0 flex-col">
       <Label
         htmlFor={id}
-        className="text-xs font-extrabold uppercase tracking-[0.14em] text-brand-forest/55"
+        className="flex min-h-5 items-center text-xs font-extrabold uppercase tracking-[0.14em] text-brand-forest/55"
       >
         {label}
       </Label>
-      <div className="mt-2">{children}</div>
+      <div className="mt-2 w-full">{children}</div>
       {error ? (
-        <p className="mt-2 text-xs font-semibold text-red-600">{error}</p>
+        <p id={`${id}-error`} className="mt-2 text-xs font-semibold text-red-600">{error}</p>
       ) : null}
     </div>
   );

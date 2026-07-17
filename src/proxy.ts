@@ -29,6 +29,7 @@ const WAITLIST_PUBLIC_PATHS = [
   "/privacy-policy",
   "/delete-account",
   "/contact",
+  "/support",
   "/faq",
 ] as const;
 

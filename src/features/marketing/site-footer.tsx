@@ -34,7 +34,7 @@ export function SiteFooter({
     ["Privacy Policy", "/privacy-policy"],
     ["Account Deletion", "/delete-account"],
     ["Help & FAQ", "/faq"],
-    ["Contact Support", "/contact"],
+    ["Contact Support", "/support"],
   ] as const;
 
   const socialLinks = [
