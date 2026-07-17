@@ -1,0 +1,17 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.kattegat.android",
+      "sha256_cert_fingerprints": [
+        "3F:A9:71:29:1C:AB:08:96:45:5A:40:0D:52:03:1D:46:47:7E:7B:1D:F8:33:FF:0A:DA:D2:AC:C6:E6:E7:AE:0D",
+        "08:49:02:C4:23:2B:3B:78:86:81:E7:17:95:D3:46:9A:E9:44:BA:A1:EF:70:CA:FE:35:88:26:E3:80:60:83:72",
+        "FD:3F:D1:9F:EB:DE:0F:22:25:49:90:69:3C:A9:0B:C4:24:5D:6E:5D:4E:38:DE:E8:83:CF:AB:82:0F:DE:09:F7"
+      ]
+    }
+  }
+]

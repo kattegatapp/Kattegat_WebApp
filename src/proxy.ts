@@ -65,6 +65,11 @@ async function isWaitlistModeEnabled(): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Platform association files must always bypass waitlist and admin guards.
+  if (pathname === "/.well-known" || pathname.startsWith("/.well-known/")) {
+    return NextResponse.next();
+  }
+
   // Never serve the internal filesystem route publicly.
   if (pathname === `/${ADMIN_INTERNAL_PATH}` || pathname.startsWith(`/${ADMIN_INTERNAL_PATH}/`)) {
     return new NextResponse(null, { status: 404 });
@@ -124,6 +129,6 @@ export const config = {
      * NEXT_PUBLIC_ADMIN_PORTAL_PATH changes still hit the proxy; the handler
      * filters to the exact segment.
      */
-    "/((?!_next/static|_next/image|favicon.ico|brand|api|.*\\..*).*)",
+    "/((?!_next/static|_next/image|favicon.ico|brand|api|\\.well-known|.*\\..*).*)",
   ],
 };

@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
+      {
+        source: "/.well-known/assetlinks.json",
+        headers: [
+          { key: "Content-Type", value: "application/json; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=3600, must-revalidate" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
     ];
   },
   // Admin and waitlist APIs are Next.js BFF routes under `src/app/api/*`.
