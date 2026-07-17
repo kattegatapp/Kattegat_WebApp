@@ -45,6 +45,8 @@ export async function MarketingPageShell({
         supportEmail={settings.brand.supportEmail}
         appStoreUrl={settings.links.appStoreUrl}
         playStoreUrl={settings.links.playStoreUrl}
+        instagramUrl={settings.links.instagramUrl}
+        linkedinUrl={settings.links.linkedinUrl}
       />
     </main>
   );

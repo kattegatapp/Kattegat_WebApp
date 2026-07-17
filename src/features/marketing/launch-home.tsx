@@ -103,7 +103,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 /** Pre-launch home: waitlist story, roadmap, and join form. */
 export function LaunchHome() {
   return (
-    <main className="min-h-screen overflow-hidden text-brand-forest">
+    <main className="min-h-screen overflow-hidden pb-32 text-brand-forest sm:pb-24">
       <section className="px-3 py-3 sm:px-6 sm:py-6">
         <div className="launch-stage relative mx-auto flex min-h-[calc(100vh-1.5rem)] w-full max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/80 px-5 py-6 shadow-2xl shadow-brand-forest/8 backdrop-blur-2xl sm:min-h-[calc(100vh-3rem)] sm:rounded-[3rem] sm:px-8 lg:px-14">
           <div className="pointer-events-none absolute left-1/2 top-[14%] h-[38rem] w-[38rem] -translate-x-1/2 rounded-full border border-dashed border-brand-forest/8" />
@@ -199,21 +199,6 @@ export function LaunchHome() {
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pb-2 text-xs font-semibold text-muted-foreground">
-            <span>Follow us</span>
-            {KATTEGAT_SOCIALS.slice(0, 3).map((social) => (
-              <Link
-                key={social.href}
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-brand-forest"
-              >
-                <AtSign className="h-3.5 w-3.5" />
-                {social.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -354,6 +339,44 @@ export function LaunchHome() {
           </Reveal>
         </div>
       </section>
+
+      <footer className="fixed bottom-3 left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-7xl -translate-x-1/2 items-center justify-start gap-3 overflow-x-auto rounded-2xl border border-brand-forest/10 bg-white/90 px-3 py-2 text-xs font-semibold text-muted-foreground shadow-xl shadow-brand-forest/10 backdrop-blur-xl sm:w-[calc(100%-3rem)] sm:justify-center sm:px-5">
+        <div className="flex shrink-0 items-center justify-center gap-1" aria-label="Kattegat social links">
+          <span className="shrink-0 px-2">Follow us</span>
+          {KATTEGAT_SOCIALS.slice(0, 3).map((social) => (
+            <a
+              key={social.href}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-2 transition-colors hover:bg-brand-forest/5 hover:text-brand-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+            >
+              <AtSign className="h-3.5 w-3.5" aria-hidden="true" />
+              {social.label}
+            </a>
+          ))}
+        </div>
+        <nav aria-label="Legal and support links" className="flex shrink-0 items-center justify-center gap-1">
+          <Link
+            href="/terms-of-service"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 transition-colors hover:bg-brand-forest/5 hover:text-brand-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+          >
+            Terms of Use
+          </Link>
+          <Link
+            href="/privacy-policy"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 transition-colors hover:bg-brand-forest/5 hover:text-brand-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/delete-account"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 transition-colors hover:bg-brand-forest/5 hover:text-brand-forest focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-2"
+          >
+            Delete Account
+          </Link>
+        </nav>
+      </footer>
     </main>
   );
 }

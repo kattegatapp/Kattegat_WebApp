@@ -12,18 +12,13 @@ const exploreLinks = [
   ["Contact", "/contact"],
 ] as const;
 
-const companyLinks = [
-  ["Join the waitlist", "/waitlist"],
-  ["Terms of Service", "/terms-of-service"],
-  ["Privacy Policy", "/privacy-policy"],
-  ["Delete Account", "/delete-account"],
-] as const;
-
 type SiteFooterProps = {
   brandName?: string;
   supportEmail?: string;
   appStoreUrl?: string | null;
   playStoreUrl?: string | null;
+  instagramUrl?: string | null;
+  linkedinUrl?: string | null;
 };
 
 export function SiteFooter({
@@ -31,11 +26,30 @@ export function SiteFooter({
   supportEmail = "hello@kattegat.app",
   appStoreUrl = null,
   playStoreUrl = null,
+  instagramUrl = null,
+  linkedinUrl = null,
 }: SiteFooterProps) {
+  const legalAndSupportLinks = [
+    ["Terms of Use", "/terms-of-service"],
+    ["Privacy Policy", "/privacy-policy"],
+    ["Account Deletion", "/delete-account"],
+    ["Help & FAQ", "/faq"],
+    ["Contact Support", "/contact"],
+  ] as const;
+
+  const socialLinks = [
+    ...(instagramUrl ? [{ label: "Instagram", href: instagramUrl }] : []),
+    ...(linkedinUrl ? [{ label: "LinkedIn", href: linkedinUrl }] : []),
+    ...KATTEGAT_SOCIALS,
+  ].filter(
+    (social, index, links) =>
+      links.findIndex((link) => link.href === social.href) === index,
+  );
+
   return (
     <footer className="mt-4 border-t border-brand-forest/10 bg-brand-forest text-white">
       <div className="mx-auto max-w-[1344px] px-5 py-14 sm:px-8 sm:py-16">
-        <div className="grid gap-12 lg:grid-cols-[1.35fr_1fr_1fr_1.1fr]">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_1fr_1fr]">
           <div>
             <Link href="/" className="inline-block">
               <Image
@@ -107,10 +121,10 @@ export function SiteFooter({
 
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
-              Company
+              Legal &amp; support
             </p>
             <ul className="mt-4 space-y-3">
-              {companyLinks.map(([label, href]) => (
+              {legalAndSupportLinks.map(([label, href]) => (
                 <li key={href}>
                   <Link
                     href={href}
@@ -125,37 +139,34 @@ export function SiteFooter({
 
           <div>
             <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
-              Get in touch
+              Follow us
             </p>
-            <ul className="mt-4 space-y-3 text-sm font-semibold text-white/70">
-              <li>
-                <a
-                  href={`mailto:${supportEmail}`}
-                  className="transition hover:text-brand-mantis"
-                >
-                  {supportEmail}
-                </a>
-              </li>
-              <li>Dubai, United Arab Emirates</li>
-              <li>Usually replies within one business day</li>
-            </ul>
-            <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
-              Follow
-            </p>
-            <ul className="mt-3 space-y-2">
-              {KATTEGAT_SOCIALS.map((social) => (
+            <ul className="mt-4 space-y-3">
+              {socialLinks.map((social) => (
                 <li key={social.href}>
-                  <Link
+                  <a
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm font-semibold text-white/70 transition hover:text-brand-mantis"
                   >
                     {social.label}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
+            <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-brand-mantis">
+              Customer care
+            </p>
+            <a
+              href={`mailto:${supportEmail}`}
+              className="mt-3 inline-block text-sm font-semibold text-white/70 transition hover:text-brand-mantis"
+            >
+              {supportEmail}
+            </a>
+            <p className="mt-2 text-xs leading-5 text-white/45">
+              Dubai, UAE · Replies within one business day
+            </p>
           </div>
         </div>
 
@@ -167,10 +178,23 @@ export function SiteFooter({
             height={40}
             className="size-10 rounded-xl opacity-90"
           />
-          <p className="text-xs leading-6 text-white/45 sm:text-right">
-            © {new Date().getFullYear()} {brandName} · Hidden Diversion
-            Recreational Services · Built in Dubai
-          </p>
+          <div className="text-xs leading-6 text-white/45 sm:text-right">
+            <p>
+              © {new Date().getFullYear()} {brandName} · Hidden Diversion
+              Recreational Services · Built in Dubai
+            </p>
+            <p>
+              By using Kattegat, you agree to our{" "}
+              <Link href="/terms-of-service" className="underline underline-offset-4 hover:text-white">
+                Terms of Use
+              </Link>{" "}
+              and acknowledge our{" "}
+              <Link href="/privacy-policy" className="underline underline-offset-4 hover:text-white">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </div>
     </footer>

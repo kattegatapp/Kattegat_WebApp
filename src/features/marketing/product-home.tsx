@@ -373,6 +373,8 @@ export function ProductHome({ settings }: ProductHomeProps) {
         supportEmail={settings.brand.supportEmail}
         appStoreUrl={settings.links.appStoreUrl}
         playStoreUrl={settings.links.playStoreUrl}
+        instagramUrl={settings.links.instagramUrl}
+        linkedinUrl={settings.links.linkedinUrl}
       />
     </main>
   );

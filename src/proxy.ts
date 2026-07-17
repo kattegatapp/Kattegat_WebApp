@@ -22,8 +22,22 @@ function unauthorizedJson() {
   );
 }
 
-function isWaitlistOnlyPublicPath(pathname: string) {
-  return pathname === "/" || pathname === "/waitlist" || pathname.startsWith("/waitlist/");
+const WAITLIST_PUBLIC_PATHS = [
+  "/",
+  "/waitlist",
+  "/terms-of-service",
+  "/privacy-policy",
+  "/delete-account",
+  "/contact",
+  "/faq",
+] as const;
+
+function isWaitlistPublicPath(pathname: string) {
+  return WAITLIST_PUBLIC_PATHS.some(
+    (publicPath) =>
+      pathname === publicPath ||
+      (publicPath !== "/" && pathname.startsWith(`${publicPath}/`)),
+  );
 }
 
 /** Cached public settings probe for the waitlist lock (edge-friendly). */
@@ -86,9 +100,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(rewriteUrl);
   }
 
-  // Pre-launch lock: when waitlist registration is on, only `/`, `/waitlist`, and
-  // the admin portal remain reachable. Deep links like /services redirect home.
-  if (!isWaitlistOnlyPublicPath(pathname) && (await isWaitlistModeEnabled())) {
+  // Pre-launch lock: legal disclosures, account deletion, and support must stay
+  // publicly reachable for users and app-store review, even before launch.
+  if (!isWaitlistPublicPath(pathname) && (await isWaitlistModeEnabled())) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/";
     homeUrl.search = "";

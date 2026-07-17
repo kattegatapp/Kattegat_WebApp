@@ -97,8 +97,8 @@ export const fallbackAppSettings: PublicAppSettings = {
     mobileAppUrl: null,
     appStoreUrl: null,
     playStoreUrl: null,
-    termsUrl: "https://kattegat.app/terms-of-service",
-    privacyUrl: "https://kattegat.app/privacy-policy",
+    termsUrl: "http://kattegat.app/terms-of-service",
+    privacyUrl: "http://kattegat.app/privacy-policy",
     supportWhatsappUrl: null,
     instagramUrl: null,
     linkedinUrl: null,
@@ -176,6 +176,28 @@ export function resolveBackendApiUrl(): string {
   return configured || "http://localhost:3000";
 }
 
+const reportedSettingsFailures = new Set<string>();
+
+function reportSettingsFailure(backendUrl: string, error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  const code = error instanceof ApiRequestError ? error.code : "UNKNOWN_ERROR";
+  const status = error instanceof ApiRequestError ? error.status : undefined;
+  const detail = `[settings] ${code}${status ? ` (${status})` : ""}: ${message} Backend: ${backendUrl}. Using fallback settings.`;
+
+  if (process.env.NODE_ENV === "production") {
+    console.error(detail);
+    return;
+  }
+
+  // A stopped local API is an expected development condition. Keep it visible
+  // without promoting a successfully handled fallback into Next's error overlay.
+  const failureKey = `${backendUrl}:${code}`;
+  if (!reportedSettingsFailures.has(failureKey)) {
+    reportedSettingsFailures.add(failureKey);
+    console.warn(detail);
+  }
+}
+
 export async function getPublicAppSettings(): Promise<PublicAppSettings> {
   const backendUrl = resolveBackendApiUrl();
 
@@ -186,12 +208,7 @@ export async function getPublicAppSettings(): Promise<PublicAppSettings> {
       { baseUrl: backendUrl },
     );
   } catch (error) {
-    console.error("[settings] failed to load public app settings", {
-      backendUrl,
-      message: error instanceof Error ? error.message : String(error),
-      code: error instanceof ApiRequestError ? error.code : undefined,
-      status: error instanceof ApiRequestError ? error.status : undefined,
-    });
+    reportSettingsFailure(backendUrl, error);
     return fallbackAppSettings;
   }
 }
