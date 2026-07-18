@@ -15,9 +15,9 @@ export async function MarketingPageShell({
 }) {
   const settings = await getPublicAppSettings();
   return (
-    <main className="min-h-screen bg-[#f6f7f2] text-brand-forest">
-      <div className="bg-[#f6f7f2] px-4 py-4 sm:px-8 sm:py-6">
-        <div className="mx-auto max-w-[1344px]">
+    <main className="min-h-screen bg-[#F7F9F8] text-brand-forest">
+      <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
+        <div className="mx-auto max-w-6xl">
           <MarketingHeader
             brandName={settings.brand.siteName}
             appStoreUrl={settings.links.appStoreUrl}
@@ -26,8 +26,9 @@ export async function MarketingPageShell({
           />
         </div>
       </div>
-      <section className="border-b border-brand-forest/10 bg-white px-5 py-16 sm:px-8 sm:py-24">
-        <div className="mx-auto max-w-7xl">
+
+      <section className="border-b border-brand-forest/10 bg-white px-5 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-32">
+        <div className="mx-auto max-w-6xl">
           <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-brand-blue">
             {eyebrow}
           </p>

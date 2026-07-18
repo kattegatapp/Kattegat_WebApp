@@ -17,11 +17,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { Reveal } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { HeroCarousel } from "@/features/marketing/hero-carousel";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
+import { SERVICE_CATEGORIES } from "@/features/marketing/service-categories";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import type { PublicAppSettings } from "@/lib/api/settings";
 import type { FeaturedSeller } from "@/lib/api/marketing";
@@ -32,40 +34,7 @@ type ProductHomeProps = {
   featuredSellers?: FeaturedSeller[];
 };
 
-const categories = [
-  {
-    title: "Entertainment",
-    image: "/assets/service-categories/entertainment-services.png",
-  },
-  {
-    title: "Event management",
-    image: "/assets/service-categories/event-management.png",
-  },
-  {
-    title: "Restaurant consultancy",
-    image: "/assets/service-categories/restaurant-consultancy.png",
-  },
-  {
-    title: "Marketing",
-    image: "/assets/service-categories/marketing-services.png",
-  },
-  {
-    title: "Fit-out",
-    image: "/assets/service-categories/fit-out-subcontractor.png",
-  },
-  {
-    title: "Shisha outsourcing",
-    image: "/assets/service-categories/shisha-outsourcing.png",
-  },
-  {
-    title: "Tailoring",
-    image: "/assets/service-categories/tailor-services.png",
-  },
-  {
-    title: "Lead generation",
-    image: "/assets/service-categories/lead-generation.png",
-  },
-] as const;
+const categories = SERVICE_CATEGORIES;
 
 const steps = [
   {
@@ -135,8 +104,58 @@ function sellerInitials(name: string) {
 
 function sellerTierLabel(tier: FeaturedSeller["tier"]) {
   if (tier === "white_glove") return "White Glove";
-  if (tier === "pro") return "Pro seller";
-  return "Kattegat seller";
+  if (tier === "pro") return "Pro";
+  return "On Kattegat";
+}
+
+function shouldShowSellerRating(seller: FeaturedSeller) {
+  return seller.reviewCount >= 3 && seller.rating >= 4;
+}
+
+const SELLER_FALLBACK_TONES = [
+  "bg-[radial-gradient(circle_at_28%_18%,rgb(111_219_66/0.45),transparent_42%),linear-gradient(155deg,#003912_0%,#1C4759_100%)]",
+  "bg-[radial-gradient(circle_at_72%_22%,rgb(72_220_129/0.4),transparent_40%),linear-gradient(155deg,#0a2f1c_0%,#003912_55%,#1C4759_100%)]",
+  "bg-[radial-gradient(circle_at_40%_80%,rgb(28_71_89/0.55),transparent_45%),linear-gradient(160deg,#1C4759_0%,#003912_100%)]",
+  "bg-[radial-gradient(circle_at_18%_70%,rgb(111_219_66/0.28),transparent_40%),linear-gradient(145deg,#003912_10%,#0d3d28_50%,#1C4759_100%)]",
+] as const;
+
+function SellerAvatar({
+  seller,
+  index = 0,
+  className,
+  initialsClassName,
+  style,
+}: {
+  seller: FeaturedSeller;
+  index?: number;
+  className?: string;
+  initialsClassName?: string;
+  style?: CSSProperties;
+}) {
+  if (seller.avatarUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- remote seller avatars; hosts vary
+      <img
+        src={seller.avatarUrl}
+        alt=""
+        className={cn("object-cover", className)}
+        style={style}
+      />
+    );
+  }
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center font-extrabold text-brand-mantis",
+        SELLER_FALLBACK_TONES[index % SELLER_FALLBACK_TONES.length],
+        className,
+        initialsClassName,
+      )}
+      style={style}
+    >
+      {sellerInitials(seller.name)}
+    </div>
+  );
 }
 
 export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps) {
@@ -154,7 +173,6 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
         <div className="mx-auto max-w-6xl">
           <MarketingHeader
-            tone="light"
             brandName={brand}
             appStoreUrl={settings.links.appStoreUrl}
             playStoreUrl={settings.links.playStoreUrl}
@@ -186,7 +204,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
             </p>
             <div className="pointer-events-auto mt-6 grid w-full max-w-[27rem] grid-cols-2 items-stretch gap-2.5 sm:mt-8 sm:gap-3 lg:flex lg:max-w-none lg:items-center">
               <Link
-                href="/services"
+                href="/search"
                 className={cn(buttonVariants({ size: "lg" }), "h-12 w-full justify-center whitespace-nowrap rounded-2xl bg-brand-mantis px-3 text-xs font-extrabold text-brand-forest hover:bg-white sm:h-13 sm:px-5 sm:text-sm lg:w-auto lg:px-6")}
               >
                 Find talent <ArrowRight className="size-4" />
@@ -283,10 +301,10 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
               </h2>
             </div>
             <Link
-              href="/services"
+              href="/search"
               className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
             >
-              All services
+              Search all
               <ArrowUpRight className="size-4" />
             </Link>
           </div>
@@ -296,7 +314,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
           {categories.map((category, i) => (
             <Reveal key={category.title} delayMs={i * 30}>
               <Link
-                href={`/services?q=${encodeURIComponent(category.title)}`}
+                href={`/search?category=${encodeURIComponent(category.query)}`}
                 className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-brand-forest shadow-[0_12px_40px_rgb(0_57_18/0.1)]"
               >
                 <Image
@@ -339,7 +357,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
             {categories.slice(0, 4).map((category, index) => (
               <Reveal key={category.title} delayMs={index * 45}>
                 <Link
-                  href={`/services?q=${encodeURIComponent(category.title)}`}
+                  href={`/search?category=${encodeURIComponent(category.query)}`}
                   className="group flex min-h-24 items-center gap-4 rounded-2xl border border-brand-forest/8 bg-white p-3 shadow-[0_10px_35px_rgb(0_57_18/0.06)] transition hover:-translate-y-0.5 hover:border-brand-mantis/60"
                 >
                   <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-brand-forest">
@@ -354,48 +372,192 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
         </div>
       </section>
 
-      {/* Featured sellers — real backend discovery data only. */}
+      {/* Featured sellers — editorial spotlight + roster. */}
       {featuredSellers.length ? (
         <section className="px-4 py-16 sm:px-6 sm:py-24">
           <div className="mx-auto max-w-6xl">
             <Reveal>
-              <div className="mx-auto max-w-3xl text-center">
-                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-blue">Featured sellers</p>
-                <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em] sm:text-5xl">Meet people ready to work.</h2>
-                <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-brand-forest/60 sm:text-lg">
-                  Real sellers with live services, selected from Kattegat&apos;s marketplace discovery feed.
+              <div className="max-w-2xl">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-blue">
+                  Featured sellers
+                </p>
+                <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em] sm:text-5xl">
+                  Meet people ready to work.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-brand-forest/60 sm:text-base">
+                  A live look at talent already on Kattegat — profiles and services from the
+                  marketplace feed.
                 </p>
               </div>
             </Reveal>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredSellers.map((seller, index) => (
-                <Reveal key={seller.id} delayMs={index * 50}>
-                  <article className="group h-full overflow-hidden rounded-[1.75rem] border border-brand-forest/10 bg-white shadow-[0_16px_50px_rgb(0_57_18/0.08)] transition hover:-translate-y-1 hover:shadow-[0_24px_65px_rgb(0_57_18/0.13)]">
-                    <div
-                      className="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand-forest to-brand-blue bg-cover bg-center text-3xl font-extrabold text-brand-mantis"
-                      style={seller.avatarUrl ? { backgroundImage: `url(${JSON.stringify(seller.avatarUrl)})` } : undefined}
+
+            {(() => {
+              const [lead, ...rest] = featuredSellers;
+              const leadRating = shouldShowSellerRating(lead);
+
+              return (
+                <div
+                  className="mt-10"
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "stretch",
+                    gap: "2rem",
+                  }}
+                >
+                  {/* Portrait spotlight — capped width so it can never go full-bleed. */}
+                  <div style={{ flex: "0 1 26rem", width: "100%", maxWidth: "26rem" }}>
+                    <article
+                      style={{
+                        position: "relative",
+                        isolation: "isolate",
+                        display: "flex",
+                        width: "100%",
+                        overflow: "hidden",
+                        borderRadius: "2rem",
+                        background: "#003912",
+                        color: "#fff",
+                        aspectRatio: "3 / 4",
+                        maxHeight: "36rem",
+                        boxShadow:
+                          "0 24px 60px rgb(0 57 18 / 0.22), 0 8px 24px rgb(0 57 18 / 0.12)",
+                      }}
                     >
-                      {!seller.avatarUrl ? sellerInitials(seller.name) : null}
-                    </div>
-                    <div className="p-5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="rounded-full bg-brand-mantis/18 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em]">
-                          {sellerTierLabel(seller.tier)}
-                        </span>
-                        {seller.rating > 0 ? (
-                          <span className="flex items-center gap-1 text-xs font-bold">
-                            <Star className="size-3.5 fill-brand-mantis text-brand-mantis" /> {seller.rating.toFixed(1)}
+                      <SellerAvatar
+                        seller={lead}
+                        index={0}
+                        className="featured-sellers-media"
+                        initialsClassName="featured-sellers-media featured-sellers-media-fallback text-5xl"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          objectPosition: "center top",
+                        }}
+                      />
+                      <div
+                        aria-hidden
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          background:
+                            "linear-gradient(to top, #003912 0%, rgb(0 57 18 / 0.55) 45%, transparent 100%)",
+                        }}
+                      />
+
+                      <div
+                        style={{
+                          position: "relative",
+                          marginTop: "auto",
+                          display: "flex",
+                          width: "100%",
+                          flexDirection: "column",
+                          justifyContent: "flex-end",
+                          padding: "1.5rem",
+                        }}
+                      >
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
+                            {sellerTierLabel(lead.tier)}
                           </span>
-                        ) : null}
+                          {leadRating ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-white/85">
+                              <Star className="size-3.5 fill-brand-mantis text-brand-mantis" />
+                              {lead.rating.toFixed(1)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <h3 className="mt-2 text-2xl font-extrabold tracking-[-0.04em] sm:text-3xl">
+                          {lead.name}
+                        </h3>
+                        <p className="mt-1 text-sm font-semibold text-brand-emerald">
+                          {lead.category || "Dubai services"}
+                        </p>
+                        <p className="mt-3 line-clamp-3 text-sm leading-6 text-white/70">
+                          {lead.service}
+                        </p>
                       </div>
-                      <h3 className="mt-4 truncate text-lg font-extrabold">{seller.name}</h3>
-                      <p className="mt-1 text-xs font-semibold text-brand-blue">{seller.category || "Dubai services"}</p>
-                      <p className="mt-3 line-clamp-2 text-sm leading-6 text-brand-forest/55">{seller.service}</p>
-                    </div>
-                  </article>
-                </Reveal>
-              ))}
-            </div>
+                    </article>
+                  </div>
+
+                  {/* Roster / early note — fills remaining space beside the portrait. */}
+                  <div
+                    style={{
+                      flex: "1 1 18rem",
+                      minWidth: "min(100%, 18rem)",
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {rest.length ? (
+                      <>
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-forest/40">
+                          Also on the marketplace
+                        </p>
+                        <ul className="mt-4 divide-y divide-brand-forest/10 border-y border-brand-forest/10">
+                          {rest.map((seller, index) => {
+                            const showRating = shouldShowSellerRating(seller);
+                            return (
+                              <li key={seller.id} className="flex items-center gap-4 py-4">
+                                <SellerAvatar
+                                  seller={seller}
+                                  index={index + 1}
+                                  className="size-14 shrink-0 rounded-2xl"
+                                  initialsClassName="text-sm"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <h3 className="truncate text-base font-extrabold tracking-[-0.02em]">
+                                      {seller.name}
+                                    </h3>
+                                    {showRating ? (
+                                      <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-forest/55">
+                                        <Star className="size-3 fill-brand-mantis text-brand-mantis" />
+                                        {seller.rating.toFixed(1)}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className="mt-0.5 text-xs font-semibold text-brand-blue">
+                                    {seller.category || "Dubai services"}
+                                  </p>
+                                  <p className="mt-1 line-clamp-1 text-sm text-brand-forest/55">
+                                    {seller.service}
+                                  </p>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    ) : (
+                      <div className="rounded-[1.75rem] border border-brand-forest/10 bg-[#EEF2F0]/70 p-6 sm:p-7">
+                        <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">
+                          Early marketplace
+                        </p>
+                        <p className="mt-3 text-lg font-extrabold tracking-[-0.03em] sm:text-xl">
+                          More sellers are going live as Kattegat opens.
+                        </p>
+                        <p className="mt-3 text-sm leading-7 text-brand-forest/60">
+                          This is a live profile from the feed — not a placeholder. Browse services
+                          or join the waitlist to get launch updates.
+                        </p>
+                      </div>
+                    )}
+
+                    <Link
+                      href="/search"
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-extrabold text-brand-forest transition hover:text-brand-blue"
+                    >
+                      Browse all services
+                      <ArrowUpRight className="size-4" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </section>
       ) : null}
@@ -582,46 +744,108 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
       </section>
 
       {/* App download */}
-      <section className="px-4 pb-16 sm:px-6 sm:pb-24">
-        <Reveal>
-          <div className="relative mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-brand-forest px-8 py-10 text-white sm:px-12 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
-            <div aria-hidden className="absolute -right-24 -top-28 size-80 rounded-full border border-brand-mantis/20" />
-            <div aria-hidden className="absolute bottom-0 right-1/4 size-56 rounded-full bg-brand-blue/40 blur-3xl" />
-            <div className="relative max-w-2xl">
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-mantis">Kattegat in your pocket</p>
-              <h2 className="mt-3 text-3xl font-extrabold tracking-[-0.045em] sm:text-5xl">
-                Find the right connection wherever the work happens.
-              </h2>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-white/65 sm:text-lg sm:leading-8">
-                Discover services, review sellers, and continue the conversation from the Kattegat app.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                {settings.links.appStoreUrl ? (
-                  <a href={settings.links.appStoreUrl} target="_blank" rel="noopener noreferrer">
-                    <Image src="/brand/stores/app-store-badge.svg" alt="Download on the App Store" width={150} height={50} className="h-12 w-auto" />
-                  </a>
-                ) : null}
-                {settings.links.playStoreUrl ? (
-                  <a href={settings.links.playStoreUrl} target="_blank" rel="noopener noreferrer">
-                    <Image src="/brand/stores/google-play-badge.png" alt="Get it on Google Play" width={170} height={66} className="h-[3.6rem] w-auto" />
-                  </a>
-                ) : null}
-                {settings.links.mobileAppUrl ? (
-                  <a href={settings.links.mobileAppUrl} className="text-sm font-extrabold text-brand-mantis underline underline-offset-4 hover:text-white">Open installed app</a>
-                ) : null}
-                {!settings.links.appStoreUrl && !settings.links.playStoreUrl ? (
-                  <Link href="/contact" className={cn(buttonVariants(), "h-12 rounded-2xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-white")}>Get launch updates</Link>
-                ) : null}
+      <section className="px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-6xl">
+          <Reveal>
+            <div
+              className="relative overflow-hidden text-white"
+              style={{
+                borderRadius: "1.5rem",
+                background: "#003912",
+              }}
+            >
+              <div className="px-6 py-7 sm:px-8 sm:py-8 lg:px-10">
+                <div className="max-w-3xl">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-1">
+                    <Smartphone className="size-3 text-brand-mantis" aria-hidden />
+                    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
+                      Kattegat in your pocket
+                    </p>
+                  </div>
+
+                  <h2 className="mt-3 text-2xl font-extrabold tracking-[-0.04em] text-balance sm:text-3xl sm:leading-[1.1] lg:max-w-none lg:text-4xl">
+                    Find the right connection wherever the work happens.
+                  </h2>
+                  <p className="mt-2.5 max-w-2xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
+                    Discover services, review sellers, and continue the conversation from the
+                    Kattegat app.
+                  </p>
+
+                  <ul className="mt-4 flex flex-wrap gap-2">
+                    {[
+                      { icon: Search, label: "Discover" },
+                      { icon: ShieldCheck, label: "Review" },
+                      { icon: MessageCircle, label: "Chat" },
+                    ].map(({ icon: Icon, label }) => (
+                      <li
+                        key={label}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-white/90"
+                      >
+                        <Icon className="size-3 text-brand-mantis" aria-hidden />
+                        {label}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-5 flex flex-wrap items-center gap-2.5">
+                    {settings.links.appStoreUrl ? (
+                      <a
+                        href={settings.links.appStoreUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-mantis"
+                      >
+                        <Image
+                          src="/brand/stores/app-store-badge.svg"
+                          alt="Download on the App Store"
+                          width={130}
+                          height={44}
+                          className="h-10 w-auto"
+                        />
+                      </a>
+                    ) : null}
+                    {settings.links.playStoreUrl ? (
+                      <a
+                        href={settings.links.playStoreUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-mantis"
+                      >
+                        <Image
+                          src="/brand/stores/google-play-badge.png"
+                          alt="Get it on Google Play"
+                          width={148}
+                          height={58}
+                          className="h-[2.95rem] w-auto"
+                        />
+                      </a>
+                    ) : null}
+                    {settings.links.mobileAppUrl ? (
+                      <a
+                        href={settings.links.mobileAppUrl}
+                        className="inline-flex h-10 items-center gap-1.5 rounded-[0.85rem] bg-brand-mantis px-3.5 text-xs font-extrabold text-brand-forest transition hover:brightness-110"
+                      >
+                        Open app
+                        <ArrowUpRight className="size-3.5" />
+                      </a>
+                    ) : null}
+                    {!settings.links.appStoreUrl && !settings.links.playStoreUrl ? (
+                      <Link
+                        href="/contact"
+                        className={cn(
+                          buttonVariants(),
+                          "h-10 rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest hover:bg-white",
+                        )}
+                      >
+                        Get launch updates
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="relative mt-10 hidden size-44 items-center justify-center rounded-[2.5rem] border border-white/15 bg-white/8 shadow-[0_24px_70px_rgb(0_0_0/0.2)] backdrop-blur-md lg:flex">
-              <Smartphone className="size-20 text-brand-mantis" strokeWidth={1.35} aria-hidden />
-              <span className="absolute -right-3 -top-3 flex size-12 items-center justify-center rounded-2xl bg-brand-mantis text-brand-forest shadow-xl">
-                <ArrowUpRight className="size-5" />
-              </span>
-            </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
 
       <SiteFooter

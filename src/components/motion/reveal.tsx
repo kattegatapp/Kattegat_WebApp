@@ -20,14 +20,25 @@ export function Reveal({ children, className, delayMs = 0, as: Tag = "div" }: Re
     const node = ref.current;
     if (!node) return;
 
+    const reveal = () => setVisible(true);
+
+    // If already on-screen (common after refresh / scroll restore), show immediately
+    // so layout columns don't look empty or stretched while waiting for IO.
+    const rect = node.getBoundingClientRect();
+    const vh = window.innerHeight || 0;
+    if (rect.top < vh * 0.9 && rect.bottom > vh * 0.1) {
+      reveal();
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisible(true);
+          reveal();
           observer.disconnect();
         }
       },
-      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" },
+      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
     );
 
     observer.observe(node);

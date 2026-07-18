@@ -742,19 +742,48 @@ body {
 .category-ring-reverse { animation: 12s ease-in-out infinite reverse category-ring-float; }
 .category-dot { animation: 4s ease-in-out infinite category-dot-pulse; }
 
-/* Keep the production hero deterministic after a hard refresh. These rules
-   intentionally mirror the desktop composition rather than relying on a
-   chain of responsive utility overrides. */
-@media (min-width: 1024px) {
-  .production-header-surface {
-    background-color: #ffffff !important;
-    border-color: rgb(0 57 18 / 0.1) !important;
-    color: #003912 !important;
-    border-radius: 9999px !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-  }
+/* App / pocket CTA — atmospheric motion (no device mockup). */
+@keyframes pocket-aurora {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(8%, -6%, 0) scale(1.12); opacity: 0.95; }
+}
 
+@keyframes pocket-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pocket-orbit-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes pocket-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -0.75rem, 0); }
+}
+
+@keyframes pocket-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.92); }
+  50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+@keyframes pocket-sheen {
+  0% { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+  20% { opacity: 0.45; }
+  55%, 100% { transform: translateX(140%) skewX(-12deg); opacity: 0; }
+}
+
+.pocket-aurora { animation: 10s ease-in-out infinite pocket-aurora; }
+.pocket-aurora-delay { animation: 14s ease-in-out infinite reverse pocket-aurora; }
+.pocket-orbit { animation: 28s linear infinite pocket-orbit; }
+.pocket-orbit-reverse { animation: 36s linear infinite pocket-orbit-reverse; }
+.pocket-float { animation: 5.5s ease-in-out infinite pocket-float; }
+.pocket-pulse { animation: 3.8s ease-in-out infinite pocket-pulse; }
+.pocket-sheen { animation: 7.5s ease-in-out infinite pocket-sheen; }
+
+/* Keep the production hero deterministic after a hard refresh. */
+@media (min-width: 1024px) {
   .production-hero-content {
     align-items: center !important;
     padding-top: 8rem !important;
@@ -774,6 +803,37 @@ body {
   .production-hero-description {
     max-width: 36rem !important;
   }
+}
+
+/* Featured sellers spotlight media fill (layout uses inline flex — no grid). */
+.featured-sellers-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 2rem;
+  background: #003912;
+  color: #fff;
+  aspect-ratio: 3 / 4;
+  max-height: 36rem;
+}
+
+.featured-sellers-media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.featured-sellers-media-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #6fdb42;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -805,7 +865,14 @@ body {
   .category-aura-reverse,
   .category-ring,
   .category-ring-reverse,
-  .category-dot {
+  .category-dot,
+  .pocket-aurora,
+  .pocket-aurora-delay,
+  .pocket-orbit,
+  .pocket-orbit-reverse,
+  .pocket-float,
+  .pocket-pulse,
+  .pocket-sheen {
     animation: none;
   }
 }
