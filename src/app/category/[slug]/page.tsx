@@ -11,7 +11,12 @@ import {
   searchListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
-import { getSiteOrigin, jsonLdScript } from "@/lib/seo";
+import {
+  categoryPageDescription,
+  categoryPageTitle,
+  getSiteOrigin,
+  jsonLdScript,
+} from "@/lib/seo";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -25,14 +30,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Category not found | Kattegat", robots: { index: false } };
   }
 
-  const description = `Browse ${category.name} talent and services on Kattegat — Dubai's direct events and hospitality marketplace.`;
+  const title = categoryPageTitle(category.name, "Dubai");
+  const description = categoryPageDescription(category.name, "Dubai");
 
   return {
-    title: `${category.name} | Kattegat`,
+    title,
     description,
     alternates: { canonical: `${origin}/category/${category.slug}` },
     openGraph: {
-      title: `${category.name} on Kattegat`,
+      title,
       description,
       url: `${origin}/category/${category.slug}`,
     },
@@ -82,15 +88,26 @@ export default async function CategoryPage({ params }: PageProps) {
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-32">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-3xl">
-            <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-brand-blue">
+            <nav className="flex flex-wrap items-center gap-2 text-xs font-bold text-brand-forest/45">
+              <Link href="/" className="hover:text-brand-blue">
+                Home
+              </Link>
+              <span>/</span>
+              <Link href="/services" className="hover:text-brand-blue">
+                Services
+              </Link>
+              <span>/</span>
+              <span className="text-brand-forest/70">{category.name}</span>
+            </nav>
+            <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.24em] text-brand-blue">
               Category
             </p>
             <h1 className="mt-3 text-4xl font-extrabold tracking-[-0.05em] sm:text-5xl">
               {category.name}
             </h1>
             <p className="mt-4 text-base leading-7 text-brand-forest/60">
-              {results.total} live listing{results.total === 1 ? "" : "s"} in this category.
-              Continue in the app to message sellers and book.
+              {results.total} live listing{results.total === 1 ? "" : "s"} in this category across
+              Dubai and the UAE. Continue in the app to message sellers and book.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -108,6 +125,12 @@ export default async function CategoryPage({ params }: PageProps) {
               className="inline-flex min-h-12 items-center rounded-2xl border border-brand-forest/15 bg-white px-5 text-sm font-extrabold"
             >
               Open search filters
+            </Link>
+            <Link
+              href="/dubai"
+              className="inline-flex min-h-12 items-center rounded-2xl border border-brand-forest/15 bg-white px-5 text-sm font-extrabold"
+            >
+              Dubai landings
             </Link>
           </div>
         </div>

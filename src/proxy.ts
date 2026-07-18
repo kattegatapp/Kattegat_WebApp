@@ -31,6 +31,16 @@ const WAITLIST_PUBLIC_PATHS = [
   "/contact",
   "/support",
   "/faq",
+  // SEO / marketplace discovery — must stay crawlable even during waitlist.
+  "/search",
+  "/services",
+  "/about",
+  "/how-it-works",
+  "/listing",
+  "/seller",
+  "/category",
+  "/dubai",
+  "/download",
 ] as const;
 
 function isWaitlistPublicPath(pathname: string) {
@@ -65,8 +75,13 @@ async function isWaitlistModeEnabled(): Promise<boolean> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Platform association files must always bypass waitlist and admin guards.
-  if (pathname === "/.well-known" || pathname.startsWith("/.well-known/")) {
+  // Platform association files + SEO metadata routes must always bypass waitlist.
+  if (
+    pathname === "/.well-known" ||
+    pathname.startsWith("/.well-known/") ||
+    pathname === "/sitemap.xml" ||
+    pathname === "/robots.txt"
+  ) {
     return NextResponse.next();
   }
 
@@ -128,7 +143,11 @@ export const config = {
      * Match the configured public portal path. Keep this broad enough that
      * NEXT_PUBLIC_ADMIN_PORTAL_PATH changes still hit the proxy; the handler
      * filters to the exact segment.
+     * Also allow metadata routes (sitemap.xml / robots.txt) through without
+     * treating the dotted path as a static file exclusion only.
      */
     "/((?!_next/static|_next/image|favicon.ico|brand|api|\\.well-known|.*\\..*).*)",
+    "/sitemap.xml",
+    "/robots.txt",
   ],
 };

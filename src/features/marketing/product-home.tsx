@@ -22,6 +22,7 @@ import type { CSSProperties } from "react";
 import { Reveal } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { HeroCarousel } from "@/features/marketing/hero-carousel";
+import { dubaiHrefForQuery } from "@/features/marketing/local-seo";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SERVICE_CATEGORIES } from "@/features/marketing/service-categories";
 import { SiteFooter } from "@/features/marketing/site-footer";
@@ -307,6 +308,13 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
               Search all
               <ArrowUpRight className="size-4" />
             </Link>
+            <Link
+              href="/dubai"
+              className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
+            >
+              Dubai
+              <ArrowUpRight className="size-4" />
+            </Link>
           </div>
         </Reveal>
 
@@ -314,7 +322,10 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
           {categories.map((category, i) => (
             <Reveal key={category.title} delayMs={i * 30}>
               <Link
-                href={`/search?category=${encodeURIComponent(category.query)}`}
+                href={
+                  dubaiHrefForQuery(category.query) ??
+                  `/search?category=${encodeURIComponent(category.query)}`
+                }
                 className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-brand-forest shadow-[0_12px_40px_rgb(0_57_18/0.1)]"
               >
                 <Image
@@ -357,7 +368,10 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
             {categories.slice(0, 4).map((category, index) => (
               <Reveal key={category.title} delayMs={index * 45}>
                 <Link
-                  href={`/search?category=${encodeURIComponent(category.query)}`}
+                  href={
+                    dubaiHrefForQuery(category.query) ??
+                    `/search?category=${encodeURIComponent(category.query)}`
+                  }
                   className="group flex min-h-24 items-center gap-4 rounded-2xl border border-brand-forest/8 bg-white p-3 shadow-[0_10px_35px_rgb(0_57_18/0.06)] transition hover:-translate-y-0.5 hover:border-brand-mantis/60"
                 >
                   <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-brand-forest">

@@ -8,7 +8,12 @@ import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import { getPublicSeller } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
-import { getSiteOrigin, jsonLdScript } from "@/lib/seo";
+import {
+  getSiteOrigin,
+  jsonLdScript,
+  sellerPageDescription,
+  sellerPageTitle,
+} from "@/lib/seo";
 
 type PageProps = {
   params: Promise<{ sellerId: string }>;
@@ -22,16 +27,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const name = seller.displayName || "Kattegat seller";
-  const description =
-    seller.bio?.slice(0, 160) ||
-    `${name} on Kattegat — Dubai events and hospitality talent marketplace.`;
+  const title = sellerPageTitle(name, "Dubai");
+  const description = sellerPageDescription({ name, bio: seller.bio, location: "Dubai" });
 
   return {
-    title: `${name} | Kattegat`,
+    title,
     description,
     alternates: { canonical: `${origin}/seller/${seller.userId}` },
     openGraph: {
-      title: name,
+      title,
       description,
       url: `${origin}/seller/${seller.userId}`,
       images: seller.avatarUrl ? [{ url: seller.avatarUrl }] : undefined,
@@ -130,8 +134,20 @@ export default async function SellerPage({ params }: PageProps) {
 
         <p className="mt-8 max-w-3xl text-base leading-8 text-brand-forest/65">
           {seller.bio ||
-            `${name} is live on Kattegat. Continue in the app for portfolio details, chat, and booking.`}
+            `${name} is live on Kattegat in Dubai. Continue in the app for portfolio details, chat, and booking.`}
         </p>
+
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm font-extrabold">
+          <Link href="/dubai" className="text-brand-blue hover:underline">
+            Dubai services
+          </Link>
+          <Link href="/search" className="text-brand-blue hover:underline">
+            Search marketplace
+          </Link>
+          <Link href="/services" className="text-brand-blue hover:underline">
+            All categories
+          </Link>
+        </div>
 
         {seller.tags.length > 0 ? (
           <div className="mt-6 flex flex-wrap gap-2">

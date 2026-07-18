@@ -6,11 +6,21 @@ import { KATTEGAT_SOCIALS } from "@/features/marketing/socials";
 const exploreLinks = [
   ["Home", "/"],
   ["Search", "/search"],
+  ["Dubai", "/dubai"],
   ["Services", "/services"],
   ["How it works", "/how-it-works"],
   ["About", "/about"],
   ["FAQ", "/faq"],
   ["Contact", "/contact"],
+] as const;
+
+const dubaiLinks = [
+  ["DJs in Dubai", "/dubai/dj"],
+  ["Event hosts", "/dubai/event-host"],
+  ["Entertainment", "/dubai/entertainment"],
+  ["Event management", "/dubai/event-management"],
+  ["Restaurant consultancy", "/dubai/restaurant-consultancy"],
+  ["Marketing", "/dubai/marketing"],
 ] as const;
 
 const legalAndSupportLinks = [
@@ -50,7 +60,7 @@ export function SiteFooter({
   return (
     <footer className="border-t border-white/10 bg-brand-forest text-white">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-9">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.3fr)_repeat(3,minmax(0,0.7fr))] lg:gap-8">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,0.7fr))] lg:gap-6">
           <div className="min-w-0 sm:col-span-2 lg:col-span-1">
             <Link
               href="/"
@@ -108,6 +118,24 @@ export function SiteFooter({
             </p>
             <ul className="mt-3 space-y-2">
               {exploreLinks.map(([label, href]) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="text-sm font-semibold text-white/70 transition hover:text-brand-mantis"
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
+              Dubai
+            </p>
+            <ul className="mt-3 space-y-2">
+              {dubaiLinks.map(([label, href]) => (
                 <li key={href}>
                   <Link
                     href={href}

@@ -5,6 +5,7 @@ import {
   listSitemapListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import { DUBAI_SEO_PAGES } from "@/features/marketing/local-seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const settings = await getPublicAppSettings();
@@ -15,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "",
     "/search",
     "/services",
+    "/dubai",
     "/about",
     "/how-it-works",
     "/faq",
@@ -26,8 +28,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ].map((path) => ({
     url: `${origin}${path || "/"}`,
     lastModified: now,
-    changeFrequency: path === "" || path === "/search" ? "daily" : "weekly",
-    priority: path === "" ? 1 : path === "/search" || path === "/services" ? 0.9 : 0.6,
+    changeFrequency: path === "" || path === "/search" || path === "/dubai" ? "daily" : "weekly",
+    priority: path === "" ? 1 : path === "/search" || path === "/services" || path === "/dubai" ? 0.9 : 0.6,
+  }));
+
+  const dubaiRoutes: MetadataRoute.Sitemap = DUBAI_SEO_PAGES.map((page) => ({
+    url: `${origin}/dubai/${page.slug}`,
+    lastModified: now,
+    changeFrequency: "daily",
+    priority: 0.92,
   }));
 
   const [categories, listings] = await Promise.all([
@@ -57,5 +66,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.75,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...listingRoutes, ...sellerRoutes];
+  return [
+    ...staticRoutes,
+    ...dubaiRoutes,
+    ...categoryRoutes,
+    ...listingRoutes,
+    ...sellerRoutes,
+  ];
 }

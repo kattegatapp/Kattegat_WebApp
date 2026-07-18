@@ -19,6 +19,7 @@ type MarketingHeaderProps = {
 const navigation = [
   ["Home", "/"],
   ["Search", "/search"],
+  ["Dubai", "/dubai"],
   ["Services", "/services"],
   ["About", "/about"],
   ["How it works", "/how-it-works"],
@@ -32,8 +33,18 @@ const mobileNavigationSections = [
     links: [
       ["Home", "/"],
       ["Search", "/search"],
+      ["Dubai", "/dubai"],
       ["Services", "/services"],
       ["How it works", "/how-it-works"],
+    ],
+  },
+  {
+    label: "Dubai services",
+    links: [
+      ["DJs", "/dubai/dj"],
+      ["Event hosts", "/dubai/event-host"],
+      ["Restaurant consultancy", "/dubai/restaurant-consultancy"],
+      ["Event management", "/dubai/event-management"],
     ],
   },
   {
