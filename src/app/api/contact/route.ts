@@ -48,6 +48,27 @@ function cleanSingleLine(value: string) {
   return escapeHtml(value.replace(/[\u0000-\u001F\u007F]+/g, " ").trim());
 }
 
+function allowedOriginsForRequest(request: Request) {
+  const origins = new Set<string>();
+
+  origins.add(new URL(request.url).origin);
+
+  const forwardedProto = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "");
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = request.headers.get("host");
+
+  for (const candidate of [forwardedHost, host]) {
+    if (!candidate) continue;
+    const normalizedHost = candidate.split(",")[0]?.trim();
+    if (!normalizedHost) continue;
+    origins.add(`${forwardedProto}://${normalizedHost}`);
+    origins.add(`http://${normalizedHost}`);
+    origins.add(`https://${normalizedHost}`);
+  }
+
+  return origins;
+}
+
 export async function POST(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().startsWith("application/json")) {
@@ -55,7 +76,7 @@ export async function POST(request: Request) {
   }
 
   const requestOrigin = request.headers.get("origin");
-  if (requestOrigin && requestOrigin !== new URL(request.url).origin) {
+  if (requestOrigin && !allowedOriginsForRequest(request).has(requestOrigin)) {
     return errorResponse("Cross-origin submissions are not allowed.", 403, "ORIGIN_REJECTED");
   }
 

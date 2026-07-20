@@ -21,6 +21,7 @@ const navigation = [
   ["Search", "/search"],
   ["Dubai", "/dubai"],
   ["Services", "/services"],
+  ["Plans", "/plans"],
   ["About", "/about"],
   ["How it works", "/how-it-works"],
   ["FAQ", "/faq"],
@@ -50,6 +51,7 @@ const mobileNavigationSections = [
   {
     label: "Company & help",
     links: [
+      ["Plans", "/plans"],
       ["About", "/about"],
       ["FAQ", "/faq"],
       ["Contact", "/contact"],
@@ -177,6 +179,7 @@ export function MarketingHeader({
       >
         {navigation.map(([label, href]) => {
           const active = isActivePath(pathname, href);
+          const isPlans = href === "/plans";
           return (
             <Link
               key={href}
@@ -186,10 +189,19 @@ export function MarketingHeader({
                 "relative whitespace-nowrap rounded-full px-2.5 py-2.5 transition focus-visible:outline-2 focus-visible:outline-brand-mantis xl:px-3 2xl:px-4",
                 active
                   ? "font-extrabold text-white"
-                  : "text-white/70 hover:text-white",
+                  : isPlans
+                    ? "bg-brand-mantis/15 font-extrabold text-brand-mantis ring-1 ring-inset ring-brand-mantis/30 hover:bg-brand-mantis/20 hover:text-brand-mantis"
+                    : "text-white/70 hover:text-white",
               )}
             >
-              {label}
+              <span className="flex items-center gap-1.5">
+                {label}
+                {isPlans ? (
+                  <span className="rounded-full bg-brand-mantis px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-brand-forest">
+                    Pro
+                  </span>
+                ) : null}
+              </span>
               <span
                 aria-hidden
                 className={cn(
@@ -245,6 +257,7 @@ export function MarketingHeader({
                 </p>
                 {section.links.map(([label, href]) => {
                   const active = isActivePath(pathname, href);
+                  const isPlans = href === "/plans";
                   return (
                     <Link
                       key={href}
@@ -255,10 +268,19 @@ export function MarketingHeader({
                         "flex min-h-11 items-center justify-between rounded-xl px-3 py-3 text-sm font-bold transition",
                         active
                           ? "text-brand-mantis"
-                          : "text-white/80 hover:bg-white/10 hover:text-white",
+                          : isPlans
+                            ? "bg-brand-mantis/10 text-brand-mantis ring-1 ring-inset ring-brand-mantis/25"
+                            : "text-white/80 hover:bg-white/10 hover:text-white",
                       )}
                     >
-                      {label}
+                      <span className="flex items-center gap-2">
+                        {label}
+                        {isPlans ? (
+                          <span className="rounded-full bg-brand-mantis px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-brand-forest">
+                            Pro
+                          </span>
+                        ) : null}
+                      </span>
                       <ArrowUpRight
                         className={cn(
                           "size-4 transition",

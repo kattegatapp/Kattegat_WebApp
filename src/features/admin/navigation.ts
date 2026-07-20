@@ -1,6 +1,7 @@
 import {
   Building2,
   BadgeCheck,
+  Inbox,
   KeyRound,
   LayoutDashboard,
   Link2,
@@ -16,9 +17,11 @@ import {
   UserCog,
   Crown,
   ConciergeBell,
+  CreditCard,
   HandHeart,
   BriefcaseBusiness,
   ListChecks,
+  Receipt,
   ScrollText,
   Server,
   Sparkles,
@@ -27,7 +30,7 @@ import {
 
 import { adminPath } from "@/lib/admin/paths";
 import type { AdminOverviewKpis } from "@/lib/api/admin";
-import { hasAnyCapability, type AdminAccessSubject } from "@/lib/admin/capabilities";
+import { hasAnyCapability, type AdminAccessSubject, VETTED_APPLICATION_ACCESS } from "@/lib/admin/capabilities";
 
 export type AdminSettingsSectionKey =
   | "brand"
@@ -36,6 +39,8 @@ export type AdminSettingsSectionKey =
   | "features"
   | "operations"
   | "email";
+
+export type AdminBillingSectionKey = "setup" | "payment-history";
 
 /**
  * Sidebar badge sources. Add a key when a new queue screen ships,
@@ -48,7 +53,8 @@ export type AdminNavBadgeKey =
   | "founding"
   | "vetted"
   | "vettedChats"
-  | "recommended";
+  | "recommended"
+  | "contactInbox";
 
 export type AdminNavItem = {
   title: string;
@@ -66,8 +72,8 @@ export type AdminNavItem = {
   superAdminOnly?: boolean;
 };
 
-export type AdminSettingsNavItem = AdminNavItem & {
-  section: AdminSettingsSectionKey;
+export type AdminBillingNavItem = AdminNavItem & {
+  section: AdminBillingSectionKey;
 };
 
 export function canAccessAdminNavItem(
@@ -101,10 +107,35 @@ export function resolveAdminNavBadgeCount(
       return n(kpis.vettedChatsQueue);
     case "recommended":
       return n(kpis.recommendedLeadsQueue);
+    case "contactInbox":
+      return n(kpis.contactInboxQueue);
     default:
       return 0;
   }
 }
+
+export type AdminSettingsNavItem = AdminNavItem & {
+  section: AdminSettingsSectionKey;
+};
+
+export const adminBillingSections: AdminBillingNavItem[] = [
+  {
+    title: "Stripe setup",
+    href: adminPath("/billing"),
+    icon: CreditCard,
+    description: "Stripe keys, test/live mode, and webhooks",
+    section: "setup",
+    anyOf: ["settings.read", "settings.write"],
+  },
+  {
+    title: "Payment history",
+    href: adminPath("/payments"),
+    icon: Receipt,
+    description: "Subscription receipts logged from Stripe webhooks",
+    section: "payment-history",
+    anyOf: ["settings.read", "settings.write"],
+  },
+];
 
 export const adminSettingsSections: AdminSettingsNavItem[] = [
   {
@@ -170,6 +201,14 @@ export const adminNavItems: AdminNavItem[] = [
     anyOf: ["users.read"],
   },
   {
+    title: "Contact inbox",
+    href: adminPath("/contact-submissions"),
+    icon: Inbox,
+    description: "Messages from the public contact form",
+    badgeKey: "contactInbox",
+    anyOf: ["users.read"],
+  },
+  {
     title: "Recommended Leads",
     href: adminPath("/recommended-leads"),
     icon: HandHeart,
@@ -199,14 +238,14 @@ export const adminNavItems: AdminNavItem[] = [
     icon: Sparkles,
     description: "Review sellers applying for managed White Glove service",
     badgeKey: "vetted",
-    anyOf: ["growth.write"],
+    anyOf: VETTED_APPLICATION_ACCESS,
   },
   {
     title: "Accepted Applications",
     href: adminPath("/accepted-applications"),
     icon: BadgeCheck,
     description: "White Glove sellers approved for managed service",
-    anyOf: ["growth.write"],
+    anyOf: VETTED_APPLICATION_ACCESS,
   },
   {
     title: "Listings",
@@ -288,8 +327,22 @@ export const adminNavItems: AdminNavItem[] = [
   },
 ];
 
+export function isBillingPath(pathname: string) {
+  const billingRoot = adminPath("/billing");
+  const paymentsRoot = adminPath("/payments");
+  return (
+    pathname === billingRoot ||
+    pathname.startsWith(`${billingRoot}/`) ||
+    pathname === paymentsRoot ||
+    pathname.startsWith(`${paymentsRoot}/`)
+  );
+}
+
 export function isSettingsPath(pathname: string) {
   const settingsRoot = adminPath("/settings");
+  if (pathname === adminPath("/settings/billing") || pathname.startsWith(`${adminPath("/settings/billing")}/`)) {
+    return false;
+  }
   return pathname === settingsRoot || pathname.startsWith(`${settingsRoot}/`);
 }
 
@@ -299,11 +352,21 @@ export function getAdminSettingsSection(pathname: string): AdminSettingsNavItem 
   );
 }
 
+export function getAdminBillingSection(pathname: string): AdminBillingNavItem | undefined {
+  return adminBillingSections.find(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  );
+}
+
 export function getAdminNavItem(pathname: string): AdminNavItem | undefined {
   const overview = adminPath();
 
   if (pathname === overview) {
     return adminNavItems.find((item) => item.href === overview);
+  }
+
+  if (isBillingPath(pathname)) {
+    return getAdminBillingSection(pathname) ?? adminBillingSections[0];
   }
 
   if (isSettingsPath(pathname)) {
@@ -339,6 +402,8 @@ export function getAdminBreadcrumbs(pathname: string): AdminBreadcrumb[] {
     [adminPath("/settings/features"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Features" }]],
     [adminPath("/settings/operations"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Operations" }]],
     [adminPath("/settings/email"), [{ title: "Settings", href: adminPath("/settings/brand") }, { title: "Email" }]],
+    [adminPath("/billing"), [{ title: "Billing", href: adminPath("/billing") }, { title: "Stripe setup" }]],
+    [adminPath("/payments"), [{ title: "Billing", href: adminPath("/billing") }, { title: "Payment history" }]],
   ];
 
   if (pathname.startsWith(`${adminPath("/users")}/`) && pathname.endsWith("/chat")) {

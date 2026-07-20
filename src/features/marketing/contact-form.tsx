@@ -79,7 +79,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
 
   if (sent) {
     return (
-      <div className="rounded-[1.75rem] border border-brand-mantis/30 bg-white p-8 text-center sm:p-10">
+      <div className="rounded-[1.75rem] border border-brand-mantis/30 bg-white p-6 text-center sm:p-10">
         <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-brand-mantis/20 text-brand-forest">
           <CheckCircle2 className="size-7" />
         </span>
@@ -106,7 +106,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
-      className="rounded-[1.75rem] border border-brand-forest/10 bg-white p-6 shadow-[0_18px_50px_rgb(0_57_18/0.08)] sm:p-8"
+      className="rounded-[1.75rem] border border-brand-forest/10 bg-white p-4 shadow-[0_18px_50px_rgb(0_57_18/0.08)] sm:p-6 lg:p-8"
       noValidate
     >
       <div hidden aria-hidden="true">
@@ -120,7 +120,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           tabIndex={-1}
         />
       </div>
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
         <Field
           id="fullName"
           label="Full name"
@@ -193,7 +193,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
                   })
                 }
                 className={cn(
-                  "rounded-xl border px-4 py-3 text-left text-sm font-bold transition",
+                  "min-h-12 rounded-xl border px-4 py-3 text-left text-sm font-bold leading-5 transition",
                   selected
                     ? "border-brand-mantis bg-brand-mantis/15 text-brand-forest"
                     : "border-brand-forest/12 bg-[#F7F9F8] text-brand-forest/70 hover:border-brand-forest/25",
@@ -227,16 +227,18 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
         </Field>
       </div>
 
-      <Button
-        type="submit"
-        disabled={form.formState.isSubmitting}
-        className="mt-7 h-12 w-full rounded-xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white sm:w-auto"
-      >
-        {form.formState.isSubmitting ? "Sending…" : "Send message"}
-        <Send className="size-4" />
-      </Button>
+      <div className="mt-6 flex flex-col gap-4 sm:mt-7">
+        <Button
+          type="submit"
+          disabled={form.formState.isSubmitting}
+          className="h-12 w-full rounded-xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white sm:w-auto"
+        >
+          {form.formState.isSubmitting ? "Sending…" : "Send message"}
+          <Send className="size-4" />
+        </Button>
+      </div>
       {submitError ? (
-        <p role="alert" className="mt-4 text-sm font-semibold text-red-700">
+        <p role="alert" className="mt-4 text-sm font-semibold leading-6 text-red-700">
           {submitError}{" "}
           <a href={`mailto:${supportEmail}`} className="underline underline-offset-4">
             Email us directly

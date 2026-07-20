@@ -34,7 +34,13 @@ export interface AdminOverviewKpis {
   vettedMembersTotal: number;
   premiumSellersTotal: number;
   recommendedLeadsQueue: number;
+  contactInboxQueue: number;
   staffTotal: number;
+  paymentsTotal: number;
+  paymentsSucceededTotal: number;
+  paymentsToday: number;
+  revenueTotalFils: number;
+  activeSubscriptionsTotal: number;
 }
 
 export interface AdminOverviewGates {
@@ -126,7 +132,13 @@ const KPI_DEFAULTS: AdminOverviewKpis = {
   vettedMembersTotal: 0,
   premiumSellersTotal: 0,
   recommendedLeadsQueue: 0,
+  contactInboxQueue: 0,
   staffTotal: 0,
+  paymentsTotal: 0,
+  paymentsSucceededTotal: 0,
+  paymentsToday: 0,
+  revenueTotalFils: 0,
+  activeSubscriptionsTotal: 0,
 };
 
 function safeCount(value: unknown): number {

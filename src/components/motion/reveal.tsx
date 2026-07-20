@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-import { cn } from "@/lib/utils";
+import { useLayoutEffect, useRef } from "react";
 
 interface RevealProps {
   children: React.ReactNode;
@@ -11,52 +9,56 @@ interface RevealProps {
   as?: keyof React.JSX.IntrinsicElements;
 }
 
-/** Fades + lifts children into place once they scroll into view, once. */
+function prefersReducedMotion() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function isInViewport(node: HTMLElement) {
+  const rect = node.getBoundingClientRect();
+  const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+  return rect.top < vh && rect.bottom > 0;
+}
+
+/**
+ * Scroll polish only — children stay fully visible on load/reload.
+ * A transform animation is applied via classList when the block enters view.
+ */
 export function Reveal({ children, className, delayMs = 0, as: Tag = "div" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const node = ref.current;
-    if (!node) return;
+    if (!node || prefersReducedMotion()) return;
 
-    const reveal = () => setVisible(true);
+    const play = () => {
+      if (delayMs > 0) node.style.animationDelay = `${delayMs}ms`;
+      node.classList.add("animate-marketing-reveal");
+    };
 
-    // If already on-screen (common after refresh / scroll restore), show immediately
-    // so layout columns don't look empty or stretched while waiting for IO.
-    const rect = node.getBoundingClientRect();
-    const vh = window.innerHeight || 0;
-    if (rect.top < vh * 0.9 && rect.bottom > vh * 0.1) {
-      reveal();
+    if (isInViewport(node)) {
+      play();
       return;
     }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          reveal();
+          play();
           observer.disconnect();
         }
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.06, rootMargin: "0px 0px 6% 0px" },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [delayMs]);
 
   const Element = Tag as React.ElementType;
 
   return (
-    <Element
-      ref={ref}
-      style={{ transitionDelay: visible ? `${delayMs}ms` : "0ms" }}
-      className={cn(
-        "transition-all duration-700 ease-out will-change-transform",
-        visible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
-        className,
-      )}
-    >
+    <Element ref={ref} className={className}>
       {children}
     </Element>
   );

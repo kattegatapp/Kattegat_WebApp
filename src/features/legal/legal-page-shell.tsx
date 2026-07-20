@@ -20,7 +20,7 @@ export function LegalPageShell({
   children,
 }: LegalPageShellProps) {
   return (
-    <main className="relative min-h-screen bg-[#F7F9F8] text-brand-forest">
+    <main className="marketing-site relative min-h-screen bg-[#F7F9F8] text-brand-forest">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 h-[28rem] bg-[radial-gradient(ellipse_at_top,rgb(111_219_66/0.12),transparent_55%),linear-gradient(180deg,#ffffff_0%,#F7F9F8_70%)]"

@@ -60,7 +60,14 @@ import {
 import { ApiRequestError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
-const ROLE_ORDER: AdminRole[] = ["super_admin", "admin", "ops_agent", "finance", "moderator"];
+const ROLE_ORDER: AdminRole[] = [
+  "super_admin",
+  "admin",
+  "ops_agent",
+  "vetted_agent",
+  "finance",
+  "moderator",
+];
 
 /** Short, everyday names — avoid jargon. */
 const ROLE_FRIENDLY: Record<
@@ -81,6 +88,11 @@ const ROLE_FRIENDLY: Record<
     title: "Operations",
     blurb: "Checks listings, users, and support queues.",
     tone: "bg-brand-emerald/90 text-brand-forest",
+  },
+  vetted_agent: {
+    title: "Vetted desk",
+    blurb: "Handles Vetted chats and White Glove applications only.",
+    tone: "bg-brand-emerald/70 text-brand-forest",
   },
   finance: {
     title: "Finance",

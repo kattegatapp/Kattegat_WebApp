@@ -84,7 +84,7 @@ export default async function DubaiLocalPage({ params }: PageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-[#F7F9F8] text-brand-forest">
+    <main className="marketing-site min-h-screen bg-[#F7F9F8] text-brand-forest">
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
 
       <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">

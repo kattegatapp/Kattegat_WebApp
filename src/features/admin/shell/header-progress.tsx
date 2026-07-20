@@ -2,9 +2,13 @@
 
 import { useIsFetching, useIsMutating } from "@tanstack/react-query";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import { cn } from "@/lib/utils";
+
+function subscribe() {
+  return () => undefined;
+}
 
 /**
  * End-to-end indeterminate progress rail for the admin header bottom edge.
@@ -15,9 +19,11 @@ export function HeaderProgressLine({ className }: { className?: string }) {
   const mutating = useIsMutating();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const [navigating, setNavigating] = useState(false);
 
   useEffect(() => {
+    if (!mounted) return;
     // Defer so the effect does not call setState synchronously on commit.
     const showId = window.setTimeout(() => setNavigating(true), 0);
     const hideId = window.setTimeout(() => setNavigating(false), 450);
@@ -25,9 +31,9 @@ export function HeaderProgressLine({ className }: { className?: string }) {
       window.clearTimeout(showId);
       window.clearTimeout(hideId);
     };
-  }, [pathname, searchParams]);
+  }, [mounted, pathname, searchParams]);
 
-  const active = fetching > 0 || mutating > 0 || navigating;
+  const active = mounted && (fetching > 0 || mutating > 0 || navigating);
 
   return (
     <div

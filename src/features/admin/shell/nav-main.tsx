@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   Building2,
+  CreditCard,
   ChevronRight,
   ConciergeBell,
   Link2,
@@ -24,6 +25,7 @@ import { useState } from "react";
 
 import {
   adminNavItems,
+  adminBillingSections,
   canAccessAdminNavItem,
   isSettingsPath,
   resolveAdminNavBadgeCount,
@@ -41,6 +43,7 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { VETTED_APPLICATION_ACCESS } from "@/lib/admin/capabilities";
 import { adminPath } from "@/lib/admin/paths";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import { fetchAdminOverview } from "@/lib/api/admin";
@@ -72,6 +75,8 @@ export function AdminNavMain() {
   const requirementsHref = adminPath("/requirements");
   const auditLogsHref = adminPath("/audit-logs");
   const systemHref = adminPath("/system");
+  const billingHref = adminPath("/billing");
+  const paymentsHref = adminPath("/payments");
 
   const meQuery = useQuery({
     ...ADMIN_ME_QUERY_OPTIONS,
@@ -118,12 +123,27 @@ export function AdminNavMain() {
       !vettedDeskHrefs.includes(item.href) &&
       !contentItems.includes(item) &&
       item.href !== settingsHref &&
+      item.href !== billingHref &&
+      item.href !== paymentsHref &&
       item.href !== auditLogsHref &&
       item.href !== systemHref,
   );
   const governanceItems = adminNavItems.filter(
     (item) => visible(item) && (item.href === auditLogsHref || item.href === systemHref),
   );
+  const showBilling = canAccessAdminNavItem(
+    { anyOf: ["settings.read", "settings.write"] },
+    me,
+  );
+  const billingItems: DropdownItem[] = adminBillingSections
+    .filter((item) => canAccessAdminNavItem(item, me))
+    .map((item) => ({
+      title: item.title,
+      href: item.href,
+      icon: item.icon,
+      anyOf: item.anyOf,
+    }));
+
   const showSettings = canAccessAdminNavItem(
     { anyOf: ["settings.read", "settings.write"] },
     me,
@@ -146,13 +166,13 @@ export function AdminNavMain() {
       badge: overviewQuery.data
         ? resolveAdminNavBadgeCount("vetted", overviewQuery.data.kpis)
         : 0,
-      anyOf: ["growth.write"],
+      anyOf: VETTED_APPLICATION_ACCESS,
     },
     {
       title: "Accepted Applications",
       href: acceptedApplicationsHref,
       icon: BadgeCheck,
-      anyOf: ["growth.write"],
+      anyOf: VETTED_APPLICATION_ACCESS,
     },
   ].filter((item) => canAccessAdminNavItem(item, me));
 
@@ -272,6 +292,23 @@ export function AdminNavMain() {
                 badge={badgeFor(item)}
               />
             ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      ) : null}
+
+      {showBilling && billingItems.length ? (
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">
+            Billing
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <AdminNavDropdown
+              title="Billing"
+              icon={CreditCard}
+              isActive={billingItems.some((item) => pathname.startsWith(item.href))}
+              badge={null}
+              items={billingItems}
+            />
           </SidebarMenu>
         </SidebarGroup>
       ) : null}

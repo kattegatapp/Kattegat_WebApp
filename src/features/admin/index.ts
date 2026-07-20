@@ -23,9 +23,12 @@ export { SettingsOperationsForm } from "@/features/admin/settings/operations-for
 export {
   adminNavItems,
   adminSettingsSections,
+  adminBillingSections,
   canAccessAdminNavItem,
   getAdminNavItem,
+  getAdminBillingSection,
   getAdminSettingsSection,
+  isBillingPath,
   isSettingsPath,
   resolveAdminNavBadgeCount,
   type AdminNavBadgeKey,

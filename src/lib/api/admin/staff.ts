@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 
-export type AdminRole = "super_admin" | "admin" | "ops_agent" | "finance" | "moderator";
+export type AdminRole = "super_admin" | "admin" | "ops_agent" | "finance" | "moderator" | "vetted_agent";
 
 export interface AdminSessionUser {
   id: string;

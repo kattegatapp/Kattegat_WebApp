@@ -9,6 +9,7 @@ const exploreLinks = [
   ["Dubai", "/dubai"],
   ["Services", "/services"],
   ["How it works", "/how-it-works"],
+  ["Plans", "/plans"],
   ["About", "/about"],
   ["FAQ", "/faq"],
   ["Contact", "/contact"],

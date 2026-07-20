@@ -13,12 +13,24 @@ export const ADMIN_CAPABILITIES = [
   "moderation.write",
   "users.read",
   "users.write",
+  "users.delegate",
+  "users.impersonate",
   "growth.write",
+  "vetted.write",
   "feature_flags.write",
   "chat.admin",
 ] as const;
 
 export type AdminCapability = (typeof ADMIN_CAPABILITIES)[number];
+
+/** White Glove application queues — vetted desk or broader growth roles. */
+export const VETTED_APPLICATION_ACCESS = ["vetted.write", "growth.write"] as const;
+
+/** Manage vetted / White Glove seller accounts on their behalf. */
+export const USER_DELEGATE_ACCESS = ["users.delegate", "users.write"] as const;
+
+/** Start audited member session as a platform user. */
+export const USER_IMPERSONATE_ACCESS = ["users.impersonate", "users.delegate"] as const;
 
 export type AdminAccessSubject = {
   adminRole?: string | null;

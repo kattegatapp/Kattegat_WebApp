@@ -34,7 +34,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminAccess } from "@/features/admin/access/require-capability";
-import { formatAdminAccessError } from "@/lib/admin/capabilities";
+import { formatAdminAccessError, USER_DELEGATE_ACCESS, USER_IMPERSONATE_ACCESS } from "@/lib/admin/capabilities";
+import { LoginAsUserButton } from "@/features/admin/impersonation/login-as-user-button";
 import { adminPath } from "@/lib/admin/paths";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
@@ -67,6 +68,8 @@ export function UsersManagementPage({
   const access = useAdminAccess(["users.read"]);
   const canWrite = access.can(["users.write"]);
   const canChat = access.can(["chat.admin"]);
+  const canDelegate = access.can([...USER_DELEGATE_ACCESS]);
+  const canImpersonate = access.can([...USER_IMPERSONATE_ACCESS]);
 
   const [draft, setDraft] = useState("");
   const [q, setQ] = useState("");
@@ -297,6 +300,8 @@ export function UsersManagementPage({
               pending={update.isPending}
               canWrite={canWrite}
               canChat={canChat}
+              canDelegate={canDelegate}
+              canImpersonate={canImpersonate}
               onSave={(input) => update.mutate({ id: detail.data!.id, input })}
               saveError={
                 update.isError
@@ -323,6 +328,8 @@ function AccountEditor({
   pending,
   canWrite,
   canChat,
+  canDelegate,
+  canImpersonate,
   onSave,
   saveError,
 }: {
@@ -331,6 +338,8 @@ function AccountEditor({
   pending: boolean;
   canWrite: boolean;
   canChat: boolean;
+  canDelegate: boolean;
+  canImpersonate: boolean;
   onSave: (input: AdminUserUpdate) => void;
   saveError?: string | null;
 }) {
@@ -555,6 +564,21 @@ function AccountEditor({
                 )}
               </div>
             </section>
+          ) : null}
+          {canImpersonate && !isSelf ? (
+            <LoginAsUserButton userId={user.id} />
+          ) : null}
+          {canDelegate && user.sid ? (
+            <Button
+              className="w-full font-bold"
+              nativeButton={false}
+              render={
+                <Link href={adminPath(`/users/${encodeURIComponent(user.id)}/manage`)} />
+              }
+            >
+              <UserRoundCog />
+              Manage on behalf
+            </Button>
           ) : null}
           {canChat ? (
             <Button

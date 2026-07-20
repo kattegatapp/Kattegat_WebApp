@@ -1,6 +1,9 @@
 /** HttpOnly cookie holding the backend access JWT for admin BFF routes. */
 export const ADMIN_SESSION_COOKIE = "kattegat_admin_access_token";
 
+/** HttpOnly JSON metadata while staff are signed in as a member (admin cookie stays). */
+export const IMPERSONATION_COOKIE = "kattegat_impersonation";
+
 /**
  * Public URL segment for the admin portal (unguessable).
  * Set the same value in `.env` as `NEXT_PUBLIC_ADMIN_PORTAL_PATH`.

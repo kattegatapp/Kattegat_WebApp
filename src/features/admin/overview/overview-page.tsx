@@ -9,6 +9,7 @@ import {
   Building2,
   CalendarDays,
   ClipboardList,
+  CreditCard,
   FileWarning,
   Loader2,
   MessageSquare,
@@ -52,6 +53,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { adminPath } from "@/lib/admin/paths";
+import { formatFilsAsAed } from "@/lib/admin/money";
 import { goToAdminLogin } from "@/lib/admin/session-client";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
 import {
@@ -308,6 +310,40 @@ export function AdminOverview() {
                 index={index}
               />
             ))}
+          </section>
+
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiTile
+              label="Payments today"
+              hint="Stripe receipts logged today"
+              value={formatCount(kpiValue(kpis, "paymentsToday"))}
+              icon={CreditCard}
+              href={adminPath("/payments")}
+              index={0}
+            />
+            <KpiTile
+              label="Active subscriptions"
+              hint="Pro sellers with active billing"
+              value={formatCount(kpiValue(kpis, "activeSubscriptionsTotal"))}
+              icon={BadgeCheck}
+              href={adminPath("/payments")}
+              index={1}
+            />
+            <KpiTile
+              label="Lifetime revenue"
+              hint="Succeeded payments total"
+              value={formatFilsAsAed(kpiValue(kpis, "revenueTotalFils"))}
+              icon={CreditCard}
+              href={adminPath("/payments")}
+              index={2}
+            />
+            <KpiTile
+              label="Pro sellers"
+              hint="Premium tier profiles"
+              value={formatCount(kpiValue(kpis, "premiumSellersTotal"))}
+              icon={Sparkles}
+              index={3}
+            />
           </section>
 
           <MarketplaceCharts kpis={kpis} />

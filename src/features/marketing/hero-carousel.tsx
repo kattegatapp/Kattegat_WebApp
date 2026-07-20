@@ -90,6 +90,7 @@ export function HeroCarousel({ className }: { className?: string }) {
                 width={1800}
                 height={2400}
                 priority={index === 0}
+                loading="eager"
                 sizes="100vw"
                 className={cn("absolute inset-0 size-full object-cover", slide.position)}
               />

@@ -29,7 +29,7 @@ export default async function DownloadPage({ searchParams }: DownloadPageProps) 
     nextPath.startsWith("/") && !nextPath.startsWith("//") ? nextPath : "/search";
 
   return (
-    <main className="min-h-screen bg-[#F7F9F8] text-brand-forest">
+    <main className="marketing-site min-h-screen bg-[#F7F9F8] text-brand-forest">
       <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
         <div className="mx-auto max-w-6xl">
           <MarketingHeader

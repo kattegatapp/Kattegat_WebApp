@@ -163,7 +163,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
   const brand = settings.brand.siteName || "Kattegat";
 
   return (
-    <main className="min-h-screen bg-[#F7F9F8] text-brand-forest">
+    <main className="marketing-site min-h-screen bg-[#F7F9F8] text-brand-forest">
       {/* Soft brand atmosphere — not purple, not dark */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -left-32 top-0 size-[28rem] rounded-full bg-brand-mantis/20 blur-3xl" />
@@ -297,24 +297,26 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
               <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-blue">
                 Browse
               </p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-[-0.045em] sm:text-4xl">
+              <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.045em] sm:text-3xl lg:text-4xl">
                 Categories that fill a night.
               </h2>
             </div>
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
-            >
-              Search all
-              <ArrowUpRight className="size-4" />
-            </Link>
-            <Link
-              href="/dubai"
-              className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
-            >
-              Dubai
-              <ArrowUpRight className="size-4" />
-            </Link>
+            <div className="flex flex-wrap items-center gap-4 sm:gap-5">
+              <Link
+                href="/search"
+                className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
+              >
+                Search all
+                <ArrowUpRight className="size-4" />
+              </Link>
+              <Link
+                href="/dubai"
+                className="inline-flex items-center gap-1.5 text-sm font-extrabold text-brand-forest hover:text-brand-blue"
+              >
+                Dubai
+                <ArrowUpRight className="size-4" />
+              </Link>
+            </div>
           </div>
         </Reveal>
 
@@ -576,11 +578,18 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
         </section>
       ) : null}
 
-      {/* Audience */}
-      <section className="bg-white py-16 sm:py-24">
+      {/* Audience — opposing skew panels */}
+      <section className="relative isolate overflow-hidden bg-[#F7F9F8] py-16 sm:py-24">
+        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute -inset-x-[15%] top-[38%] h-[55%] -translate-y-1/2 skew-y-[-4deg] bg-white shadow-[0_24px_80px_rgb(0_57_18/0.06)]" />
+          <div className="absolute -inset-x-[10%] top-[62%] h-[42%] -translate-y-1/2 skew-y-[3deg] bg-brand-forest/[0.04]" />
+          <div className="absolute -left-24 top-16 size-64 rounded-full bg-brand-mantis/15 blur-3xl" />
+          <div className="absolute -right-20 bottom-8 size-72 rounded-full bg-brand-blue/10 blur-3xl" />
+        </div>
+
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
-            <div className="mx-auto mb-10 max-w-3xl text-center sm:mb-14">
+            <div className="mx-auto mb-12 max-w-3xl text-center sm:mb-16">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-brand-blue">
                 One marketplace, both sides
               </p>
@@ -594,75 +603,99 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
             </div>
           </Reveal>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-          <Reveal>
-            <div className="flex h-full flex-col rounded-[1.75rem] bg-brand-forest p-8 text-white sm:p-10">
-              <BriefcaseBusiness className="size-7 text-brand-mantis" />
-              <h2 className="mt-8 text-3xl font-extrabold tracking-[-0.04em]">
-                For venues & planners
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-white/65">
-                Find the right people for private events, nightlife, hotels, and
-                brand activations — without the agency maze.
-              </p>
-              <ul className="mt-7 space-y-3">
-                {[
-                  "Post a clear brief",
-                  "Review profiles and portfolios",
-                  "Talk directly to sellers",
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-sm font-bold">
-                    <Check className="mt-0.5 size-4 shrink-0 text-brand-mantis" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/how-it-works"
-                className={cn(
-                  buttonVariants(),
-                  "mt-9 h-12 w-fit rounded-2xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-white",
-                )}
-              >
-                Find talent
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-          </Reveal>
+          <div className="relative grid gap-8 lg:grid-cols-2 lg:gap-10 lg:items-center">
+            <Reveal>
+              <div className="relative lg:translate-x-2 lg:translate-y-3">
+                <div className="skew-y-0 transition duration-500 lg:-skew-y-2 lg:hover:-skew-y-1">
+                  <div className="relative overflow-hidden rounded-[1.75rem] bg-brand-forest p-8 text-white shadow-[0_28px_70px_rgb(0_57_18/0.22)] sm:p-10 lg:skew-y-2">
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute -right-8 top-0 h-full w-24 skew-x-[-14deg] bg-brand-mantis/10"
+                    />
+                    <div className="relative flex h-full flex-col">
+                      <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-white/10 text-brand-mantis backdrop-blur-sm">
+                        <BriefcaseBusiness className="size-6" />
+                      </span>
+                      <h2 className="mt-8 text-3xl font-extrabold tracking-[-0.04em]">
+                        For venues & planners
+                      </h2>
+                      <p className="mt-3 max-w-md text-sm leading-7 text-white/65">
+                        Find the right people for private events, nightlife, hotels, and brand
+                        activations — without the agency maze.
+                      </p>
+                      <ul className="mt-7 space-y-3">
+                        {[
+                          "Post a clear brief",
+                          "Review profiles and portfolios",
+                          "Talk directly to sellers",
+                        ].map((item) => (
+                          <li key={item} className="flex gap-3 text-sm font-bold">
+                            <Check className="mt-0.5 size-4 shrink-0 text-brand-mantis" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link
+                        href="/how-it-works"
+                        className={cn(
+                          buttonVariants(),
+                          "mt-9 h-12 w-fit rounded-2xl bg-brand-mantis px-6 font-extrabold text-brand-forest hover:bg-white",
+                        )}
+                      >
+                        Find talent
+                        <ArrowRight className="size-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
 
-          <Reveal delayMs={70}>
-            <div className="flex h-full flex-col rounded-[1.75rem] bg-brand-mantis p-8 text-brand-forest sm:p-10">
-              <Users className="size-7" />
-              <h2 className="mt-8 text-3xl font-extrabold tracking-[-0.04em]">
-                For talent & sellers
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-brand-forest/70">
-                Show your craft, get relevant demand, and keep what you earn.
-              </p>
-              <ul className="mt-7 space-y-3">
-                {[
-                  "Build a service-led profile",
-                  "Access marketplace demand",
-                  "Keep 100% of your booking fee",
-                ].map((item) => (
-                  <li key={item} className="flex gap-3 text-sm font-bold">
-                    <Check className="mt-0.5 size-4 shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/contact"
-                className={cn(
-                  buttonVariants(),
-                  "mt-9 h-12 w-fit rounded-2xl bg-brand-forest px-6 font-extrabold text-white hover:bg-brand-blue",
-                )}
-              >
-                Join as a seller
-                <ArrowRight className="size-4" />
-              </Link>
-            </div>
-          </Reveal>
+            <Reveal delayMs={70}>
+              <div className="relative lg:-translate-x-2 lg:-translate-y-2">
+                <div className="skew-y-0 transition duration-500 lg:skew-y-2 lg:hover:skew-y-1">
+                  <div className="relative overflow-hidden rounded-[1.75rem] border border-brand-forest/10 bg-brand-mantis p-8 text-brand-forest shadow-[0_28px_70px_rgb(111_219_66/0.25)] sm:p-10 lg:-skew-y-2">
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute -left-6 bottom-0 h-full w-20 skew-x-[12deg] bg-brand-forest/5"
+                    />
+                    <div className="relative flex h-full flex-col">
+                      <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-brand-forest text-white">
+                        <Users className="size-6" />
+                      </span>
+                      <h2 className="mt-8 text-3xl font-extrabold tracking-[-0.04em]">
+                        For talent & sellers
+                      </h2>
+                      <p className="mt-3 max-w-md text-sm leading-7 text-brand-forest/70">
+                        Show your craft, get relevant demand, and keep what you earn.
+                      </p>
+                      <ul className="mt-7 space-y-3">
+                        {[
+                          "Build a service-led profile",
+                          "Access marketplace demand",
+                          "Keep 100% of your booking fee",
+                        ].map((item) => (
+                          <li key={item} className="flex gap-3 text-sm font-bold">
+                            <Check className="mt-0.5 size-4 shrink-0 text-brand-forest" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link
+                        href="/contact"
+                        className={cn(
+                          buttonVariants(),
+                          "mt-9 h-12 w-fit rounded-2xl bg-brand-forest px-6 font-extrabold text-white hover:bg-brand-blue",
+                        )}
+                      >
+                        Join as a seller
+                        <ArrowRight className="size-4" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>

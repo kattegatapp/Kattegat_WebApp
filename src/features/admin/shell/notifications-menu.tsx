@@ -29,6 +29,10 @@ const NOTIFICATION_ROUTES: Record<string, string> = {
   vetted: adminPath("/white-glove-applications"),
   vetted_chats: adminPath("/agent-requests"),
   recommended: adminPath("/recommended-leads"),
+  contact: adminPath("/contact-submissions"),
+  billing: adminPath("/billing"),
+  payments: adminPath("/payments"),
+  payment_issues: adminPath("/payments"),
 };
 
 function routeFor(key: string) {

@@ -472,7 +472,7 @@ function MonthlyPriceField({
           Monthly price
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
-          Editable commercial price for Pro. Stripe checkout still charges via Stripe price IDs.
+          Editable commercial price for Pro. This amount is sent to Stripe dynamically at checkout.
         </p>
       </div>
       <div className="space-y-1.5">
