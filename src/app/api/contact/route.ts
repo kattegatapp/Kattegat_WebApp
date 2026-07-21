@@ -1,12 +1,11 @@
+import { type NextRequest } from "next/server";
+
 import { resolveBackendApiUrl } from "@/lib/api/settings";
+import { cleanSingleLine, escapeHtml } from "@/lib/security/input";
+import { parseSecureJson, requestIp } from "@/lib/security/request";
 import { contactSchema } from "@/lib/validations/contact";
 
 const BACKEND_API_URL = resolveBackendApiUrl();
-const MAX_BODY_BYTES = 12_000;
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
-const RATE_LIMIT_MAX_REQUESTS = 5;
-
-const contactAttempts = new Map<string, { count: number; resetsAt: number }>();
 
 function errorResponse(message: string, status: number, code: string) {
   return Response.json(
@@ -15,110 +14,16 @@ function errorResponse(message: string, status: number, code: string) {
   );
 }
 
-function requestIp(request: Request) {
-  return (
-    request.headers.get("x-real-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
-}
-
-function isRateLimited(ip: string) {
-  const now = Date.now();
-  const current = contactAttempts.get(ip);
-  if (!current || current.resetsAt <= now) {
-    contactAttempts.set(ip, { count: 1, resetsAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > RATE_LIMIT_MAX_REQUESTS;
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function cleanSingleLine(value: string) {
-  return escapeHtml(value.replace(/[\u0000-\u001F\u007F]+/g, " ").trim());
-}
-
-function allowedOriginsForRequest(request: Request) {
-  const origins = new Set<string>();
-
-  origins.add(new URL(request.url).origin);
-
-  const forwardedProto = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "");
-  const forwardedHost = request.headers.get("x-forwarded-host");
-  const host = request.headers.get("host");
-
-  for (const candidate of [forwardedHost, host]) {
-    if (!candidate) continue;
-    const normalizedHost = candidate.split(",")[0]?.trim();
-    if (!normalizedHost) continue;
-    origins.add(`${forwardedProto}://${normalizedHost}`);
-    origins.add(`http://${normalizedHost}`);
-    origins.add(`https://${normalizedHost}`);
-  }
-
-  return origins;
-}
-
-export async function POST(request: Request) {
-  const contentType = request.headers.get("content-type") ?? "";
-  if (!contentType.toLowerCase().startsWith("application/json")) {
-    return errorResponse("Content-Type must be application/json.", 415, "UNSUPPORTED_MEDIA_TYPE");
-  }
-
-  const requestOrigin = request.headers.get("origin");
-  if (requestOrigin && !allowedOriginsForRequest(request).has(requestOrigin)) {
-    return errorResponse("Cross-origin submissions are not allowed.", 403, "ORIGIN_REJECTED");
-  }
-
-  const declaredSize = Number(request.headers.get("content-length") ?? 0);
-  if (declaredSize > MAX_BODY_BYTES) {
-    return errorResponse("Support request is too large.", 413, "PAYLOAD_TOO_LARGE");
-  }
-
-  if (isRateLimited(requestIp(request))) {
-    return Response.json(
-      { success: false, error: { message: "Too many requests. Please try again later.", code: "RATE_LIMITED" } },
-      { status: 429, headers: { "Cache-Control": "no-store", "Retry-After": "600" } },
-    );
-  }
-
-  let payload: unknown;
-
-  try {
-    const rawBody = await request.text();
-    if (new TextEncoder().encode(rawBody).byteLength > MAX_BODY_BYTES) {
-      return errorResponse("Support request is too large.", 413, "PAYLOAD_TOO_LARGE");
-    }
-    payload = JSON.parse(rawBody);
-  } catch {
-    return errorResponse("Invalid support request.", 400, "INVALID_JSON");
-  }
-
-  // Hidden honeypot: acknowledge bots without forwarding their submission.
-  if (
-    typeof payload === "object" &&
-    payload !== null &&
-    "website" in payload &&
-    typeof payload.website === "string" &&
-    payload.website.trim()
-  ) {
-    return Response.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
-  }
-
-  const parsed = contactSchema.safeParse(payload);
-  if (!parsed.success) {
-    return errorResponse("Please check the form and try again.", 400, "VALIDATION_ERROR");
-  }
+export async function POST(request: NextRequest) {
+  const parsed = await parseSecureJson(request, contactSchema, {
+    maxBytes: 12_000,
+    rateLimit: {
+      key: `contact:${requestIp(request)}`,
+      windowMs: 10 * 60 * 1000,
+      max: 5,
+    },
+  });
+  if (!parsed.ok) return parsed.response;
 
   try {
     const backendOrigin = new URL(BACKEND_API_URL).origin;

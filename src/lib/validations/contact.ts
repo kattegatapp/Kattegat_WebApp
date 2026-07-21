@@ -1,29 +1,33 @@
 import { z } from "zod";
 
-export const contactSchema = z.object({
-  fullName: z.string().trim().min(2, "Enter your name").max(80),
-  email: z.string().trim().email("Enter a valid email"),
-  phone: z
-    .string()
-    .trim()
-    .max(30)
-    .optional()
-    .transform((value) => value || undefined),
-  company: z
-    .string()
-    .trim()
-    .max(100)
-    .optional()
-    .transform((value) => value || undefined),
-  topic: z.enum(["hiring", "joining", "partnership", "support", "other"], {
-    message: "Choose a topic",
-  }),
-  message: z
-    .string()
-    .trim()
-    .min(20, "Tell us a bit more (at least 20 characters)")
-    .max(2000),
-});
+import {
+  safeEmailSchema,
+  safeMessageField,
+  safeOptionalSingleLineField,
+  safeSingleLineField,
+} from "@/lib/security/input";
+
+export const contactSchema = z
+  .object({
+    fullName: safeSingleLineField("Name", 80),
+    email: safeEmailSchema,
+    phone: z
+      .preprocess(
+        (value) => (typeof value === "string" ? value.trim() : value),
+        z
+          .string()
+          .max(30, "Phone number is too long")
+          .regex(/^[+\d\s().-]*$/, "Enter a valid phone number")
+          .optional(),
+      )
+      .transform((value) => value || undefined),
+    company: safeOptionalSingleLineField(100),
+    topic: z.enum(["hiring", "joining", "partnership", "support", "other"], {
+      message: "Choose a topic",
+    }),
+    message: safeMessageField(20, "Tell us a bit more (at least 20 characters)"),
+  })
+  .strict();
 
 export type ContactFormValues = z.infer<typeof contactSchema>;
 export type ContactFormDraft = Omit<ContactFormValues, "topic"> & {

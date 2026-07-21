@@ -1,8 +1,19 @@
 import { z } from "zod";
 
-export const adminLoginSchema = z.object({
-  email: z.string().email("Enter your admin email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
+import { loginPasswordSchema, safeEmailSchema, safePasswordSchema } from "@/lib/security/input";
+
+export const adminLoginSchema = z
+  .object({
+    email: safeEmailSchema,
+    password: safePasswordSchema,
+  })
+  .strict();
 
 export type AdminLoginValues = z.infer<typeof adminLoginSchema>;
+
+export const adminLoginPasswordSchema = z
+  .object({
+    email: safeEmailSchema,
+    password: loginPasswordSchema,
+  })
+  .strict();

@@ -34,12 +34,7 @@ export default async function DubaiHubPage() {
 
       <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
         <div className="mx-auto max-w-6xl">
-          <MarketingHeader
-            brandName={settings.brand.siteName}
-            appStoreUrl={settings.links.appStoreUrl}
-            playStoreUrl={settings.links.playStoreUrl}
-            mobileAppUrl={settings.links.mobileAppUrl}
-          />
+          <MarketingHeader brandName={settings.brand.siteName} />
         </div>
       </div>
 
@@ -100,6 +95,7 @@ export default async function DubaiHubPage() {
         supportEmail={settings.brand.supportEmail}
         appStoreUrl={settings.links.appStoreUrl}
         playStoreUrl={settings.links.playStoreUrl}
+        mobileAppUrl={settings.links.mobileAppUrl}
         instagramUrl={settings.links.instagramUrl}
         linkedinUrl={settings.links.linkedinUrl}
       />

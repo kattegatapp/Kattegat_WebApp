@@ -1,4 +1,8 @@
+import { type NextRequest } from "next/server";
+
 import { getPublicAppSettings, resolveBackendApiUrl } from "@/lib/api/settings";
+import { parseSecureJson, requestIp } from "@/lib/security/request";
+import { waitlistSchema } from "@/lib/validations/waitlist";
 
 const BACKEND_API_URL = resolveBackendApiUrl();
 
@@ -8,12 +12,11 @@ function errorResponse(message: string, status: number, code: string) {
       success: false,
       error: { message, code },
     },
-    { status },
+    { status, headers: { "Cache-Control": "no-store" } },
   );
 }
 
-export async function POST(request: Request) {
-  // Hard gate: closed waitlist or maintenance — reject before proxying.
+export async function POST(request: NextRequest) {
   const settings = await getPublicAppSettings();
   if (settings.features.maintenanceMode) {
     return errorResponse(
@@ -23,23 +26,20 @@ export async function POST(request: Request) {
     );
   }
   if (!settings.features.waitlistEnabled) {
-    return errorResponse(
-      "The waitlist is closed.",
-      404,
-      "WAITLIST_DISABLED",
-    );
+    return errorResponse("The waitlist is closed.", 404, "WAITLIST_DISABLED");
   }
 
-  let payload: unknown;
-
-  try {
-    payload = await request.json();
-  } catch {
-    return errorResponse("Invalid waitlist submission.", 400, "INVALID_JSON");
-  }
+  const parsed = await parseSecureJson(request, waitlistSchema, {
+    maxBytes: 8_192,
+    rateLimit: {
+      key: `waitlist:${requestIp(request)}`,
+      windowMs: 10 * 60 * 1000,
+      max: 5,
+    },
+  });
+  if (!parsed.ok) return parsed.response;
 
   let backendOrigin: string;
-
   try {
     backendOrigin = new URL(BACKEND_API_URL).origin;
   } catch {
@@ -51,7 +51,6 @@ export async function POST(request: Request) {
   }
 
   const webAppOrigin = new URL(request.url).origin;
-
   if (webAppOrigin === backendOrigin) {
     return errorResponse(
       "The waitlist backend URL points back to the web app. Set NEXT_PUBLIC_API_URL or KATTEGAT_API_URL to the backend server.",
@@ -64,12 +63,11 @@ export async function POST(request: Request) {
     const response = await fetch(`${BACKEND_API_URL}/api/waitlist`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(parsed.data),
       cache: "no-store",
     });
 
     const contentType = response.headers.get("content-type") ?? "";
-
     if (!contentType.includes("application/json")) {
       return errorResponse(
         "The waitlist backend returned an unexpected response.",
@@ -79,7 +77,6 @@ export async function POST(request: Request) {
     }
 
     const body = await response.json();
-
     return Response.json(body, { status: response.status });
   } catch {
     return errorResponse(
@@ -90,7 +87,6 @@ export async function POST(request: Request) {
   }
 }
 
-/** No other methods when waitlist is a write-only public endpoint. */
 export function GET() {
   return errorResponse("Not found", 404, "NOT_FOUND");
 }

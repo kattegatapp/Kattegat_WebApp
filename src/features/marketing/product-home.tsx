@@ -11,7 +11,6 @@ import {
   MessageCircle,
   Search,
   ShieldCheck,
-  Smartphone,
   Star,
   Users,
 } from "lucide-react";
@@ -173,12 +172,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
         <div className="mx-auto max-w-6xl">
-          <MarketingHeader
-            brandName={brand}
-            appStoreUrl={settings.links.appStoreUrl}
-            playStoreUrl={settings.links.playStoreUrl}
-            mobileAppUrl={settings.links.mobileAppUrl}
-          />
+          <MarketingHeader brandName={brand} />
         </div>
       </header>
 
@@ -790,116 +784,13 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
         </div>
       </section>
 
-      {/* App download */}
-      <section className="px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-6xl">
-          <Reveal>
-            <div
-              className="relative overflow-hidden text-white"
-              style={{
-                borderRadius: "1.5rem",
-                background: "#003912",
-              }}
-            >
-              <div className="px-6 py-7 sm:px-8 sm:py-8 lg:px-10">
-                <div className="max-w-3xl">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/15 px-2.5 py-1">
-                    <Smartphone className="size-3 text-brand-mantis" aria-hidden />
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
-                      Kattegat in your pocket
-                    </p>
-                  </div>
-
-                  <h2 className="mt-3 text-2xl font-extrabold tracking-[-0.04em] text-balance sm:text-3xl sm:leading-[1.1] lg:max-w-none lg:text-4xl">
-                    Find the right connection wherever the work happens.
-                  </h2>
-                  <p className="mt-2.5 max-w-2xl text-sm leading-6 text-white/65 sm:text-base sm:leading-7">
-                    Discover services, review sellers, and continue the conversation from the
-                    Kattegat app.
-                  </p>
-
-                  <ul className="mt-4 flex flex-wrap gap-2">
-                    {[
-                      { icon: Search, label: "Discover" },
-                      { icon: ShieldCheck, label: "Review" },
-                      { icon: MessageCircle, label: "Chat" },
-                    ].map(({ icon: Icon, label }) => (
-                      <li
-                        key={label}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1.5 text-xs font-semibold text-white/90"
-                      >
-                        <Icon className="size-3 text-brand-mantis" aria-hidden />
-                        {label}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="mt-5 flex flex-wrap items-center gap-2.5">
-                    {settings.links.appStoreUrl ? (
-                      <a
-                        href={settings.links.appStoreUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-mantis"
-                      >
-                        <Image
-                          src="/brand/stores/app-store-badge.svg"
-                          alt="Download on the App Store"
-                          width={130}
-                          height={44}
-                          className="h-10 w-auto"
-                        />
-                      </a>
-                    ) : null}
-                    {settings.links.playStoreUrl ? (
-                      <a
-                        href={settings.links.playStoreUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-mantis"
-                      >
-                        <Image
-                          src="/brand/stores/google-play-badge.png"
-                          alt="Get it on Google Play"
-                          width={148}
-                          height={58}
-                          className="h-[2.95rem] w-auto"
-                        />
-                      </a>
-                    ) : null}
-                    {settings.links.mobileAppUrl ? (
-                      <a
-                        href={settings.links.mobileAppUrl}
-                        className="inline-flex h-10 items-center gap-1.5 rounded-[0.85rem] bg-brand-mantis px-3.5 text-xs font-extrabold text-brand-forest transition hover:brightness-110"
-                      >
-                        Open app
-                        <ArrowUpRight className="size-3.5" />
-                      </a>
-                    ) : null}
-                    {!settings.links.appStoreUrl && !settings.links.playStoreUrl ? (
-                      <Link
-                        href="/contact"
-                        className={cn(
-                          buttonVariants(),
-                          "h-10 rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest hover:bg-white",
-                        )}
-                      >
-                        Get launch updates
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
 
       <SiteFooter
         brandName={brand}
         supportEmail={settings.brand.supportEmail}
         appStoreUrl={settings.links.appStoreUrl}
         playStoreUrl={settings.links.playStoreUrl}
+        mobileAppUrl={settings.links.mobileAppUrl}
         instagramUrl={settings.links.instagramUrl}
         linkedinUrl={settings.links.linkedinUrl}
       />

@@ -71,7 +71,7 @@ export async function POST(_request: NextRequest, context: RouteContext<"/api/ad
     impersonationCookieOptions(maxAge),
   );
 
-  const redirectTo = user.sid ? "/as-user" : "/as-user";
+  const redirectTo = "/account";
 
   return NextResponse.json({
     success: true,

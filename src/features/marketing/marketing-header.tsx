@@ -1,25 +1,22 @@
 "use client";
 
-import { ArrowUpRight, ChevronDown, Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { HeaderAccountMenu } from "@/features/marketing/header-account-menu";
 import { cn } from "@/lib/utils";
 
 type MarketingHeaderProps = {
   brandName?: string;
-  appStoreUrl: string | null;
-  playStoreUrl: string | null;
-  mobileAppUrl?: string | null;
 };
 
 const navigation = [
   ["Home", "/"],
   ["Search", "/search"],
-  ["Dubai", "/dubai"],
   ["Services", "/services"],
   ["Plans", "/plans"],
   ["About", "/about"],
@@ -34,7 +31,6 @@ const mobileNavigationSections = [
     links: [
       ["Home", "/"],
       ["Search", "/search"],
-      ["Dubai", "/dubai"],
       ["Services", "/services"],
       ["How it works", "/how-it-works"],
     ],
@@ -64,95 +60,7 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function StoreLinks({
-  appStoreUrl,
-  playStoreUrl,
-  mobileAppUrl,
-  layout = "stacked",
-}: {
-  appStoreUrl: string | null;
-  playStoreUrl: string | null;
-  mobileAppUrl?: string | null;
-  layout?: "stacked" | "row";
-}) {
-  return (
-    <div
-      className={cn(
-        "grid gap-3 text-left",
-        layout === "row" && "grid-cols-2 items-center gap-2",
-      )}
-    >
-      {appStoreUrl ? (
-        <a
-          href={appStoreUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block rounded-xl focus-visible:outline-2 focus-visible:outline-brand-mantis"
-        >
-          <Image
-            src="/brand/stores/app-store-badge.svg"
-            alt="Download on the App Store"
-            width={156}
-            height={52}
-            className={cn(
-              "h-12 w-auto",
-              layout === "row" && "h-auto max-h-10 w-full object-contain",
-            )}
-          />
-        </a>
-      ) : (
-        <div className="rounded-xl border border-brand-forest/10 bg-brand-forest/5 px-3 py-3 text-brand-forest/60">
-          <p className="text-sm font-extrabold">App Store</p>
-          <p className="mt-0.5 text-[11px] font-semibold">Coming soon</p>
-        </div>
-      )}
-
-      {playStoreUrl ? (
-        <a
-          href={playStoreUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block -ml-2 rounded-xl focus-visible:outline-2 focus-visible:outline-brand-mantis"
-        >
-          <Image
-            src="/brand/stores/google-play-badge.png"
-            alt="Get it on Google Play"
-            width={180}
-            height={70}
-            className={cn(
-              "h-[3.65rem] w-auto",
-              layout === "row" && "h-auto max-h-12 w-full object-contain",
-            )}
-          />
-        </a>
-      ) : (
-        <div className="rounded-xl border border-brand-forest/10 bg-brand-forest/5 px-3 py-3 text-brand-forest/60">
-          <p className="text-sm font-extrabold">Google Play</p>
-          <p className="mt-0.5 text-[11px] font-semibold">Coming soon</p>
-        </div>
-      )}
-
-      {mobileAppUrl ? (
-        <a
-          href={mobileAppUrl}
-          className={cn(
-            "mt-1 text-center text-xs font-bold text-brand-blue hover:text-brand-forest",
-            layout === "row" && "col-span-2",
-          )}
-        >
-          Open the installed app
-        </a>
-      ) : null}
-    </div>
-  );
-}
-
-export function MarketingHeader({
-  brandName = "Kattegat",
-  appStoreUrl,
-  playStoreUrl,
-  mobileAppUrl = null,
-}: MarketingHeaderProps) {
+export function MarketingHeader({ brandName = "Kattegat" }: MarketingHeaderProps) {
   const pathname = usePathname() || "/";
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -214,23 +122,9 @@ export function MarketingHeader({
         })}
       </nav>
 
-      <details className="group relative ml-auto hidden shrink-0 lg:block">
-        <summary className="flex min-h-11 min-w-36 cursor-pointer list-none items-center justify-center gap-2 rounded-full bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest shadow-[0_8px_24px_rgb(111_219_66/0.22)] transition hover:bg-white focus-visible:outline-2 focus-visible:outline-white">
-          Get the app
-          <ChevronDown className="size-4 transition group-open:rotate-180" />
-        </summary>
-        <div className="group-open:animate-in group-open:fade-in group-open:slide-in-from-top-2 absolute right-0 top-[calc(100%+0.75rem)] z-[110] w-72 rounded-2xl border border-white/15 bg-[#003912] p-4 text-white shadow-[0_24px_80px_rgb(0_0_0/0.45)] group-open:duration-200">
-          <p className="px-1 pb-3 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
-            Choose your platform
-          </p>
-          <StoreLinks
-            appStoreUrl={appStoreUrl}
-            playStoreUrl={playStoreUrl}
-            mobileAppUrl={mobileAppUrl}
-            layout="row"
-          />
-        </div>
-      </details>
+      <div className="ml-auto hidden shrink-0 items-center lg:flex">
+        <HeaderAccountMenu />
+      </div>
 
       <Button
         type="button"
@@ -293,16 +187,16 @@ export function MarketingHeader({
               </section>
             ))}
           </nav>
-          <div className="mt-2 rounded-2xl border border-white/15 bg-white/[0.06] p-4">
-            <p className="mb-3 px-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
-              Get the app
-            </p>
-            <StoreLinks
-              appStoreUrl={appStoreUrl}
-              playStoreUrl={playStoreUrl}
-              mobileAppUrl={mobileAppUrl}
-              layout="row"
-            />
+          <div className="mt-2">
+            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-3">
+              <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-mantis">
+                Account
+              </p>
+              <HeaderAccountMenu
+                className="w-full justify-between"
+                onNavigate={() => setMenuOpen(false)}
+              />
+            </div>
           </div>
         </div>
       ) : null}

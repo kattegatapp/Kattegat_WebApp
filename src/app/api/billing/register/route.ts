@@ -3,16 +3,26 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { SELLER_SESSION_COOKIE } from "@/lib/billing/constants";
 import { billingApiUrl, sellerSessionCookieOptions } from "@/lib/billing/session";
+import { parseSecureJson, requestIp } from "@/lib/security/request";
+import { billingRegisterSchema } from "@/lib/validations/auth";
 
 export async function POST(request: NextRequest) {
-  const body = await request.text();
-  let response: Response;
+  const parsed = await parseSecureJson(request, billingRegisterSchema, {
+    maxBytes: 6_144,
+    rateLimit: {
+      key: `billing-register:${requestIp(request)}`,
+      windowMs: 60 * 60 * 1000,
+      max: 10,
+    },
+  });
+  if (!parsed.ok) return parsed.response;
 
+  let response: Response;
   try {
     response = await fetch(billingApiUrl("/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: JSON.stringify(parsed.data),
     });
   } catch {
     return NextResponse.json(

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { adminPath } from "@/lib/admin/paths";
 import { resetAdminQueryCache } from "@/lib/admin/query-cache";
 import { fetchAdminMe, loginAdmin } from "@/lib/api/admin";
+import { INPUT_LIMITS } from "@/lib/security/input";
 import { adminLoginSchema, type AdminLoginValues } from "@/lib/validations/admin";
 
 export function AdminLoginForm() {
@@ -23,7 +24,7 @@ export function AdminLoginForm() {
   const queryClient = useQueryClient();
   const [showPassword, setShowPassword] = useState(false);
   const form = useForm<AdminLoginValues>({
-    resolver: zodResolver(adminLoginSchema),
+    resolver: zodResolver(adminLoginSchema) as Resolver<AdminLoginValues>,
     defaultValues: { email: "", password: "" },
   });
 
@@ -63,7 +64,7 @@ export function AdminLoginForm() {
               <FieldLabel htmlFor="adminEmail" className="text-xs font-bold text-white/70">Work email</FieldLabel>
               <InputGroup className="h-12 rounded-xl border-white/10 bg-white/[0.055] shadow-none transition-colors has-[[data-slot=input-group-control]:focus-visible]:border-brand-mantis/55 has-[[data-slot=input-group-control]:focus-visible]:ring-brand-mantis/20">
                 <InputGroupAddon><Mail className="text-white/35" /></InputGroupAddon>
-                <InputGroupInput id="adminEmail" type="email" autoComplete="email" placeholder="name@kattegat.com" aria-invalid={emailInvalid || undefined} className="text-white placeholder:text-white/25" {...form.register("email")} />
+                <InputGroupInput id="adminEmail" type="email" autoComplete="email" maxLength={INPUT_LIMITS.email} placeholder="name@kattegat.com" aria-invalid={emailInvalid || undefined} className="text-white placeholder:text-white/25" {...form.register("email")} />
               </InputGroup>
               <FieldError className="text-red-300" errors={[form.formState.errors.email]} />
             </Field>
@@ -72,7 +73,7 @@ export function AdminLoginForm() {
               <FieldLabel htmlFor="adminPassword" className="text-xs font-bold text-white/70">Password</FieldLabel>
               <InputGroup className="h-12 rounded-xl border-white/10 bg-white/[0.055] shadow-none transition-colors has-[[data-slot=input-group-control]:focus-visible]:border-brand-mantis/55 has-[[data-slot=input-group-control]:focus-visible]:ring-brand-mantis/20">
                 <InputGroupAddon><LockKeyhole className="text-white/35" /></InputGroupAddon>
-                <InputGroupInput id="adminPassword" type={showPassword ? "text" : "password"} autoComplete="current-password" placeholder="Enter your password" aria-invalid={passwordInvalid || undefined} className="text-white placeholder:text-white/25" {...form.register("password")} />
+                <InputGroupInput id="adminPassword" type={showPassword ? "text" : "password"} autoComplete="current-password" maxLength={INPUT_LIMITS.password} placeholder="Enter your password" aria-invalid={passwordInvalid || undefined} className="text-white placeholder:text-white/25" {...form.register("password")} />
                 <InputGroupAddon align="inline-end">
                   <InputGroupButton type="button" size="icon-sm" className="size-9 cursor-pointer rounded-lg text-white/45 hover:bg-white/8 hover:text-white focus-visible:ring-brand-mantis/30" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((value) => !value)}>
                     {showPassword ? <EyeOff aria-hidden className="size-[18px]" /> : <Eye aria-hidden className="size-[18px]" />}

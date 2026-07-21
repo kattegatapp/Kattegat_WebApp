@@ -10,6 +10,7 @@ import { useForm, type Resolver } from "react-hook-form";
 
 import { joinWaitlist } from "@/lib/api/waitlist";
 import { ApiRequestError } from "@/lib/api/client";
+import { INPUT_LIMITS } from "@/lib/security/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,7 +53,7 @@ export function WaitlistForm() {
     role: "seller" | "buyer";
   } | null>(null);
   const form = useForm<WaitlistFormDraft>({
-    resolver: zodResolver(waitlistSchema) as Resolver<WaitlistFormDraft>,
+    resolver: zodResolver(waitlistSchema) as unknown as Resolver<WaitlistFormDraft>,
     defaultValues: {
       fullName: "",
       email: "",
@@ -101,6 +102,7 @@ export function WaitlistForm() {
       phone: phoneDigits ? `+971${phoneDigits}` : undefined,
       instagramHandle: values.instagramHandle.replace(/^@/, ""),
       linkedinUrl: values.linkedinUrl ? values.linkedinUrl : undefined,
+      source,
     });
   }
 
@@ -348,6 +350,7 @@ export function WaitlistForm() {
               <Input
                 id="fullName"
                 autoComplete="name"
+                maxLength={INPUT_LIMITS.businessName}
                 placeholder="Your name"
                 className="h-14 rounded-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
                 {...form.register("fullName")}
@@ -365,6 +368,7 @@ export function WaitlistForm() {
                 id="email"
                 type="email"
                 autoComplete="email"
+                maxLength={INPUT_LIMITS.email}
                 placeholder="you@example.com"
                 className="h-14 rounded-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
                 {...form.register("email")}
@@ -385,6 +389,7 @@ export function WaitlistForm() {
                 <Input
                   id="instagramHandle"
                   autoComplete="off"
+                  maxLength={INPUT_LIMITS.instagramHandle}
                   placeholder="yourhandle"
                   className="h-14 rounded-l-none rounded-r-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
                   {...instagramField}
@@ -410,6 +415,7 @@ export function WaitlistForm() {
                 id="linkedinUrl"
                 type="url"
                 autoComplete="url"
+                maxLength={INPUT_LIMITS.linkedinUrl}
                 placeholder="https://linkedin.com/in/yourname"
                 className="h-14 rounded-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
                 {...form.register("linkedinUrl")}
@@ -438,7 +444,7 @@ export function WaitlistForm() {
                   autoComplete="tel-national"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  maxLength={9}
+                  maxLength={INPUT_LIMITS.uaeMobileLocal}
                   placeholder="501234567"
                   className="h-14 rounded-l-none rounded-r-2xl border-transparent bg-muted/70 px-4 text-base text-brand-forest placeholder:text-muted-foreground transition-colors focus-visible:border-brand-blue"
                   {...phoneField}

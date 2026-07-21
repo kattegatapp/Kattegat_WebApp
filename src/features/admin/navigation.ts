@@ -1,6 +1,7 @@
 import {
   Building2,
   BadgeCheck,
+  Banknote,
   Inbox,
   KeyRound,
   LayoutDashboard,
@@ -54,7 +55,8 @@ export type AdminNavBadgeKey =
   | "vetted"
   | "vettedChats"
   | "recommended"
-  | "contactInbox";
+  | "contactInbox"
+  | "payouts";
 
 export type AdminNavItem = {
   title: string;
@@ -109,6 +111,8 @@ export function resolveAdminNavBadgeCount(
       return n(kpis.recommendedLeadsQueue);
     case "contactInbox":
       return n(kpis.contactInboxQueue);
+    case "payouts":
+      return n(kpis.payoutsPendingQueue);
     default:
       return 0;
   }
@@ -214,6 +218,14 @@ export const adminNavItems: AdminNavItem[] = [
     icon: HandHeart,
     description: "Member referrals for the team to qualify",
     badgeKey: "recommended",
+    anyOf: ["growth.write"],
+  },
+  {
+    title: "Payouts",
+    href: adminPath("/payouts"),
+    icon: Banknote,
+    description: "Member withdrawal requests against their earnings",
+    badgeKey: "payouts",
     anyOf: ["growth.write"],
   },
   {

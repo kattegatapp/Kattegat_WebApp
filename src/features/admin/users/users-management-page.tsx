@@ -274,8 +274,9 @@ export function UsersManagementPage({
           <SheetHeader>
             <SheetTitle>Full account editor</SheetTitle>
             <SheetDescription>
-              Protected IDs, authentication secrets, ratings, reviews, and financial history are
-              read-only.
+              Edit contact and profile fields here. Use <strong>Manage on behalf</strong> for
+              White Glove listings work, or <strong>Sign in as this user</strong> to browse the
+              site as they see it.
             </SheetDescription>
           </SheetHeader>
           {detail.isPending ? (
@@ -565,20 +566,29 @@ function AccountEditor({
               </div>
             </section>
           ) : null}
-          {canImpersonate && !isSelf ? (
-            <LoginAsUserButton userId={user.id} />
-          ) : null}
-          {canDelegate && user.sid ? (
-            <Button
-              className="w-full font-bold"
-              nativeButton={false}
-              render={
-                <Link href={adminPath(`/users/${encodeURIComponent(user.id)}/manage`)} />
-              }
-            >
-              <UserRoundCog />
-              Manage on behalf
-            </Button>
+          {(canImpersonate && !isSelf) || (canDelegate && user.sid) ? (
+            <section className="space-y-3 rounded-2xl border border-brand-forest/10 bg-[#F7F9F8] p-4">
+              <div>
+                <p className="font-bold text-brand-forest">Work as this member</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  <strong>Manage on behalf</strong> — edit listings and profile in admin (audited).{" "}
+                  <strong>Sign in as</strong> — browse billing and public pages in their session.
+                </p>
+              </div>
+              {canDelegate && user.sid ? (
+                <Button
+                  className="w-full font-bold"
+                  nativeButton={false}
+                  render={
+                    <Link href={adminPath(`/users/${encodeURIComponent(user.id)}/manage`)} />
+                  }
+                >
+                  <UserRoundCog />
+                  Manage on behalf
+                </Button>
+              ) : null}
+              {canImpersonate && !isSelf ? <LoginAsUserButton userId={user.id} compact /> : null}
+            </section>
           ) : null}
           {canChat ? (
             <Button

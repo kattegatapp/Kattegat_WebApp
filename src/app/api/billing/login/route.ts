@@ -3,16 +3,30 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { SELLER_SESSION_COOKIE } from "@/lib/billing/constants";
 import { billingApiUrl, sellerSessionCookieOptions } from "@/lib/billing/session";
+import {
+  clearAdminSessionCookie,
+  staffMemberLoginError,
+} from "@/lib/auth/session-isolation";
+import { parseSecureJson, requestIp } from "@/lib/security/request";
+import { memberLoginSchema } from "@/lib/validations/auth";
 
 export async function POST(request: NextRequest) {
-  const body = await request.text();
-  let response: Response;
+  const parsed = await parseSecureJson(request, memberLoginSchema, {
+    maxBytes: 4_096,
+    rateLimit: {
+      key: `billing-login:${requestIp(request)}`,
+      windowMs: 15 * 60 * 1000,
+      max: 20,
+    },
+  });
+  if (!parsed.ok) return parsed.response;
 
+  let response: Response;
   try {
     response = await fetch(billingApiUrl("/auth/login"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body,
+      body: JSON.stringify(parsed.data),
     });
   } catch {
     return NextResponse.json(
@@ -37,6 +51,11 @@ export async function POST(request: NextRequest) {
   }
 
   const user = payload.data?.user;
+  const staffError = staffMemberLoginError(user);
+  if (staffError) {
+    return NextResponse.json({ success: false, error: staffError }, { status: 403 });
+  }
+
   if (!user?.sid) {
     return NextResponse.json(
       {
@@ -61,6 +80,7 @@ export async function POST(request: NextRequest) {
   const expiresAt = Number(payload.data.session.expiresAt ?? 0);
   const maxAge = expiresAt > 0 ? Math.max(expiresAt - Math.floor(Date.now() / 1000), 60) : 60 * 60;
 
+  await clearAdminSessionCookie();
   (await cookies()).set(SELLER_SESSION_COOKIE, accessToken, sellerSessionCookieOptions(maxAge));
 
   return NextResponse.json({

@@ -16,3 +16,4 @@ export * from "@/lib/api/admin/system";
 export * from "@/lib/api/admin/billing";
 export * from "@/lib/api/admin/delegation";
 export * from "@/lib/api/admin/impersonation";
+export * from "@/lib/api/admin/payouts";

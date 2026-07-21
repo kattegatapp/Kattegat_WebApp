@@ -14,8 +14,17 @@ const nextConfig: NextConfig = {
     "192.168.30.*",
     "localhost",
     "192.168.30.13",
-    "192.168.30.8"
+    "192.168.30.8",
   ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+        pathname: "/**",
+      },
+    ],
+  },
   async headers() {
     return [
       {

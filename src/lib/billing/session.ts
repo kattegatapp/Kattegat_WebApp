@@ -2,11 +2,12 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { SELLER_SESSION_COOKIE } from "@/lib/billing/constants";
-import { API_URL } from "@/lib/api/client";
+import { resolveBackendApiUrl } from "@/lib/api/settings";
 
 export function billingApiUrl(path: string) {
+  const base = resolveBackendApiUrl();
   const normalized = path.startsWith("/") ? path : `/${path}`;
-  return `${API_URL}${API_URL.endsWith("/api") ? normalized : `/api${normalized}`}`;
+  return `${base}${base.endsWith("/api") ? normalized : `/api${normalized}`}`;
 }
 
 export async function getSellerAccessToken(): Promise<string | null> {

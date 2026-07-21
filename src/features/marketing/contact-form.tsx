@@ -14,6 +14,7 @@ import {
   type ContactFormDraft,
   type ContactFormValues,
 } from "@/lib/validations/contact";
+import { INPUT_LIMITS } from "@/lib/security/input";
 import { cn } from "@/lib/utils";
 
 const TOPICS: { value: ContactFormValues["topic"]; label: string }[] = [
@@ -33,7 +34,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [website, setWebsite] = useState("");
   const form = useForm<ContactFormDraft>({
-    resolver: zodResolver(contactSchema) as Resolver<ContactFormDraft>,
+    resolver: zodResolver(contactSchema) as unknown as Resolver<ContactFormDraft>,
     defaultValues: {
       fullName: "",
       email: "",
@@ -129,6 +130,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <Input
             id="fullName"
             autoComplete="name"
+            maxLength={INPUT_LIMITS.businessName}
             aria-invalid={Boolean(form.formState.errors.fullName)}
             aria-describedby={form.formState.errors.fullName ? "fullName-error" : undefined}
             className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
@@ -144,6 +146,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
             id="email"
             type="email"
             autoComplete="email"
+            maxLength={INPUT_LIMITS.email}
             className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("email")}
           />
@@ -157,6 +160,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
             id="phone"
             type="tel"
             autoComplete="tel"
+            maxLength={INPUT_LIMITS.contactPhone}
             className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("phone")}
           />
@@ -169,6 +173,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <Input
             id="company"
             autoComplete="organization"
+            maxLength={INPUT_LIMITS.company}
             className="h-12 w-full rounded-xl border-brand-forest/15 px-4"
             {...form.register("company")}
           />
@@ -220,6 +225,7 @@ export function ContactForm({ supportEmail }: ContactFormProps) {
           <Textarea
             id="message"
             rows={6}
+            maxLength={INPUT_LIMITS.message}
             placeholder="Share a short description of your enquiry…"
             className="rounded-xl border-brand-forest/15"
             {...form.register("message")}

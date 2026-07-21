@@ -15,8 +15,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useForm, type Resolver } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,14 +36,9 @@ import {
   type BillingUser,
 } from "@/lib/api/billing";
 import type { PublicPlanFeatures } from "@/lib/api/plans";
+import { INPUT_LIMITS } from "@/lib/security/input";
+import { memberLoginSchema, type MemberLoginValues } from "@/lib/validations/auth";
 import { cn } from "@/lib/utils";
-
-const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginValues = z.infer<typeof loginSchema>;
 
 type PlansCheckoutContentProps = {
   plan: PublicPlanFeatures;
@@ -60,8 +54,8 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
 
-  const loginForm = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+  const loginForm = useForm<MemberLoginValues>({
+    resolver: zodResolver(memberLoginSchema) as Resolver<MemberLoginValues>,
     defaultValues: { email: "", password: "" },
   });
 
@@ -78,7 +72,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
     };
   }, []);
 
-  async function handleLogin(values: LoginValues) {
+  async function handleLogin(values: MemberLoginValues) {
     setAuthLoading(true);
     setSubmitError(null);
     try {
@@ -390,6 +384,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                     <Input
                       type="email"
                       autoComplete="email"
+                      maxLength={INPUT_LIMITS.email}
                       className="h-11 rounded-xl"
                       {...loginForm.register("email")}
                     />
@@ -398,6 +393,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                     <Input
                       type="password"
                       autoComplete="current-password"
+                      maxLength={INPUT_LIMITS.password}
                       className="h-11 rounded-xl"
                       {...loginForm.register("password")}
                     />

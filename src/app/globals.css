@@ -1007,3 +1007,351 @@ textarea {
     overflow: visible;
   }
 }
+
+/* Member account workspace — pure light shell */
+.member-workspace {
+  --sidebar: #ffffff;
+  --sidebar-foreground: #003912;
+  --sidebar-accent: #eef2f0;
+  --sidebar-accent-foreground: #003912;
+  --sidebar-border: #e1e7e3;
+  --background: #eef3f0;
+  --card: #ffffff;
+  --muted: #eef2f0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #eef3f0;
+  color: #003912;
+}
+
+.member-sidebar-glass {
+  border-right: 1px solid rgb(255 255 255 / 0.55) !important;
+  background: rgb(255 255 255 / 0.52) !important;
+  backdrop-filter: blur(28px) saturate(1.65);
+  -webkit-backdrop-filter: blur(28px) saturate(1.65);
+}
+
+.member-header-glass {
+  border-color: rgb(255 255 255 / 0.55) !important;
+  background: rgb(255 255 255 / 0.52) !important;
+  backdrop-filter: blur(28px) saturate(1.65);
+  -webkit-backdrop-filter: blur(28px) saturate(1.65);
+}
+
+.member-footer-glass {
+  border-color: rgb(255 255 255 / 0.55) !important;
+  background: linear-gradient(
+    90deg,
+    rgb(255 255 255 / 0.45),
+    rgb(244 251 242 / 0.55),
+    rgb(255 255 255 / 0.45)
+  ) !important;
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+}
+
+.member-glass-canvas [data-slot="card"] {
+  background: transparent;
+}
+
+.member-glass-canvas input:not([type="checkbox"]):not([type="radio"]),
+.member-glass-canvas textarea,
+.member-glass-canvas [data-slot="select-trigger"],
+.member-glass-canvas [data-slot="textarea"] {
+  border-color: rgb(255 255 255 / 0.75);
+  background: rgb(255 255 255 / 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.member-workspace ::selection {
+  background: rgb(111 219 66 / 0.2);
+}
+
+.member-workspace [data-slot="card"] {
+  background: transparent;
+  color: #003912;
+}
+
+.account-shell-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.account-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid rgb(0 57 18 / 0.08);
+  background: #fff;
+  padding: 1.25rem 0.875rem 1rem;
+}
+
+.account-layout-main {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: #eef3f0;
+}
+
+.account-topbar {
+  z-index: 30;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgb(0 57 18 / 0.08);
+  background: #fff;
+}
+
+@media (min-width: 640px) {
+  .account-topbar {
+    gap: 0.875rem;
+    min-height: 3.75rem;
+    padding: 0.625rem 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .account-topbar {
+    padding-inline: 1.5rem;
+  }
+}
+
+.account-main-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  background: transparent;
+}
+
+.account-main {
+  color: #003912;
+}
+
+.account-mobile-nav {
+  border-right: 1px solid rgb(0 57 18 / 0.08);
+  background: #fff;
+}
+
+.account-mobile-nav [data-slot="sheet-content"] {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.account-mobile-nav > [data-slot="sheet-close"] {
+  z-index: 10;
+}
+
+.account-glass {
+  border: 1px solid rgb(0 57 18 / 0.08);
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 57 18 / 0.04);
+}
+
+.account-search {
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(0 57 18 / 0.1);
+  background: #fff;
+  padding-inline: 0.75rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+@media (min-width: 640px) {
+  .account-search {
+    height: 2.75rem;
+    border-radius: 0.875rem;
+    padding-inline: 1rem;
+  }
+}
+
+.account-search:focus-within {
+  border-color: rgb(111 219 66 / 0.55);
+  box-shadow: 0 0 0 3px rgb(111 219 66 / 0.12);
+}
+
+.account-view {
+  animation: account-view-in 0.3s ease;
+}
+
+@keyframes account-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.account-main-scroll--chat {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.account-main--chat {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.account-chat {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.account-chat-grid {
+  display: grid;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .account-chat-grid {
+    grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  }
+}
+
+.account-chat-panel {
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.account-chat-panel.is-open:not(.hidden) {
+  display: flex;
+}
+
+.account-chat-panel.hidden {
+  display: none;
+}
+
+.account-chat-messages {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.account-chat-list {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.account-chat-wallpaper {
+  background-color: #e5ddd5;
+  background-image:
+    radial-gradient(rgb(0 57 18 / 0.04) 1px, transparent 1px),
+    linear-gradient(180deg, rgb(247 249 248 / 0.65), rgb(238 242 240 / 0.9));
+  background-size: 18px 18px, auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-view {
+    animation: none;
+  }
+
+  .account-notification-bell--active,
+  .account-notification-badge-shimmer,
+  .account-notification-badge-pulse,
+  .account-notification-dot-shimmer {
+    animation: none !important;
+  }
+}
+
+.account-notification-bell--active {
+  animation: account-notification-bell-glow 1.6s ease-in-out infinite;
+}
+
+.account-notification-badge-shimmer {
+  background: rgb(111 219 66 / 0.45);
+  animation: account-notification-badge-ring 1.4s ease-out infinite;
+}
+
+.account-notification-badge-pulse {
+  animation: account-notification-badge-blink 1.1s ease-in-out infinite;
+}
+
+.account-notification-dot-shimmer {
+  animation: account-notification-dot-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes account-notification-bell-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(111 219 66 / 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgb(111 219 66 / 0.28);
+  }
+}
+
+@keyframes account-notification-badge-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.85;
+  }
+  70% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.65);
+    opacity: 0;
+  }
+}
+
+@keyframes account-notification-badge-blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes account-notification-dot-blink {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(111 219 66 / 0.5);
+  }
+  50% {
+    opacity: 0.65;
+    box-shadow: 0 0 0 4px rgb(111 219 66 / 0.15);
+  }
+}

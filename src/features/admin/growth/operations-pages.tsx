@@ -40,6 +40,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,7 @@ import {
 } from "@/components/ui/select";
 import { adminPath } from "@/lib/admin/paths";
 import { formatAdminAccessError } from "@/lib/admin/capabilities";
+import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   fetchFoundingApplications,
   fetchRecommendLeads,
@@ -131,16 +133,20 @@ function LeadProgress({ status }: { status: RecommendLeadStatus }) {
 export function RecommendedLeadsPage() {
   const client = useQueryClient();
   const [closingId, setClosingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [rewardAmount, setRewardAmount] = useState("");
   const query = useQuery({
     queryKey: ["admin", "recommend-leads"],
     queryFn: fetchRecommendLeads,
     retry: false,
   });
   const mutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: RecommendLeadStatus }) =>
-      updateRecommendLead(id, status),
+    mutationFn: ({ id, status, amountFils }: { id: string; status: RecommendLeadStatus; amountFils?: number }) =>
+      updateRecommendLead(id, status, amountFils),
     onSuccess: () => {
       setClosingId(null);
+      setCompletingId(null);
+      setRewardAmount("");
       client.invalidateQueries({ queryKey: ["admin", "recommend-leads"] });
     },
   });
@@ -287,7 +293,7 @@ export function RecommendedLeadsPage() {
                   >
                     <CircleCheck className="size-5" />
                     {lead.status === "completed"
-                      ? "This referral has been completed. No further action is required."
+                      ? `This referral has been completed. ${lead.rewardAmountFils ? `${formatFilsAsAed(lead.rewardAmountFils)} was credited to ${lead.recommenderName}'s wallet.` : "No further action is required."}`
                       : "This lead was closed because the client is not proceeding."}
                   </div>
                 ) : (
@@ -302,10 +308,15 @@ export function RecommendedLeadsPage() {
                       <Button
                         className="h-11 flex-1 text-sm font-bold"
                         disabled={mutation.isPending}
-                        onClick={() =>
-                          next &&
-                          mutation.mutate({ id: lead.id, status: next.status })
-                        }
+                        onClick={() => {
+                          if (!next) return;
+                          if (next.status === "completed") {
+                            setCompletingId(lead.id);
+                            setRewardAmount("");
+                          } else {
+                            mutation.mutate({ id: lead.id, status: next.status });
+                          }
+                        }}
                       >
                         {mutation.isPending &&
                         mutation.variables?.id === lead.id ? (
@@ -368,6 +379,51 @@ export function RecommendedLeadsPage() {
                 <X />
               )}
               Yes, close this lead
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(completingId)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCompletingId(null);
+            setRewardAmount("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm the reward amount</DialogTitle>
+            <DialogDescription>
+              This credits the recommender&rsquo;s wallet immediately and cannot be undone from
+              here — a duplicate submission is a safe no-op, but a wrong amount needs a manual
+              correction.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            placeholder="AED amount"
+            value={rewardAmount}
+            onChange={(event) => setRewardAmount(event.target.value)}
+          />
+          <DialogFooter showCloseButton>
+            <Button
+              disabled={!rewardAmount || Number(rewardAmount) <= 0 || mutation.isPending}
+              onClick={() =>
+                completingId &&
+                mutation.mutate({
+                  id: completingId,
+                  status: "completed",
+                  amountFils: Math.round(Number(rewardAmount) * 100),
+                })
+              }
+            >
+              {mutation.isPending ? <Loader2 className="animate-spin" /> : <Check />}
+              Confirm and credit wallet
             </Button>
           </DialogFooter>
         </DialogContent>

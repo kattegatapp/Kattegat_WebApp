@@ -5,7 +5,7 @@ export type RecommendLeadStatus = "submitted" | "in_progress" | "confirmed" | "c
 export interface AdminRecommendLead {
   id: string; recommenderId: string; recommenderName: string; recommenderContact: string;
   clientName: string; inquiry: string; clientPhone: string; clientEmail: string;
-  status: RecommendLeadStatus; createdAt: string; updatedAt: string;
+  status: RecommendLeadStatus; rewardAmountFils: number | null; createdAt: string; updatedAt: string;
 }
 export type FoundingStatus = "submitted" | "under_review" | "accepted" | "rejected" | "waitlisted";
 export type ContactAgentRequestStatus = "new" | "in_progress" | "contacted" | "resolved" | "closed";
@@ -78,7 +78,7 @@ export interface IdentityVerificationQueue {
 }
 
 export const fetchRecommendLeads = () => apiFetch<AdminRecommendLead[]>("/api/admin/recommend-leads", undefined, { baseUrl: "" });
-export const updateRecommendLead = (id: string, status: RecommendLeadStatus) => apiFetch<AdminRecommendLead>(`/api/admin/recommend-leads/${id}`, { method: "PATCH", body: JSON.stringify({ status }) }, { baseUrl: "" });
+export const updateRecommendLead = (id: string, status: RecommendLeadStatus, amountFils?: number) => apiFetch<AdminRecommendLead>(`/api/admin/recommend-leads/${id}`, { method: "PATCH", body: JSON.stringify({ status, amountFils }) }, { baseUrl: "" });
 export const fetchFoundingApplications = () => apiFetch<AdminFoundingApplication[]>("/api/admin/founding-members", undefined, { baseUrl: "" });
 export const reviewFoundingApplication = (id: string, decision: "under_review" | "accepted" | "rejected" | "waitlisted") => apiFetch<null>(`/api/admin/founding-members/${id}/review`, { method: "POST", body: JSON.stringify({ decision }) }, { baseUrl: "" });
 export const fetchVettedApplications = (status?: VettedApplicationStatus | "all") => {

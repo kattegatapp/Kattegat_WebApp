@@ -35,6 +35,8 @@ export interface AdminOverviewKpis {
   premiumSellersTotal: number;
   recommendedLeadsQueue: number;
   contactInboxQueue: number;
+  /** Withdrawal requests awaiting admin review. */
+  payoutsPendingQueue: number;
   staffTotal: number;
   paymentsTotal: number;
   paymentsSucceededTotal: number;
@@ -133,6 +135,7 @@ const KPI_DEFAULTS: AdminOverviewKpis = {
   premiumSellersTotal: 0,
   recommendedLeadsQueue: 0,
   contactInboxQueue: 0,
+  payoutsPendingQueue: 0,
   staffTotal: 0,
   paymentsTotal: 0,
   paymentsSucceededTotal: 0,

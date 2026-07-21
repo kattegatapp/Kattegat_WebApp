@@ -83,11 +83,13 @@ Start with [`src/README.md`](src/README.md) if you are new to the repo.
 
 ## Getting Started
 
+Run the backend first (`Kattegat_Backend` on **port 3000**), then this web app:
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3001](http://localhost:3001) — the web app runs on **port 3001**; the API stays on **port 3000**.
 
 ## Commands
 

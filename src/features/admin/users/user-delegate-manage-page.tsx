@@ -170,10 +170,14 @@ export function UserDelegateManagePage({ userId }: { userId: string }) {
         <AlertTitle className="text-brand-forest">Acting for {displayLabel}</AlertTitle>
         <AlertDescription className="space-y-3">
           <p>
-            SID {user.sid ?? "—"} · {label(session.data.eligibility.tier ?? "seller")} · Use admin
-            tools below, or sign in as this member for billing/plan pages.
+            SID {user.sid ?? "—"} · {label(session.data.eligibility.tier ?? "seller")}. Edit
+            profile and listings below — changes are audited to your staff account.
           </p>
-          {canImpersonate ? <LoginAsUserButton userId={user.id} /> : null}
+          <p className="text-xs leading-5 text-muted-foreground">
+            Need to see billing or public pages as this seller? Sign in as them (your admin
+            session stays open; exit from the amber banner).
+          </p>
+          {canImpersonate ? <LoginAsUserButton userId={user.id} compact /> : null}
         </AlertDescription>
       </Alert>
 
