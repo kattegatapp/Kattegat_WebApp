@@ -1243,12 +1243,8 @@ textarea {
   overflow: hidden;
 }
 
-.account-chat-panel.is-open:not(.hidden) {
-  display: flex;
-}
-
-.account-chat-panel.hidden {
-  display: none;
+.account-chat-grid > .account-chat-panel {
+  min-width: 0;
 }
 
 .account-chat-messages {

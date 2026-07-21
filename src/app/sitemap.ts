@@ -5,6 +5,7 @@ import {
   listSitemapListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import { listingPublicPath, sellerPublicPath } from "@/lib/navigation/public-paths";
 import { DUBAI_SEO_PAGES } from "@/features/marketing/local-seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -53,15 +54,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const listingRoutes: MetadataRoute.Sitemap = listings.map((listing) => ({
-    url: `${origin}/listing/${listing.id}`,
+    url: `${origin}${listingPublicPath({ id: listing.id, title: listing.title })}`,
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.8,
   }));
 
-  const sellerIds = [...new Set(listings.map((listing) => listing.sellerId))];
-  const sellerRoutes: MetadataRoute.Sitemap = sellerIds.map((sellerId) => ({
-    url: `${origin}/seller/${sellerId}`,
+  const sellerPaths = new Map<string, string>();
+  for (const listing of listings) {
+    if (sellerPaths.has(listing.sellerId)) continue;
+    sellerPaths.set(
+      listing.sellerId,
+      sellerPublicPath({
+        userId: listing.sellerId,
+        customSlug: listing.sellerCustomSlug,
+        displayName: listing.sellerName,
+      }),
+    );
+  }
+
+  const sellerRoutes: MetadataRoute.Sitemap = [...sellerPaths.values()].map((path) => ({
+    url: `${origin}${path}`,
     lastModified: now,
     changeFrequency: "weekly",
     priority: 0.75,

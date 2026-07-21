@@ -3,6 +3,7 @@ const ALLOWED_PREFIXES = [
   "/chat/",
   "/account",
   "/listing/",
+  "/requirement/",
   "/seller/",
   "/category/",
   "/requirements",

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Star } from "lucide-react";
 
 import { ContinueInApp } from "@/features/marketing/continue-in-app";
@@ -8,6 +8,12 @@ import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import { getPublicSeller } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import {
+  decodePublicRouteParam,
+  listingPublicPath,
+  sellerPublicPath,
+  shouldRedirectSellerPublicPath,
+} from "@/lib/navigation/public-paths";
 import {
   getSiteOrigin,
   jsonLdScript,
@@ -19,8 +25,17 @@ type PageProps = {
   params: Promise<{ sellerId: string }>;
 };
 
+function sellerPathInput(seller: NonNullable<Awaited<ReturnType<typeof getPublicSeller>>>) {
+  return {
+    userId: seller.userId,
+    customSlug: seller.customSlug,
+    displayName: seller.displayName,
+  };
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { sellerId } = await params;
+  const { sellerId: sellerKey } = await params;
+  const sellerId = decodePublicRouteParam(sellerKey);
   const [seller, origin] = await Promise.all([getPublicSeller(sellerId), getSiteOrigin()]);
   if (!seller) {
     return { title: "Seller not found | Kattegat", robots: { index: false } };
@@ -29,22 +44,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const name = seller.displayName || "Kattegat seller";
   const title = sellerPageTitle(name, "Dubai");
   const description = sellerPageDescription({ name, bio: seller.bio, location: "Dubai" });
+  const canonicalPath = sellerPublicPath(sellerPathInput(seller));
 
   return {
     title,
     description,
-    alternates: { canonical: `${origin}/seller/${seller.userId}` },
+    alternates: { canonical: `${origin}${canonicalPath}` },
     openGraph: {
       title,
       description,
-      url: `${origin}/seller/${seller.userId}`,
+      url: `${origin}${canonicalPath}`,
       images: seller.avatarUrl ? [{ url: seller.avatarUrl }] : undefined,
     },
   };
 }
 
 export default async function SellerPage({ params }: PageProps) {
-  const { sellerId } = await params;
+  const { sellerId: sellerKey } = await params;
+  const sellerId = decodePublicRouteParam(sellerKey);
   const [settings, seller, origin] = await Promise.all([
     getPublicAppSettings(),
     getPublicSeller(sellerId),
@@ -53,13 +70,19 @@ export default async function SellerPage({ params }: PageProps) {
 
   if (!seller) notFound();
 
+  const pathInput = sellerPathInput(seller);
+  if (shouldRedirectSellerPublicPath(sellerId, pathInput)) {
+    redirect(sellerPublicPath(pathInput));
+  }
+
   const name = seller.displayName || "Kattegat seller";
+  const publicPath = sellerPublicPath(pathInput);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
     name,
     description: seller.bio,
-    url: `${origin}/seller/${seller.userId}`,
+    url: `${origin}${publicPath}`,
     image: seller.avatarUrl || undefined,
     aggregateRating:
       seller.reviewCount > 0
@@ -164,7 +187,7 @@ export default async function SellerPage({ params }: PageProps) {
               {seller.listings.map((listing) => (
                 <li key={listing.id}>
                   <Link
-                    href={`/listing/${listing.id}`}
+                    href={listingPublicPath({ id: listing.id, title: listing.title })}
                     className="flex items-center justify-between gap-4 py-4 text-sm font-extrabold hover:text-brand-blue"
                   >
                     {listing.title}

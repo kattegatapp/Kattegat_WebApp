@@ -1,9 +1,11 @@
 import { apiFetchEnvelope } from "@/lib/api/client";
 import { resolveBackendApiUrl } from "@/lib/api/settings";
+import { sellerPublicPath } from "@/lib/navigation/public-paths";
 
 type DiscoveryListing = {
   sellerId: string;
   sellerName: string | null;
+  sellerCustomSlug?: string | null;
   sellerAvatarUrl: string | null;
   sellerTier?: "starter" | "pro" | "white_glove" | null;
   sellerAggregateRating?: number | null;
@@ -15,6 +17,7 @@ type DiscoveryListing = {
 export type FeaturedSeller = {
   id: string;
   name: string;
+  slug: string;
   avatarUrl: string | null;
   tier: "starter" | "pro" | "white_glove" | null;
   rating: number;
@@ -43,6 +46,7 @@ export type ListingSearchHit = {
   subcategoryName: string | null;
   sellerId: string;
   sellerName: string | null;
+  sellerCustomSlug: string | null;
   sellerAvatarUrl: string | null;
   sellerTier: "starter" | "pro" | "white_glove" | null;
   sellerAggregateRating: number;
@@ -151,6 +155,7 @@ function normalizeSearchHit(listing: DiscoveryListing & {
     subcategoryName: listing.subcategoryName?.trim() || null,
     sellerId: listing.sellerId,
     sellerName: listing.sellerName?.trim() || "Kattegat seller",
+    sellerCustomSlug: listing.sellerCustomSlug?.trim() || null,
     sellerAvatarUrl: safeRemoteImage(listing.sellerAvatarUrl),
     sellerTier: listing.sellerTier ?? null,
     sellerAggregateRating: Number.isFinite(listing.sellerAggregateRating)
@@ -219,6 +224,11 @@ export async function getFeaturedSellers(limit = 4): Promise<FeaturedSeller[]> {
       sellers.set(listing.sellerId, {
         id: listing.sellerId,
         name: listing.sellerName?.trim() || "Kattegat seller",
+        slug: sellerPublicPath({
+          userId: listing.sellerId,
+          customSlug: listing.sellerCustomSlug,
+          displayName: listing.sellerName,
+        }).replace(/^\/seller\//, ""),
         avatarUrl: safeRemoteImage(listing.sellerAvatarUrl),
         tier: listing.sellerTier ?? null,
         rating: Number.isFinite(listing.sellerAggregateRating)
@@ -261,8 +271,29 @@ export type PublicListingDetail = {
   reviewCount: number;
 };
 
+export type PublicSellerListing = {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  categoryId: string;
+  coverImage: string | null;
+  pricing: { amount?: number; unit?: string };
+  aggregateRating: number;
+  reviewCount: number;
+  createdAt: string;
+};
+
+export type PublicSellerMedia = {
+  id: string;
+  type: "photo" | "video_link";
+  url: string;
+  sortOrder: number;
+};
+
 export type PublicSellerDetail = {
   userId: string;
+  sid: string | null;
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;
@@ -271,10 +302,13 @@ export type PublicSellerDetail = {
   aggregateRating: number;
   reviewCount: number;
   tags: string[];
-  listings?: Array<{ id: string; title: string }>;
+  badges: string[];
+  socialLinks: Record<string, string>;
+  profileMedia: PublicSellerMedia[];
+  listings: PublicSellerListing[];
 };
 
-export async function getPublicListing(listingId: string): Promise<PublicListingDetail | null> {
+export async function getPublicListing(listingKey: string): Promise<PublicListingDetail | null> {
   try {
     const { data } = await apiFetchEnvelope<{
       id: string;
@@ -287,7 +321,7 @@ export async function getPublicListing(listingId: string): Promise<PublicListing
       updatedAt?: string | null;
       aggregateRating?: number;
       reviewCount?: number;
-    }>(`/api/listings/${listingId}`, { next: { revalidate: 300 } }, { baseUrl: resolveBackendApiUrl() });
+    }>(`/api/listings/${encodeURIComponent(listingKey)}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
 
     return {
       id: data.id,
@@ -306,11 +340,11 @@ export async function getPublicListing(listingId: string): Promise<PublicListing
   }
 }
 
-export async function getPublicListingMedia(listingId: string): Promise<string[]> {
+export async function getPublicListingMedia(listingKey: string): Promise<string[]> {
   try {
     const { data } = await apiFetchEnvelope<Array<{ type: string; url: string; sortOrder: number }>>(
-      `/api/listings/${listingId}/media`,
-      { next: { revalidate: 300 } },
+      `/api/listings/${encodeURIComponent(listingKey)}/media`,
+      { cache: "no-store" },
       { baseUrl: resolveBackendApiUrl() },
     );
     return data
@@ -323,10 +357,11 @@ export async function getPublicListingMedia(listingId: string): Promise<string[]
   }
 }
 
-export async function getPublicSeller(sellerId: string): Promise<PublicSellerDetail | null> {
+export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDetail | null> {
   try {
     const { data } = await apiFetchEnvelope<{
       userId: string;
+      sid?: string | null;
       displayName: string | null;
       avatarUrl: string | null;
       bio: string | null;
@@ -335,11 +370,31 @@ export async function getPublicSeller(sellerId: string): Promise<PublicSellerDet
       aggregateRating?: number;
       reviewCount?: number;
       tags?: string[];
-      listings?: Array<{ id: string; title: string }>;
-    }>(`/api/sellers/${sellerId}`, { next: { revalidate: 300 } }, { baseUrl: resolveBackendApiUrl() });
+      badges?: string[];
+      socialLinks?: Record<string, string>;
+      profileMedia?: Array<{
+        id: string;
+        type: "photo" | "video_link";
+        url: string;
+        sortOrder: number;
+      }>;
+      listings?: Array<{
+        id: string;
+        title: string;
+        description?: string | null;
+        location?: string | null;
+        categoryId: string;
+        coverImage?: string | null;
+        pricing?: { amount?: number; unit?: string };
+        aggregateRating?: number;
+        reviewCount?: number;
+        createdAt: string;
+      }>;
+    }>(`/api/sellers/${encodeURIComponent(sellerKey)}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
 
     return {
       userId: data.userId,
+      sid: data.sid?.trim() || null,
       displayName: data.displayName?.trim() || null,
       avatarUrl: safeRemoteImage(data.avatarUrl),
       bio: data.bio?.trim() || null,
@@ -348,10 +403,79 @@ export async function getPublicSeller(sellerId: string): Promise<PublicSellerDet
       aggregateRating: Number.isFinite(data.aggregateRating) ? Number(data.aggregateRating) : 0,
       reviewCount: Number.isFinite(data.reviewCount) ? Number(data.reviewCount) : 0,
       tags: data.tags ?? [],
-      listings: data.listings?.map((listing) => ({
+      badges: data.badges ?? [],
+      socialLinks: data.socialLinks ?? {},
+      profileMedia: (data.profileMedia ?? [])
+        .map((item) => ({
+          id: item.id,
+          type: item.type,
+          url: safeRemoteImage(item.url) ?? item.url,
+          sortOrder: item.sortOrder,
+        }))
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+      listings: (data.listings ?? []).map((listing) => ({
         id: listing.id,
-        title: listing.title,
+        title: listing.title?.trim() || "Service listing",
+        description: listing.description?.trim() || null,
+        location: listing.location?.trim() || null,
+        categoryId: listing.categoryId,
+        coverImage: safeRemoteImage(listing.coverImage ?? null),
+        pricing: listing.pricing ?? {},
+        aggregateRating: Number.isFinite(listing.aggregateRating) ? Number(listing.aggregateRating) : 0,
+        reviewCount: Number.isFinite(listing.reviewCount) ? Number(listing.reviewCount) : 0,
+        createdAt: listing.createdAt,
       })),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export type PublicRequirementDetail = {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  jobType: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  status: string;
+  createdAt: string;
+  viewCount: number;
+};
+
+export async function getPublicRequirement(requirementKey: string): Promise<PublicRequirementDetail | null> {
+  try {
+    const { data } = await apiFetchEnvelope<{
+      id: string;
+      title: string;
+      description: string;
+      location: string;
+      jobType: string;
+      budgetMin?: number | null;
+      budgetMax?: number | null;
+      startsAt?: string | null;
+      endsAt?: string | null;
+      status: string;
+      createdAt: string;
+      viewCount?: number;
+    }>(`/api/requirements/${encodeURIComponent(requirementKey)}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
+
+    return {
+      id: data.id,
+      title: data.title?.trim() || "Open requirement",
+      description: data.description?.trim() || "",
+      location: data.location?.trim() || "UAE",
+      jobType: data.jobType,
+      budgetMin: data.budgetMin ?? null,
+      budgetMax: data.budgetMax ?? null,
+      startsAt: data.startsAt ?? null,
+      endsAt: data.endsAt ?? null,
+      status: data.status,
+      createdAt: data.createdAt,
+      viewCount: Number.isFinite(data.viewCount) ? Number(data.viewCount) : 0,
     };
   } catch {
     return null;
@@ -360,16 +484,34 @@ export async function getPublicSeller(sellerId: string): Promise<PublicSellerDet
 
 /** Crawl budget helper — paginate live listings for sitemap generation. */
 export async function listSitemapListings(maxItems = 2000): Promise<
-  Array<{ id: string; sellerId: string }>
+  Array<{
+    id: string;
+    title: string;
+    sellerId: string;
+    sellerCustomSlug: string | null;
+    sellerName: string | null;
+  }>
 > {
   const pageSize = 50;
   const maxPages = Math.ceil(maxItems / pageSize);
-  const items: Array<{ id: string; sellerId: string }> = [];
+  const items: Array<{
+    id: string;
+    title: string;
+    sellerId: string;
+    sellerCustomSlug: string | null;
+    sellerName: string | null;
+  }> = [];
 
   for (let page = 1; page <= maxPages; page += 1) {
     const result = await searchListings({ page, pageSize, sort: "newest" });
     for (const listing of result.items) {
-      items.push({ id: listing.id, sellerId: listing.sellerId });
+      items.push({
+        id: listing.id,
+        title: listing.title,
+        sellerId: listing.sellerId,
+        sellerCustomSlug: listing.sellerCustomSlug,
+        sellerName: listing.sellerName,
+      });
     }
     if (result.items.length === 0 || items.length >= result.total || items.length >= maxItems) {
       break;

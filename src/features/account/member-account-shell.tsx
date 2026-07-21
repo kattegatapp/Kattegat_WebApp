@@ -37,7 +37,10 @@ import {
 } from "@/features/account/account-shared";
 import { AccountNotificationsMenu } from "@/features/account/account-notifications-menu";
 import { AccountProfileMenu } from "@/features/account/account-profile-menu";
+import { ListingEditorDialog } from "@/features/account/listing-editor-dialog";
+import { RequirementEditorDialog } from "@/features/account/requirement-editor-dialog";
 import type { AccountIdentity, AccountViewId } from "@/features/account/types";
+import { HeaderProgressLine } from "@/components/header-progress-line";
 import type { AccountDashboard } from "@/lib/api/account";
 import type { AccountNotificationsState } from "@/lib/api/account-notifications";
 import { cn } from "@/lib/utils";
@@ -93,8 +96,10 @@ export function MemberAccountShell({
   children,
 }: MemberAccountShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [listingEditorOpen, setListingEditorOpen] = useState(false);
+  const [requirementEditorOpen, setRequirementEditorOpen] = useState(false);
   const mainScrollRef = useRef<HTMLDivElement>(null);
-  const { user, sellerProfile } = dashboard;
+  const { user, sellerProfile, listings } = dashboard;
 
   const displayName = accountDisplayName({
     displayName: sellerProfile?.displayName,
@@ -163,7 +168,8 @@ export function MemberAccountShell({
         </aside>
 
         <div className="account-layout-main flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="account-topbar member-header-glass">
+        <header className="account-topbar member-header-glass relative">
+          <HeaderProgressLine />
           <Button
             type="button"
             variant="ghost"
@@ -215,27 +221,28 @@ export function MemberAccountShell({
               className="w-[min(100vw-2rem,262px)] rounded-2xl border-brand-forest/10 bg-white p-2 text-brand-forest"
             >
               <DropdownMenuGroup>
-                {identity === "seller" ? (
+                {identity === "seller" && user.sid ? (
                   <DropdownMenuItem
                     className="cursor-pointer rounded-xl p-3 focus:bg-brand-forest/5"
-                    onClick={() => window.open("/download", "_blank")}
+                    onClick={() => setListingEditorOpen(true)}
                   >
                     <div className="flex gap-3">
                       <span className="grid size-[34px] place-items-center rounded-[10px] bg-brand-forest/5 text-brand-forest">
-                        <Plus className="size-4" />
+                        <BriefcaseBusiness className="size-4" />
                       </span>
                       <div>
                         <p className="text-[13.5px] font-bold">List your service</p>
                         <p className="text-xs leading-5 text-brand-forest/65">
-                          Publish to your catalog in the app — web listing tools are coming soon.
+                          Create a draft listing and submit for review when ready.
                         </p>
                       </div>
                     </div>
                   </DropdownMenuItem>
-                ) : (
+                ) : null}
+                {identity === "buyer" && user.bid ? (
                   <DropdownMenuItem
                     className="cursor-pointer rounded-xl p-3 focus:bg-brand-forest/5"
-                    onClick={() => selectView("requirements")}
+                    onClick={() => setRequirementEditorOpen(true)}
                   >
                     <div className="flex gap-3">
                       <span className="grid size-[34px] place-items-center rounded-[10px] bg-brand-forest/5 text-brand-forest">
@@ -249,7 +256,7 @@ export function MemberAccountShell({
                       </div>
                     </div>
                   </DropdownMenuItem>
-                )}
+                ) : null}
               </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -299,6 +306,19 @@ export function MemberAccountShell({
         ) : null}
       </div>
       </div>
+
+      <ListingEditorDialog
+        open={listingEditorOpen}
+        onOpenChange={setListingEditorOpen}
+        mode="create"
+        sellerTier={sellerProfile?.tier}
+        listingCount={listings.length}
+      />
+      <RequirementEditorDialog
+        open={requirementEditorOpen}
+        onOpenChange={setRequirementEditorOpen}
+        mode="create"
+      />
     </div>
   );
 }
@@ -375,8 +395,10 @@ function AccountSidebarContent({
               className={cn(
                 "relative z-10 flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
                 identity === "buyer" ? "text-brand-forest" : "text-brand-forest/55",
+                !user.bid && "cursor-not-allowed opacity-50",
               )}
-              onClick={() => onIdentityChange("buyer")}
+              disabled={!user.bid}
+              onClick={() => user.bid && onIdentityChange("buyer")}
             >
               Buyer
             </button>
@@ -385,13 +407,30 @@ function AccountSidebarContent({
               className={cn(
                 "relative z-10 flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
                 identity === "seller" ? "text-brand-forest" : "text-brand-forest/55",
+                !user.sid && "cursor-not-allowed opacity-50",
               )}
-              onClick={() => onIdentityChange("seller")}
+              disabled={!user.sid}
+              onClick={() => user.sid && onIdentityChange("seller")}
             >
               Seller
             </button>
           </div>
-        ) : null}
+        ) : (
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-forest/55">
+              {user.sid ? "Seller mode" : "Buyer mode"}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 w-full rounded-lg border-brand-forest/10 text-[11px] font-bold"
+              onClick={() => onSelectView("dashboard")}
+            >
+              {user.sid ? "Add buyer identity" : "Add seller identity"}
+            </Button>
+          </div>
+        )}
 
         <Button
           type="button"

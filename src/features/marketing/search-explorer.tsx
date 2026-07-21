@@ -11,6 +11,7 @@ import type {
   ListingSearchHit,
   ListingSearchSort,
 } from "@/lib/api/marketing";
+import { listingPublicPath } from "@/lib/navigation/public-paths";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: { value: ListingSearchSort; label: string }[] = [
@@ -367,7 +368,7 @@ export function SearchExplorer({
             return (
               <li key={item.id}>
                 <Link
-                  href={`/listing/${item.id}`}
+                  href={listingPublicPath({ id: item.id, title: item.title })}
                   className="group flex w-full gap-4 py-5 text-left transition hover:bg-white/70 sm:gap-5 sm:rounded-2xl sm:px-3"
                 >
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-[#EEF2F0] sm:size-24">

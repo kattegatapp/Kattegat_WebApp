@@ -4,6 +4,14 @@ import type { CreateListingPayload, UpdateListingPayload } from "@/lib/validatio
 
 export type { AccountListing };
 
+export type ListingMediaItem = {
+  id: string;
+  listingId: string;
+  type: "photo" | "video_link";
+  url: string;
+  sortOrder: number;
+};
+
 export async function fetchAccountListings() {
   return apiFetch<AccountListing[]>("/api/account/listings", undefined, { baseUrl: "" });
 }
@@ -48,6 +56,25 @@ export async function republishAccountListing(listingId: string) {
   return apiFetch<AccountListing>(
     `/api/account/listings/${listingId}/republish`,
     { method: "POST" },
+    { baseUrl: "" },
+  );
+}
+
+export async function fetchAccountListingMedia(listingId: string) {
+  return apiFetch<ListingMediaItem[]>(
+    `/api/account/listings/${listingId}/media`,
+    undefined,
+    { baseUrl: "" },
+  );
+}
+
+export async function addAccountListingMedia(
+  listingId: string,
+  payload: { type: "photo" | "video_link"; url: string },
+) {
+  return apiFetch<ListingMediaItem>(
+    `/api/account/listings/${listingId}/media`,
+    { method: "POST", body: JSON.stringify(payload) },
     { baseUrl: "" },
   );
 }

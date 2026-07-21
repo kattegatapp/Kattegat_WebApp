@@ -45,6 +45,7 @@ export type AccountListing = {
   location: string | null;
   pricing?: { amount?: number; unit?: string } | Record<string, unknown>;
   schemaFields?: Record<string, unknown>;
+  isConfidential?: boolean;
   status: string;
   rejectionReason: string | null;
   submittedAt: string | null;

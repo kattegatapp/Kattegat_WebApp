@@ -14,6 +14,7 @@ export type AccountRequirement = {
   rejectionReason?: string | null;
   startsAt?: string | null;
   endsAt?: string | null;
+  attachments?: string[];
   createdAt: string;
   updatedAt?: string;
   viewCount: number;

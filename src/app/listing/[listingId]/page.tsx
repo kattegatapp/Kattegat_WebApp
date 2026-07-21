@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowRight, MapPin, Star } from "lucide-react";
 
 import { ContinueInApp } from "@/features/marketing/continue-in-app";
@@ -15,6 +15,12 @@ import {
   searchListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import {
+  decodePublicRouteParam,
+  listingPublicPath,
+  sellerPublicPath,
+  shouldRedirectTitledPublicPath,
+} from "@/lib/navigation/public-paths";
 import {
   getSiteOrigin,
   jsonLdScript,
@@ -40,7 +46,8 @@ function relatedDubaiPath(categoryName?: string | null) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { listingId } = await params;
+  const { listingId: listingKey } = await params;
+  const listingId = decodePublicRouteParam(listingKey);
   const [listing, origin, categories] = await Promise.all([
     getPublicListing(listingId),
     getSiteOrigin(),
@@ -67,21 +74,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     sellerName,
   });
 
+  const canonicalPath = listingPublicPath({ id: listing.id, title: listing.title });
+
   return {
     title,
     description,
-    alternates: { canonical: `${origin}/listing/${listing.id}` },
+    alternates: { canonical: `${origin}${canonicalPath}` },
     openGraph: {
       title,
       description,
-      url: `${origin}/listing/${listing.id}`,
+      url: `${origin}${canonicalPath}`,
       type: "website",
     },
   };
 }
 
 export default async function ListingPage({ params }: PageProps) {
-  const { listingId } = await params;
+  const { listingId: listingKey } = await params;
+  const listingId = decodePublicRouteParam(listingKey);
   const [settings, listing, media, categories] = await Promise.all([
     getPublicAppSettings(),
     getPublicListing(listingId),
@@ -90,6 +100,12 @@ export default async function ListingPage({ params }: PageProps) {
   ]);
 
   if (!listing) notFound();
+
+  if (shouldRedirectTitledPublicPath(listingKey, { id: listing.id, title: listing.title })) {
+    redirect(listingPublicPath({ id: listing.id, title: listing.title }));
+  }
+
+  const publicPath = listingPublicPath({ id: listing.id, title: listing.title });
 
   const [seller, origin, related] = await Promise.all([
     getPublicSeller(listing.sellerId),
@@ -104,6 +120,16 @@ export default async function ListingPage({ params }: PageProps) {
   const category = categories.find((item) => item.id === listing.categoryId);
   const cover = media[0] || seller?.avatarUrl || null;
   const sellerName = seller?.displayName || "Kattegat seller";
+  const sellerPath = seller
+    ? sellerPublicPath({
+        userId: seller.userId,
+        customSlug: seller.customSlug,
+        displayName: seller.displayName,
+      })
+    : sellerPublicPath({
+        userId: listing.sellerId,
+        displayName: sellerName,
+      });
   const place = locationLabel(listing.location);
   const dubaiHref = relatedDubaiPath(category?.name);
   const relatedListings = related.items
@@ -122,12 +148,12 @@ export default async function ListingPage({ params }: PageProps) {
     "@type": "Service",
     name: listing.title,
     description: listing.description,
-    url: `${origin}/listing/${listing.id}`,
+    url: `${origin}${publicPath}`,
     areaServed: listing.location || "Dubai, UAE",
     provider: {
       "@type": "Person",
       name: sellerName,
-      url: `${origin}/seller/${listing.sellerId}`,
+      url: `${origin}${sellerPath}`,
     },
     aggregateRating:
       listing.reviewCount > 0
@@ -191,7 +217,7 @@ export default async function ListingPage({ params }: PageProps) {
           <div className="space-y-5">
             <div className="rounded-[1.75rem] border border-brand-forest/10 bg-white p-6">
               <Link
-                href={`/seller/${listing.sellerId}`}
+                href={sellerPath}
                 className="text-sm font-extrabold hover:text-brand-blue"
               >
                 {sellerName}
@@ -223,7 +249,7 @@ export default async function ListingPage({ params }: PageProps) {
                   mobileAppUrl={settings.links.mobileAppUrl}
                 />
                 <Link
-                  href={`/seller/${listing.sellerId}`}
+                  href={sellerPath}
                   className="inline-flex min-h-12 items-center rounded-2xl border border-brand-forest/15 bg-white px-5 text-sm font-extrabold"
                 >
                   View seller
@@ -271,7 +297,7 @@ export default async function ListingPage({ params }: PageProps) {
               {relatedListings.map((item) => (
                 <li key={item.id}>
                   <Link
-                    href={`/listing/${item.id}`}
+                    href={listingPublicPath({ id: item.id, title: item.title })}
                     className="group flex items-center justify-between gap-4 py-4"
                   >
                     <div className="min-w-0">
@@ -298,7 +324,11 @@ export default async function ListingPage({ params }: PageProps) {
               {relatedSellers.map((item) => (
                 <li key={item.sellerId}>
                   <Link
-                    href={`/seller/${item.sellerId}`}
+                    href={sellerPublicPath({
+                      userId: item.sellerId,
+                      customSlug: item.sellerCustomSlug,
+                      displayName: item.sellerName,
+                    })}
                     className="flex items-center gap-3 rounded-2xl border border-brand-forest/10 bg-white px-4 py-3 transition hover:border-brand-mantis/40"
                   >
                     <div className="size-12 overflow-hidden rounded-xl bg-[#EEF2F0]">

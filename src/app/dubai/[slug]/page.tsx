@@ -17,6 +17,7 @@ import {
   searchListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import { listingPublicPath } from "@/lib/navigation/public-paths";
 import { getSiteOrigin, jsonLdScript } from "@/lib/seo";
 
 type PageProps = {
@@ -181,7 +182,7 @@ export default async function DubaiLocalPage({ params }: PageProps) {
               return (
                 <li key={item.id}>
                   <Link
-                    href={`/listing/${item.id}`}
+                    href={listingPublicPath({ id: item.id, title: item.title })}
                     className="group flex gap-4 py-5 transition hover:bg-white/70 sm:gap-5 sm:rounded-2xl sm:px-3"
                   >
                     <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-[#EEF2F0] sm:size-24">

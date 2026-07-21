@@ -136,8 +136,8 @@ export function AccountChatView({
       <div className="account-chat-grid">
         <aside
           className={cn(
-            "account-chat-panel is-open border-brand-forest/10 bg-white lg:border-r",
-            showListOnMobile ? "flex" : "hidden lg:flex",
+            "account-chat-panel is-open flex min-h-0 flex-col border-brand-forest/10 bg-white lg:border-r",
+            !showListOnMobile && "max-lg:hidden",
           )}
         >
           <div className="shrink-0 border-b border-brand-forest/10 bg-[#f7f9f8] px-4 py-4">
@@ -233,7 +233,7 @@ export function AccountChatView({
         </aside>
 
         {selectedThread ? (
-          <section className="account-chat-panel is-open flex bg-white">
+          <section className="account-chat-panel is-open flex min-h-0 min-w-0 flex-1 flex-col bg-white">
               <header className="flex shrink-0 items-center gap-3 border-b border-brand-forest/10 bg-[#f7f9f8] px-3 py-3 sm:px-4">
                 <Button
                   type="button"
@@ -330,7 +330,7 @@ export function AccountChatView({
               </footer>
           </section>
         ) : (
-          <section className="account-chat-panel is-open hidden bg-white lg:flex">
+          <section className="account-chat-panel is-open hidden min-h-0 flex-col bg-white lg:flex">
             <div className="account-chat-wallpaper account-chat-messages flex flex-col items-center justify-center px-6 text-center">
               <MessageCircle className="size-10 text-brand-mantis/80" />
               <p className="mt-4 text-lg font-bold text-brand-forest">Kattegat messages</p>

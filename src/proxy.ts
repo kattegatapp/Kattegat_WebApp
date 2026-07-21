@@ -46,6 +46,7 @@ const WAITLIST_PUBLIC_PATHS = [
   "/chat",
   "/r",
   "/listing",
+  "/requirement",
   "/seller",
   "/category",
   "/dubai",

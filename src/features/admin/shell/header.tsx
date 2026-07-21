@@ -48,7 +48,7 @@ import { clearAdminToken, fetchAdminSettings } from "@/lib/api/admin";
 import { fallbackAppSettings } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 import { AdminNotificationsMenu } from "@/features/admin/shell/notifications-menu";
-import { HeaderProgressLine } from "@/features/admin/shell/header-progress";
+import { HeaderProgressLine } from "@/components/header-progress-line";
 
 function roleLabel(role: string | null | undefined) {
   if (!role) return "Admin";

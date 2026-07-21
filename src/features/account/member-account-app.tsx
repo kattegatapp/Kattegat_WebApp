@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { MemberGlassCanvas } from "@/features/account/account-glass";
 import { MemberAccountShell } from "@/features/account/member-account-shell";
@@ -26,6 +26,10 @@ import type { AccountConversation } from "@/lib/api/account-chat";
 import type { AccountHomeFeed } from "@/lib/api/account-home";
 import type { AccountNotificationsState } from "@/lib/api/account-notifications";
 import type { AccountDashboard } from "@/lib/api/account";
+import {
+  readStoredMemberIdentity,
+  writeStoredMemberIdentity,
+} from "@/lib/auth/member-identity";
 import { logoutMember } from "@/lib/api/auth";
 import { fetchAccountConversations } from "@/lib/api/account-chat";
 
@@ -76,7 +80,31 @@ export function MemberAccountApp({
     return identityForConversation(thread, dashboard.user.id);
   }, [initialConversationId, deepLinkConversationsQuery.data, dashboard.user.id]);
 
-  const resolvedIdentity = deepLinkIdentity ?? identity;
+  useEffect(() => {
+    const stored = readStoredMemberIdentity(dashboard.user.sid, dashboard.user.bid);
+    const next =
+      initialConversationId && deepLinkIdentity
+        ? deepLinkIdentity
+        : stored ?? defaultIdentity;
+    const timer = window.setTimeout(() => {
+      setIdentity(next);
+      writeStoredMemberIdentity(next);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [
+    dashboard.user.bid,
+    dashboard.user.sid,
+    deepLinkIdentity,
+    defaultIdentity,
+    initialConversationId,
+  ]);
+
+  function handleIdentityChange(next: AccountIdentity) {
+    if (next === "seller" && !dashboard.user.sid) return;
+    if (next === "buyer" && !dashboard.user.bid) return;
+    setIdentity(next);
+    writeStoredMemberIdentity(next);
+  }
 
   const logout = useMutation({
     mutationFn: logoutMember,
@@ -92,39 +120,39 @@ export function MemberAccountApp({
         dashboard={dashboard}
         activeView={activeView}
         onViewChange={setActiveView}
-        identity={resolvedIdentity}
+        identity={identity}
         notifications={notifications}
-        onIdentityChange={setIdentity}
+        onIdentityChange={handleIdentityChange}
         onSignOut={() => logout.mutate()}
         signingOut={logout.isPending}
       >
         {activeView === "chat" ? (
           <AccountChatView
             dashboard={dashboard}
-            identity={resolvedIdentity}
+            identity={identity}
             initialConversationId={initialConversationId}
           />
         ) : (
         <MemberGlassCanvas>
         <div key={activeView} className="account-view mx-auto w-full max-w-5xl">
           {activeView === "home" ? (
-            <AccountHomeView dashboard={dashboard} homeFeed={homeFeed} identity={resolvedIdentity} onNavigate={setActiveView} />
+            <AccountHomeView dashboard={dashboard} homeFeed={homeFeed} identity={identity} onNavigate={setActiveView} />
           ) : null}
           {activeView === "categories" ? <AccountCategoriesView /> : null}
           {activeView === "requirements" ? <AccountOpenRequirementsView /> : null}
           {activeView === "saved" ? <AccountSavedView /> : null}
           {activeView === "my-listings" ? <AccountMyListingsView dashboard={dashboard} /> : null}
-          {activeView === "my-requirements" ? <AccountMyRequirementsView /> : null}
+          {activeView === "my-requirements" ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
           {activeView === "referrals" ? <AccountReferralsView dashboard={dashboard} /> : null}
           {activeView === "recommend" ? <AccountRecommendView /> : null}
           {activeView === "notifications" ? (
             <AccountNotificationsView
-              identity={resolvedIdentity}
+              identity={identity}
               notifications={notifications.items}
               unreadCount={notifications.unreadCount}
             />
           ) : null}
-          {activeView === "dashboard" ? <AccountDashboardView dashboard={dashboard} identity={resolvedIdentity} /> : null}
+          {activeView === "dashboard" ? <AccountDashboardView dashboard={dashboard} identity={identity} /> : null}
           {activeView === "membership" ? <AccountMembershipView dashboard={dashboard} /> : null}
         </div>
         </MemberGlassCanvas>

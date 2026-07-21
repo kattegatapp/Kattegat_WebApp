@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import {
   ArrowRight,
-  ArrowUpRight,
   BriefcaseBusiness,
   ChevronRight,
   ClipboardList,
@@ -33,6 +32,7 @@ import {
   type AccountHomeFeed,
 } from "@/lib/api/account-home";
 import type { ListingSearchHit } from "@/lib/api/marketing";
+import { listingPublicPath, requirementPublicPath } from "@/lib/navigation/public-paths";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -126,58 +126,46 @@ function MetricCard({
 
 function ListingCard({ listing }: { listing: ListingSearchHit }) {
   return (
-    <Link href={`/listing/${listing.id}`} className="group block">
-      <Card className="gap-0 overflow-hidden border-border bg-white py-0 shadow-none ring-0 transition hover:border-brand-forest/15 hover:shadow-md">
-        <div className="relative aspect-[16/10] bg-muted">
-          {listing.coverImage ? (
-            <Image
-              src={listing.coverImage}
-              alt=""
-              fill
-              className="object-cover transition duration-300 group-hover:scale-[1.02]"
-              sizes="(max-width: 640px) 100vw, 50vw"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand-forest/5 to-brand-blue/10">
-              <BriefcaseBusiness className="size-8 text-brand-forest/25" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
-          {listing.categoryName ? (
-            <Badge className="absolute left-3 top-3 border-0 bg-white/95 text-[10px] font-bold text-brand-forest shadow-sm">
-              {listing.categoryName}
-            </Badge>
-          ) : null}
-          <span className="absolute bottom-3 right-3 grid size-8 place-items-center rounded-full bg-white/95 text-brand-forest opacity-0 shadow-sm transition group-hover:opacity-100">
-            <ArrowUpRight className="size-4" />
-          </span>
-        </div>
-        <CardContent className="space-y-3 p-4">
-          <div className="flex items-start gap-3">
-            <AccountAvatar
-              name={listing.sellerName ?? "Seller"}
-              imageUrl={listing.sellerAvatarUrl}
-              className="size-10 shrink-0 rounded-xl"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold text-brand-forest">{listing.sellerName}</p>
-              <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 text-muted-foreground">{listing.title}</p>
-            </div>
+    <Link href={listingPublicPath({ id: listing.id, title: listing.title })} className="group block">
+      <Card className="gap-0 overflow-hidden border-border bg-white py-0 shadow-none ring-0 transition hover:border-brand-forest/15 hover:shadow-sm">
+        <CardContent className="flex items-center gap-3 p-3 sm:p-3.5">
+          <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-16">
+            {listing.coverImage ? (
+              <Image
+                src={listing.coverImage}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="64px"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand-forest/5 to-brand-blue/10">
+                <BriefcaseBusiness className="size-5 text-brand-forest/25" />
+              </div>
+            )}
           </div>
-          <div className="flex items-center justify-between gap-2 text-[12px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1 font-medium text-brand-forest">
-              <Star className="size-3.5 fill-brand-mantis text-brand-mantis" />
-              {listing.sellerReviewCount > 0
-                ? `${listing.sellerAggregateRating.toFixed(1)} (${listing.sellerReviewCount})`
-                : "New seller"}
-            </span>
-            {listing.location ? (
-              <span className="inline-flex max-w-[50%] items-center gap-1 truncate">
-                <MapPin className="size-3 shrink-0" />
-                {listing.location}
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-bold text-brand-forest">{listing.title}</p>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{listing.sellerName}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] text-muted-foreground">
+              {listing.categoryName ? (
+                <span className="font-medium text-brand-forest/70">{listing.categoryName}</span>
+              ) : null}
+              <span className="inline-flex items-center gap-0.5">
+                <Star className="size-3 fill-brand-mantis text-brand-mantis" />
+                {listing.sellerReviewCount > 0
+                  ? listing.sellerAggregateRating.toFixed(1)
+                  : "New"}
               </span>
-            ) : null}
+              {listing.location ? (
+                <span className="inline-flex max-w-[8rem] items-center gap-0.5 truncate">
+                  <MapPin className="size-2.5 shrink-0" />
+                  {listing.location}
+                </span>
+              ) : null}
+            </div>
           </div>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground/70 transition group-hover:text-brand-forest" />
         </CardContent>
       </Card>
     </Link>
@@ -186,28 +174,31 @@ function ListingCard({ listing }: { listing: ListingSearchHit }) {
 
 function RequirementCard({ item }: { item: AccountHomeFeed["requirements"][number] }) {
   return (
-    <Card className="gap-0 border-border bg-white py-0 shadow-none ring-0 transition hover:border-brand-forest/15 hover:shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="rounded-md bg-brand-forest/5 text-[10px] font-bold text-brand-forest">
-                {item.jobType.replaceAll("_", " ")}
-              </Badge>
-              <span className="text-[11px] text-muted-foreground">{formatRelativeTime(item.createdAt)}</span>
-            </div>
-            <h3 className="mt-2 font-bold leading-snug text-brand-forest">{item.title}</h3>
-            <p className="mt-1.5 line-clamp-2 text-[13px] leading-6 text-muted-foreground">{item.description}</p>
+    <Link href={requirementPublicPath({ id: item.id, title: item.title })} className="group block">
+      <Card className="gap-0 border-border bg-white py-0 shadow-none ring-0 transition hover:border-brand-forest/15 hover:shadow-sm">
+      <CardContent className="flex items-center gap-3 p-3 sm:p-3.5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-forest/5 text-brand-forest">
+          <ClipboardList className="size-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant="secondary"
+              className="h-5 rounded-md bg-brand-forest/5 px-1.5 text-[9px] font-bold text-brand-forest"
+            >
+              {item.jobType.replaceAll("_", " ")}
+            </Badge>
+            <span className="text-[10px] text-muted-foreground">{formatRelativeTime(item.createdAt)}</span>
           </div>
-          <span className="shrink-0 text-right">
-            <span className="block text-sm font-extrabold text-brand-forest">
-              {formatAedRange(item.budgetMin, item.budgetMax)}
-            </span>
-            <span className="mt-1 block text-[11px] text-muted-foreground">{item.location}</span>
-          </span>
+          <h3 className="mt-1 truncate text-[13px] font-bold text-brand-forest">{item.title}</h3>
+          <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{item.location}</p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[12px] font-extrabold text-brand-mantis">{formatAedRange(item.budgetMin, item.budgetMax)}</p>
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }
 
@@ -235,7 +226,7 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
   const featuredCategories = homeFeed.categories.slice(0, 6);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 pb-2">
+    <div className="mx-auto max-w-5xl space-y-6 pb-2">
       {/* Hero */}
       <section className="relative overflow-hidden rounded-[1.35rem] border border-border bg-white p-5 sm:p-7">
         <div
@@ -391,7 +382,7 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
               }
             />
             {homeFeed.requirements.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="flex flex-col gap-2">
                 {homeFeed.requirements.map((item) => (
                   <RequirementCard key={item.id} item={item} />
                 ))}
@@ -416,7 +407,7 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
                   </Link>
                 }
               />
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
                 {homeFeed.listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
@@ -513,7 +504,7 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
               }
             />
             {homeFeed.listings.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
                 {homeFeed.listings.map((listing) => (
                   <ListingCard key={listing.id} listing={listing} />
                 ))}
@@ -539,7 +530,7 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
               }
             />
             {homeFeed.requirements.length > 0 ? (
-              <div className="grid gap-3">
+              <div className="flex flex-col gap-2">
                 {homeFeed.requirements.map((item) => (
                   <RequirementCard key={item.id} item={item} />
                 ))}

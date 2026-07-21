@@ -81,6 +81,26 @@ export function AccountGlass({
   );
 }
 
+/** Solid surface for dense list rows (listings, requirements) — easier to scan than glass. */
+export function AccountListCard({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card
+      className={cn(
+        "overflow-hidden rounded-[18px] border border-brand-forest/10 !bg-white shadow-sm ring-0",
+        className,
+      )}
+    >
+      {children}
+    </Card>
+  );
+}
+
 export function SectionHeading({
   title,
   action,

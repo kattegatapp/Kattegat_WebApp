@@ -28,6 +28,7 @@ import {
   SectionHeading,
   accountDisplayName,
 } from "@/features/account/account-shared";
+import { AccountProfileEditDialog } from "@/features/account/account-profile-edit-dialog";
 import { ReferralSharePanel } from "@/features/account/referral-share-panel";
 import { Button } from "@/components/ui/button";
 import {
@@ -331,6 +332,7 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
   const isSeller = identity === "seller";
   const { becomeSeller, becomeBuyer } = useIdentityMutations();
   const [walletDisplay, setWalletDisplay] = useState(0);
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
   const displayName = accountDisplayName({
     displayName: sellerProfile?.displayName,
     businessName: user.businessName,
@@ -384,14 +386,23 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
               </div>
             </div>
           </div>
-          <Link
-            href="/account/setup"
-            className="rounded-xl border border-brand-forest/10 px-4 py-2 text-xs font-bold text-brand-forest transition hover:bg-brand-forest/[0.03]"
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-xl border-brand-forest/10 px-4 py-2 text-xs font-bold text-brand-forest"
+            onClick={() => setProfileEditOpen(true)}
           >
             Edit profile
-          </Link>
+          </Button>
         </div>
       </AccountGlass>
+
+      <AccountProfileEditDialog
+        open={profileEditOpen}
+        onOpenChange={setProfileEditOpen}
+        dashboard={dashboard}
+        identity={identity ?? (user.sid ? "seller" : "buyer")}
+      />
 
       {referral ? (
         <>

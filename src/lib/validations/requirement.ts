@@ -67,6 +67,7 @@ export const requirementFormSchema = z
   });
 
 export type RequirementFormValues = z.input<typeof requirementFormSchema>;
+export type RequirementParsed = z.output<typeof requirementFormSchema>;
 
 export type RequirementPayload = {
   title: string;
@@ -77,49 +78,100 @@ export type RequirementPayload = {
   budgetMax?: number;
   startsAt?: string;
   endsAt?: string;
+  attachments?: string[];
 };
 
-export function toRequirementPayload(values: RequirementFormValues): RequirementPayload {
-  const parsed = requirementFormSchema.parse(values);
+export function toRequirementPayload(
+  values: RequirementParsed,
+  attachments: string[],
+): RequirementPayload {
   return {
-    title: parsed.title,
-    jobType: parsed.jobType,
-    description: parsed.description,
-    location: parsed.location,
-    budgetMin: parsed.budgetMinAed,
-    budgetMax: parsed.budgetMaxAed,
-    startsAt: parsed.startsAt,
-    endsAt: parsed.endsAt,
+    title: values.title,
+    jobType: values.jobType,
+    description: values.description,
+    location: values.location,
+    budgetMin: values.budgetMinAed,
+    budgetMax: values.budgetMaxAed,
+    startsAt: values.startsAt,
+    endsAt: values.endsAt,
+    attachments: attachments.length ? attachments : undefined,
   };
 }
 
-export const requirementBodySchema = z
-  .object({
-    title: z
-      .string()
-      .transform((value) => normalizeText(value))
-      .pipe(z.string().min(3).max(120))
-      .refine((value) => !containsDangerousMarkup(value), { message: "Title contains invalid characters" }),
-    jobType: jobTypeSchema,
-    description: z
-      .string()
-      .transform((value) => normalizeText(value, { allowNewlines: true }))
-      .pipe(z.string().min(1).max(5000))
-      .refine((value) => !containsDangerousMarkup(value), {
-        message: "Description contains invalid characters",
-      }),
-    location: z
-      .string()
-      .transform((value) => normalizeText(value))
-      .pipe(z.string().min(1).max(120))
-      .refine((value) => !containsDangerousMarkup(value), {
-        message: "Location contains invalid characters",
-      }),
-    budgetMin: z.number().int().nonnegative().optional(),
-    budgetMax: z.number().int().nonnegative().optional(),
-    startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  })
-  .strict();
+export type RequirementDiffSource = {
+  title: string;
+  jobType: string;
+  description: string;
+  location: string;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  attachments?: string[];
+};
+
+export function buildUpdateRequirementPayload(
+  values: RequirementParsed,
+  existing: RequirementDiffSource,
+  attachments: string[],
+): Partial<RequirementPayload> {
+  const payload: Partial<RequirementPayload> = {};
+
+  if (values.title !== existing.title) payload.title = values.title;
+  if (values.description !== existing.description) payload.description = values.description;
+  if (values.location !== existing.location) payload.location = values.location;
+  if (values.jobType !== existing.jobType) payload.jobType = values.jobType;
+
+  const nextStarts = values.startsAt || undefined;
+  const existingStarts = existing.startsAt?.slice(0, 10) || undefined;
+  if (nextStarts !== existingStarts) payload.startsAt = nextStarts;
+
+  const nextEnds = values.endsAt || undefined;
+  const existingEnds = existing.endsAt?.slice(0, 10) || undefined;
+  if (nextEnds !== existingEnds) payload.endsAt = nextEnds;
+
+  const nextMin = values.budgetMinAed;
+  const existingMin = existing.budgetMin ?? undefined;
+  if (nextMin !== existingMin) payload.budgetMin = nextMin;
+
+  const nextMax = values.budgetMaxAed;
+  const existingMax = existing.budgetMax ?? undefined;
+  if (nextMax !== existingMax) payload.budgetMax = nextMax;
+
+  const existingAttachments = existing.attachments ?? [];
+  if (JSON.stringify(attachments) !== JSON.stringify(existingAttachments)) {
+    payload.attachments = attachments;
+  }
+
+  return payload;
+}
+
+export const requirementBodySchema = z.object({
+  title: z
+    .string()
+    .transform((value) => normalizeText(value))
+    .pipe(z.string().min(3).max(120))
+    .refine((value) => !containsDangerousMarkup(value), { message: "Title contains invalid characters" }),
+  jobType: jobTypeSchema,
+  description: z
+    .string()
+    .transform((value) => normalizeText(value, { allowNewlines: true }))
+    .pipe(z.string().min(1).max(5000))
+    .refine((value) => !containsDangerousMarkup(value), {
+      message: "Description contains invalid characters",
+    }),
+  location: z
+    .string()
+    .transform((value) => normalizeText(value))
+    .pipe(z.string().min(1).max(120))
+    .refine((value) => !containsDangerousMarkup(value), {
+      message: "Location contains invalid characters",
+    }),
+  budgetMin: z.number().int().nonnegative().optional(),
+  budgetMax: z.number().int().nonnegative().optional(),
+  startsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  endsAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  attachments: z.array(z.string().url()).max(20).optional(),
+});
 
 export const updateRequirementBodySchema = requirementBodySchema.partial();

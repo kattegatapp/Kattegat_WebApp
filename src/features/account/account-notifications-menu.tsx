@@ -184,7 +184,7 @@ export function AccountNotificationsMenu({
               const isNew = !item.readAt;
               const href = normalizeMemberDeepLink(item.deepLink);
 
-              return (
+              return href ? (
                 <DropdownMenuItem
                   key={item.id}
                   nativeButton={false}
@@ -192,13 +192,38 @@ export function AccountNotificationsMenu({
                     "items-start gap-3 rounded-xl px-3 py-3 focus:bg-brand-forest/5 data-highlighted:bg-brand-forest/5",
                     isNew && "bg-brand-mantis/5",
                   )}
-                  render={
-                    href ? (
-                      <Link href={href} onClick={() => setOpen(false)} />
-                    ) : (
-                      <button type="button" className="w-full text-left" onClick={() => setOpen(false)} />
-                    )
-                  }
+                  render={<Link href={href} onClick={() => setOpen(false)} />}
+                >
+                  <span className="relative mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-brand-mantis/12 text-brand-forest">
+                    <Icon className="size-4" />
+                    {isNew ? (
+                      <span className="account-notification-dot-shimmer absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-brand-mantis ring-2 ring-white" />
+                    ) : null}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-start justify-between gap-2">
+                      <span className={cn("line-clamp-1 text-sm", isNew ? "font-extrabold" : "font-semibold")}>
+                        {item.title}
+                      </span>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">
+                        {formatRelativeTime(item.createdAt)}
+                      </span>
+                    </span>
+                    {item.body ? (
+                      <span className="mt-0.5 line-clamp-2 block text-xs leading-5 text-brand-forest/65">
+                        {item.body}
+                      </span>
+                    ) : null}
+                  </span>
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  key={item.id}
+                  className={cn(
+                    "items-start gap-3 rounded-xl px-3 py-3 focus:bg-brand-forest/5 data-highlighted:bg-brand-forest/5",
+                    isNew && "bg-brand-mantis/5",
+                  )}
+                  onClick={() => setOpen(false)}
                 >
                   <span className="relative mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-brand-mantis/12 text-brand-forest">
                     <Icon className="size-4" />
