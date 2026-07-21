@@ -23,6 +23,44 @@ export default function ServicesPage() {
       eyebrow="Marketplace categories"
       title="The specialists behind exceptional hospitality."
       description="Explore professional services built around how venues, events, and hospitality teams actually operate. Pick a category to browse live listings in Dubai."
+      compact
+      heroVisual={
+        <div
+          className="grid grid-cols-[1.08fr_0.92fr] grid-rows-2 gap-2 sm:gap-3"
+          style={{ height: "clamp(13rem, 30vw, 21rem)" }}
+        >
+          <div className="relative row-span-2 overflow-hidden rounded-3xl bg-brand-forest shadow-sm ring-1 ring-brand-forest/10">
+            <Image
+              src={SERVICE_CATEGORIES[0].image}
+              alt="Entertainment services"
+              fill
+              priority
+              sizes="(max-width: 1024px) 55vw, 28vw"
+              className="object-cover object-top"
+            />
+          </div>
+          <div className="relative overflow-hidden rounded-3xl bg-brand-mantis shadow-sm ring-1 ring-brand-forest/10">
+            <Image
+              src={SERVICE_CATEGORIES[2].image}
+              alt="Restaurant consultancy"
+              fill
+              priority
+              sizes="(max-width: 1024px) 45vw, 22vw"
+              className="object-cover object-[center_58%]"
+            />
+          </div>
+          <div className="relative overflow-hidden rounded-3xl bg-brand-forest shadow-sm ring-1 ring-brand-forest/10">
+            <Image
+              src={SERVICE_CATEGORIES[3].image}
+              alt="Marketing services"
+              fill
+              priority
+              sizes="(max-width: 1024px) 45vw, 22vw"
+              className="object-cover object-[center_48%]"
+            />
+          </div>
+        </div>
+      }
     >
       <section className="relative isolate overflow-x-clip bg-white">
         <div aria-hidden className="marketing-section-bg">
@@ -55,11 +93,12 @@ export default function ServicesPage() {
           </div>
 
           <div className="mt-8 grid grid-cols-2 gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {SERVICE_CATEGORIES.map((service) => (
+            {SERVICE_CATEGORIES.map((service, index) => (
               <Link
                 key={service.title}
                 href={categoryHref(service.query)}
-                className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-brand-forest shadow-[0_12px_40px_rgb(0_57_18/0.1)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_50px_rgb(0_57_18/0.14)]"
+                aria-label={`Browse ${service.title}`}
+                className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-brand-forest shadow-sm ring-1 ring-brand-forest/10 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgb(0_57_18/0.14)] hover:ring-brand-mantis/50"
               >
                 <Image
                   src={service.image}
@@ -67,21 +106,17 @@ export default function ServicesPage() {
                   fill
                   loading="eager"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="object-cover transition duration-500 group-hover:scale-[1.04]"
+                  className="object-cover transition duration-500 group-hover:scale-[1.025]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-forest/90 via-brand-forest/20 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-3.5 sm:p-5">
-                  <h2 className="text-sm font-extrabold tracking-[-0.02em] text-white sm:text-base">
-                    {service.title}
-                  </h2>
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-white/70 sm:mt-1.5 sm:text-[13px] sm:leading-6">
-                    {service.body}
-                  </p>
-                  <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wide text-brand-mantis sm:mt-3 sm:text-[11px]">
-                    Browse
-                    <ArrowRight className="size-3 transition group-hover:translate-x-0.5" />
-                  </span>
-                </div>
+                <span className="absolute bottom-3 left-3 grid size-7 place-items-center rounded-full bg-white/90 text-[10px] font-extrabold text-brand-forest shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4 sm:size-8">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="absolute bottom-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 text-brand-forest shadow-sm backdrop-blur-sm transition group-hover:bg-brand-mantis sm:bottom-4 sm:right-4 sm:size-10">
+                  <ArrowUpRight className="size-4" />
+                </span>
+                <span className="sr-only">
+                  {service.title}: {service.body}
+                </span>
               </Link>
             ))}
           </div>

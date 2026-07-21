@@ -13,7 +13,6 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 
@@ -36,9 +35,8 @@ import {
 const inputClass =
   "h-12 rounded-xl border-brand-forest/12 bg-white pl-10 text-brand-forest shadow-sm placeholder:text-brand-forest/35 focus-visible:border-brand-mantis/55 focus-visible:ring-brand-mantis/20";
 
-export function MemberRegisterForm() {
-  const searchParams = useSearchParams();
-  const refFromUrl = (searchParams.get("ref") ?? "").trim().toUpperCase();
+export function MemberRegisterForm({ initialReferralCode = "" }: { initialReferralCode?: string }) {
+  const refFromUrl = initialReferralCode.trim().toUpperCase();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [needsConfirm, setNeedsConfirm] = useState(false);
@@ -259,6 +257,7 @@ export function MemberRegisterForm() {
               placeholder="Friend's code"
               className={cn(inputClass, "uppercase")}
               {...form.register("referralCode")}
+              defaultValue={refFromUrl}
             />
           </div>
           <FieldError errors={[form.formState.errors.referralCode]} />

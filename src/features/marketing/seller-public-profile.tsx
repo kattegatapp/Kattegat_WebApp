@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 
 import { ContinueInApp } from "@/features/marketing/continue-in-app";
+import { Reveal } from "@/components/motion/reveal";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import type { CatalogCategory, PublicReview, PublicSellerDetail } from "@/lib/api/marketing";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
 
@@ -133,7 +136,18 @@ function SectionHeading({
   );
 }
 
-function StatPill({
+function ProfileNavLink({ href, label }: { href: string; label: string }) {
+  return (
+    <a
+      href={href}
+      className="shrink-0 px-1 py-3 text-sm font-bold text-foreground/50 transition hover:text-foreground"
+    >
+      {label}
+    </a>
+  );
+}
+
+function StatItem({
   icon: Icon,
   label,
   value,
@@ -143,14 +157,14 @@ function StatPill({
   value: string;
 }) {
   return (
-    <div className="min-w-[8.5rem] shrink-0 rounded-xl border border-brand-forest/8 bg-[#F7F9F8] px-3.5 py-3 sm:min-w-0 sm:flex-1">
-      <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-brand-forest/45">
-        <span className="grid size-5 place-items-center rounded-full bg-brand-mantis/15">
-          <Icon className="size-3 text-brand-forest" />
-        </span>
-        {label}
+    <div className="flex min-w-[7rem] shrink-0 items-center gap-2.5 px-4 py-3.5 sm:min-w-0 sm:flex-1 sm:px-5">
+      <Icon className="size-4 shrink-0 text-brand-blue" />
+      <div className="min-w-0">
+        <p className="truncate text-sm font-extrabold leading-tight text-brand-forest">{value}</p>
+        <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-[0.06em] text-muted-foreground">
+          {label}
+        </p>
       </div>
-      <p className="text-base font-extrabold tracking-tight text-brand-forest sm:text-lg">{value}</p>
     </div>
   );
 }
@@ -203,172 +217,195 @@ export function SellerPublicProfile({
     }
   });
 
+  const stats = [
+    { icon: BriefcaseBusiness, label: "Services", value: String(listings.length) },
+    { icon: Star, label: "Overall rating", value: hasOverallRating ? overallRating!.toFixed(1) : "New" },
+    { icon: Calendar, label: "Member since", value: memberSince ?? "—" },
+    { icon: MessageCircle, label: "Contact", value: "Via listing" },
+  ];
+
   return (
-    <div className="pb-12 sm:pb-16">
+    <div className="scroll-smooth pb-24 sm:pb-16">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <article className="overflow-hidden rounded-[1.75rem] border border-brand-forest/10 bg-white shadow-[0_18px_50px_rgb(0_57_18/0.07)]">
-          <div className="h-1 bg-brand-mantis" aria-hidden />
-          <div className="space-y-6 p-5 sm:p-8">
-            <div className="flex gap-4 sm:gap-5">
-              <div className="shrink-0 rounded-2xl border border-brand-forest/10 bg-[#F7F9F8] p-1">
-                <div className="size-[4.5rem] overflow-hidden rounded-[0.85rem] bg-[#EEF2F0] sm:size-24">
-                  {seller.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- remote avatar
-                    <img src={seller.avatarUrl} alt="" className="size-full object-cover" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center text-lg font-extrabold text-brand-mantis sm:text-xl">
+        {/* Hero */}
+        <Reveal className="overflow-hidden rounded-3xl bg-card shadow-[0_20px_60px_rgb(0_57_18/0.08)]">
+          <div className="h-28 bg-brand-mantis sm:h-40" />
+
+          <div className="px-5 pb-6 sm:px-8 sm:pb-8">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex min-w-0 items-end gap-4 sm:gap-5">
+                <div className="-mt-10 shrink-0 rounded-2xl bg-card p-1.5 shadow-lg sm:-mt-14">
+                  <Avatar className="size-20 rounded-xl sm:size-28">
+                    <AvatarImage src={seller.avatarUrl ?? undefined} alt="" className="rounded-xl" />
+                    <AvatarFallback className="rounded-xl text-lg font-extrabold text-brand-forest sm:text-2xl">
                       {sellerInitials(name)}
-                    </div>
-                  )}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-brand-blue">
-                  Provider profile
-                </p>
-                <h1 className="mt-1 text-2xl font-extrabold leading-tight tracking-[-0.03em] text-brand-forest sm:text-4xl">
-                  {name}
-                </h1>
-                <div className="mt-2.5 flex flex-wrap items-center gap-2">
-                  <Badge className="border-brand-mantis/30 bg-brand-mantis/15 text-[10px] font-extrabold uppercase tracking-wide text-brand-forest hover:bg-brand-mantis/15">
-                    {tierLabel(seller.tier)}
-                  </Badge>
-                  {seller.badges.map((badge) => (
-                    <Badge
-                      key={badge}
-                      variant="secondary"
-                      className="border-brand-forest/10 bg-[#F7F9F8] text-[10px] font-bold text-brand-forest/80"
-                    >
-                      <BadgeCheck className="mr-1 size-3 text-brand-mantis" />
-                      {badge}
+                <div className="min-w-0 pb-0.5">
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <Badge className="border-0 bg-brand-mantis/15 text-[10px] font-extrabold uppercase tracking-wide text-brand-forest hover:bg-brand-mantis/15">
+                      {tierLabel(seller.tier)}
                     </Badge>
-                  ))}
-                </div>
-                <div className="mt-2.5 flex flex-col gap-1 text-sm font-semibold text-brand-forest/60">
-                  {reviewsEnabled ? (
-                    hasOverallRating ? (
-                      <span className="inline-flex items-center gap-1.5 text-brand-forest">
-                        <Star className="size-3.5 fill-brand-mantis text-brand-mantis" />
-                        {overallRating!.toFixed(1)}
-                        <span className="text-brand-forest/50">· {overallReviewCount} reviews</span>
-                      </span>
-                    ) : (
-                      <span>New provider · no reviews yet</span>
-                    )
-                  ) : null}
-                  <span className="inline-flex items-center gap-1.5">
-                    <MapPin className="size-3.5 text-brand-blue" />
-                    Dubai, UAE
-                  </span>
-                  {seller.customSlug ? <span>@{seller.customSlug}</span> : null}
-                  {seller.sid ? <span className="text-xs text-brand-forest/40">{seller.sid}</span> : null}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:gap-3 sm:overflow-visible lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
-              {[
-                { icon: BriefcaseBusiness, label: "Services", value: String(listings.length) },
-                {
-                  icon: Star,
-                  label: "Overall",
-                  value: hasOverallRating ? overallRating!.toFixed(1) : "—",
-                },
-                { icon: Calendar, label: "Member since", value: memberSince ?? "—" },
-                { icon: MessageCircle, label: "Contact", value: "Via listing" },
-              ].map((stat) => (
-                <StatPill key={stat.label} icon={stat.icon} label={stat.label} value={stat.value} />
-              ))}
-            </div>
-
-            <div className="border-t border-brand-forest/8 pt-6">
-              <SectionHeading
-                eyebrow="About"
-                title={`Meet ${firstName}`}
-                subtitle="A quick look at this provider"
-              />
-              <p className="mt-4 text-[15px] leading-7 text-brand-forest/70 sm:text-base sm:leading-8">
-                {seller.bio ||
-                  `${name} is active on Kattegat in Dubai. Browse their services below or continue in the app to message and book directly.`}
-              </p>
-
-              {skillTags.length > 0 ? (
-                <div className="mt-5">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-brand-forest/45">
-                    From their active services
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {skillTags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full bg-[#EEF2F0] px-3 py-1.5 text-xs font-bold text-brand-forest/70"
+                    {seller.badges.map((badge) => (
+                      <Badge
+                        key={badge}
+                        variant="secondary"
+                        className="border-0 bg-muted text-[10px] font-bold text-foreground/80"
                       >
-                        {tag}
-                      </span>
+                        <BadgeCheck className="mr-1 size-3 text-brand-mantis" />
+                        {badge}
+                      </Badge>
                     ))}
                   </div>
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                    <h1 className="truncate text-2xl font-extrabold leading-tight tracking-[-0.035em] text-foreground sm:text-4xl">
+                      {name}
+                    </h1>
+                    {reviewsEnabled ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-mantis/15 px-2.5 py-1 text-xs font-extrabold text-brand-forest">
+                        <Star className="size-3.5 fill-brand-mantis text-brand-mantis" />
+                        {hasOverallRating ? overallRating!.toFixed(1) : "New"}
+                        {hasOverallRating ? (
+                          <span className="font-semibold text-brand-forest/50">
+                            ({overallReviewCount})
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-semibold text-muted-foreground sm:text-sm">
+                    <span className="inline-flex items-center gap-1.5">
+                      <MapPin className="size-3.5 text-brand-blue" /> Dubai, UAE
+                    </span>
+                    {seller.customSlug ? (
+                      <>
+                        <span className="text-foreground/25">·</span>
+                        <span>@{seller.customSlug}</span>
+                      </>
+                    ) : null}
+                    {seller.sid ? (
+                      <>
+                        <span className="text-foreground/25">·</span>
+                        <span className="text-foreground/35">{seller.sid}</span>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
-              ) : seller.tags.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {seller.tags.map((tag) => (
+              </div>
+
+              <ContinueInApp
+                title="Message & book in the app"
+                description={`Open Kattegat to view ${name}'s full portfolio, message them, and book directly.`}
+                deepLinkPath={`/seller/${seller.userId}`}
+                webOrigin={origin}
+                appStoreUrl={appStoreUrl}
+                playStoreUrl={playStoreUrl}
+                mobileAppUrl={mobileAppUrl}
+                buttonLabel="Message & book"
+                className="hidden active:scale-[0.98] sm:inline-flex sm:w-auto sm:shrink-0"
+              />
+            </div>
+
+            <div className="mt-6 flex overflow-x-auto rounded-2xl bg-muted/40 [-ms-overflow-style:none] [scrollbar-width:none] sm:mt-7 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+              {stats.map((stat) => (
+                <StatItem key={stat.label} icon={stat.icon} label={stat.label} value={stat.value} />
+              ))}
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Section nav */}
+        <Reveal
+          as="nav"
+          delayMs={60}
+          aria-label="Profile sections"
+          className="sticky top-[4.5rem] z-30 -mx-4 mt-6 flex items-center gap-5 overflow-x-auto bg-background/90 px-4 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] sm:top-[5.5rem] sm:mx-0 sm:mt-8 sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+          <ProfileNavLink href="#about" label="About" />
+          {portfolioCount > 0 ? <ProfileNavLink href="#portfolio" label="Portfolio" /> : null}
+          <ProfileNavLink href="#services" label="Services" />
+        </Reveal>
+
+        {/* About */}
+        <section id="about" className="scroll-mt-32 pt-8 sm:scroll-mt-36 sm:pt-10">
+          <Reveal delayMs={80}>
+            <SectionHeading
+              eyebrow="About"
+              title={`Meet ${firstName}`}
+              subtitle="A quick look at this provider"
+            />
+            <p className="mt-4 max-w-4xl text-[15px] leading-7 text-muted-foreground sm:text-base sm:leading-8">
+              {seller.bio ||
+                `${name} is active on Kattegat in Dubai. Browse their services below or continue in the app to message and book directly.`}
+            </p>
+
+            {skillTags.length > 0 ? (
+              <div className="mt-5">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-brand-forest/45">
+                  From their active services
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {skillTags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-brand-forest/10 bg-[#F7F9F8] px-3 py-1.5 text-xs font-bold text-brand-forest/70"
+                      className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold text-foreground/70"
                     >
                       {tag}
                     </span>
                   ))}
                 </div>
-              ) : null}
+              </div>
+            ) : seller.tags.length > 0 ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {seller.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-muted/60 px-3 py-1.5 text-xs font-bold text-foreground/70"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            ) : null}
 
-              {socialLinks.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {socialLinks.map(([key, url]) => (
-                    <a
-                      key={key}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-brand-forest/10 bg-[#F7F9F8] px-3 py-1.5 text-xs font-bold text-brand-forest/70 transition hover:border-brand-mantis/35 hover:text-brand-forest"
-                    >
-                      <Globe className="size-3.5" />
-                      {socialLabel(key)}
-                      <ExternalLink className="size-3 opacity-50" />
-                    </a>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </article>
-
-        {/* App CTA */}
-        <section className="mt-6">
-          <ContinueInApp
-            title="Message & book in the app"
-            description={`Open Kattegat to view ${name}'s full portfolio, message them, and book directly.`}
-            deepLinkPath={`/seller/${seller.userId}`}
-            webOrigin={origin}
-            appStoreUrl={appStoreUrl}
-            playStoreUrl={playStoreUrl}
-            mobileAppUrl={mobileAppUrl}
-            className="rounded-[1.5rem] border border-brand-forest/10 bg-white p-5 shadow-[0_12px_40px_rgb(0_57_18/0.06)] sm:p-6"
-          />
+            {socialLinks.length > 0 ? (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {socialLinks.map(([key, url]) => (
+                  <a
+                    key={key}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs font-bold text-foreground/70 transition hover:bg-brand-mantis/15 hover:text-foreground active:scale-[0.97]"
+                  >
+                    <Globe className="size-3.5" />
+                    {socialLabel(key)}
+                    <ExternalLink className="size-3 opacity-50" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </Reveal>
         </section>
 
         {/* Portfolio */}
         {portfolioCount > 0 ? (
-          <section className="mt-12 sm:mt-14">
-            <SectionHeading
-              eyebrow="Portfolio"
-              title="Showcase"
-              subtitle={`${portfolioCount} showcase item${portfolioCount === 1 ? "" : "s"}`}
-            />
+          <section id="portfolio" className="scroll-mt-32 pt-12 sm:scroll-mt-36 sm:pt-14">
+            <Separator className="mb-12 sm:mb-14" />
+            <Reveal>
+              <SectionHeading
+                eyebrow="Portfolio"
+                title="Showcase"
+                subtitle={`${portfolioCount} showcase item${portfolioCount === 1 ? "" : "s"}`}
+              />
+            </Reveal>
             <div className="mt-5 flex gap-3 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] snap-x snap-mandatory sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:pb-0 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
-              {photos.map((item) => (
-                <div
+              {photos.map((item, index) => (
+                <Reveal
                   key={item.id}
-                  className="group aspect-[4/5] w-[72vw] max-w-[280px] shrink-0 snap-start overflow-hidden rounded-[1.25rem] bg-[#EEF2F0] sm:w-auto sm:max-w-none"
+                  delayMs={Math.min(index * 50, 300)}
+                  className="group aspect-[4/5] w-[72vw] max-w-[280px] shrink-0 snap-start overflow-hidden rounded-2xl bg-muted shadow-sm sm:w-auto sm:max-w-none"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -376,49 +413,54 @@ export function SellerPublicProfile({
                     alt=""
                     className="size-full object-cover transition duration-500 group-hover:scale-105"
                   />
-                </div>
+                </Reveal>
               ))}
-              {videos.map((item) => (
-                <a
+              {videos.map((item, index) => (
+                <Reveal
                   key={item.id}
+                  as="a"
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex aspect-[4/5] w-[72vw] max-w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-[1.25rem] border border-brand-forest/10 bg-brand-forest/[0.03] transition hover:border-brand-mantis/35 hover:bg-brand-mantis/5 sm:w-[240px]"
+                  delayMs={Math.min((photos.length + index) * 50, 300)}
+                  className="group flex aspect-[4/5] w-[72vw] max-w-[280px] shrink-0 snap-start flex-col items-center justify-center gap-2 rounded-2xl bg-card shadow-sm transition hover:bg-brand-mantis/5 active:scale-[0.97] sm:w-auto sm:max-w-none"
                 >
                   <span className="grid size-12 place-items-center rounded-full bg-brand-mantis/15 text-brand-forest transition group-hover:scale-105">
                     <Play className="size-5 fill-current" />
                   </span>
                   <span className="text-xs font-bold text-brand-forest/60">Watch video</span>
-                </a>
+                </Reveal>
               ))}
             </div>
           </section>
         ) : null}
 
         {/* Services */}
-        <section className="mt-12 pb-4 sm:mt-14">
-          <SectionHeading
-            eyebrow="Services"
-            title="Book a specific service"
-            subtitle={
-              reviewsEnabled
-                ? `${listings.length} active listing${listings.length === 1 ? "" : "s"} — newest first, each with its own rating`
-                : `${listings.length} active listing${listings.length === 1 ? "" : "s"} — pick the one that fits your event`
-            }
-            action={
-              <Link
-                href="/search"
-                className="hidden text-sm font-extrabold text-brand-blue hover:underline sm:inline"
-              >
-                Browse marketplace
-              </Link>
-            }
-          />
+        <section id="services" className="scroll-mt-32 pb-4 pt-12 sm:scroll-mt-36 sm:pt-14">
+          <Separator className="mb-12 sm:mb-14" />
+          <Reveal>
+            <SectionHeading
+              eyebrow="Services"
+              title="Book a specific service"
+              subtitle={
+                reviewsEnabled
+                  ? `${listings.length} active listing${listings.length === 1 ? "" : "s"} — newest first, each with its own rating`
+                  : `${listings.length} active listing${listings.length === 1 ? "" : "s"} — pick the one that fits your event`
+              }
+              action={
+                <Link
+                  href="/search"
+                  className="hidden text-sm font-extrabold text-brand-blue hover:underline sm:inline"
+                >
+                  Browse marketplace
+                </Link>
+              }
+            />
+          </Reveal>
 
           {listings.length > 0 ? (
             <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {listings.map((listing) => {
+              {listings.map((listing, index) => {
                 const categoryName = categoryNameById.get(listing.categoryId);
                 const listingReviews = reviewsByListingId.get(listing.id) ?? [];
                 const { rating, reviewCount, hasRating: listingHasRating } = resolveListingRating(
@@ -427,67 +469,68 @@ export function SellerPublicProfile({
                 );
 
                 return (
-                  <Link
-                    key={listing.id}
-                    href={listingPublicPath({ id: listing.id, title: listing.title })}
-                    className="group flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-brand-forest/10 bg-white shadow-[0_16px_45px_rgb(0_57_18/0.08)] transition duration-300 hover:-translate-y-1 hover:border-brand-mantis/40 hover:shadow-[0_24px_60px_rgb(0_57_18/0.12)]"
-                  >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-[#EEF2F0]">
-                      {listing.coverImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={listing.coverImage}
-                          alt=""
-                          className="size-full object-cover transition duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center">
-                          <BriefcaseBusiness className="size-8 text-brand-forest/20" />
-                        </div>
-                      )}
-                      {categoryName ? (
-                        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-brand-forest/70 backdrop-blur-sm">
-                          {categoryName}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-1 flex-col p-4 sm:p-5">
-                      <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-brand-forest transition group-hover:text-brand-blue sm:text-lg">
-                        {listing.title}
-                      </h3>
-                      {listing.location ? (
-                        <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-brand-forest/45">
-                          <MapPin className="size-3" />
-                          {listing.location}
-                        </p>
-                      ) : null}
-                      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-                        <div>
-                          <p className="text-sm font-extrabold text-brand-mantis sm:text-base">
-                            {formatListingPrice(listing.pricing)}
-                          </p>
-                          {reviewsEnabled ? (
-                            listingHasRating ? (
-                              <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-brand-forest/50">
-                                <Star className="size-3 fill-brand-mantis text-brand-mantis" />
-                                {rating!.toFixed(1)} · {reviewCount}
-                              </p>
-                            ) : (
-                              <p className="mt-1 text-[11px] font-semibold text-brand-forest/45">New service</p>
-                            )
-                          ) : null}
-                        </div>
-                        <span className="grid size-9 place-items-center rounded-full bg-brand-mantis/15 text-brand-forest transition group-hover:bg-brand-mantis/25">
-                          <ArrowRight className="size-4" />
-                        </span>
+                  <Reveal key={listing.id} delayMs={Math.min(index * 60, 360)} className="h-full">
+                    <Link
+                      href={listingPublicPath({ id: listing.id, title: listing.title })}
+                      className="group flex h-full flex-col overflow-hidden rounded-2xl bg-card shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgb(0_57_18/0.10)] active:scale-[0.98]"
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                        {listing.coverImage ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={listing.coverImage}
+                            alt=""
+                            className="size-full object-cover transition duration-500 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center">
+                            <BriefcaseBusiness className="size-8 text-brand-forest/20" />
+                          </div>
+                        )}
+                        {categoryName ? (
+                          <span className="absolute left-3 top-3 rounded-full bg-card/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-foreground/70 backdrop-blur-sm">
+                            {categoryName}
+                          </span>
+                        ) : null}
                       </div>
-                    </div>
-                  </Link>
+                      <div className="flex flex-1 flex-col p-4 sm:p-5">
+                        <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-brand-forest transition group-hover:text-brand-blue sm:text-lg">
+                          {listing.title}
+                        </h3>
+                        {listing.location ? (
+                          <p className="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-brand-forest/45">
+                            <MapPin className="size-3" />
+                            {listing.location}
+                          </p>
+                        ) : null}
+                        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                          <div>
+                            <p className="text-sm font-extrabold text-brand-mantis sm:text-base">
+                              {formatListingPrice(listing.pricing)}
+                            </p>
+                            {reviewsEnabled ? (
+                              listingHasRating ? (
+                                <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-brand-forest/50">
+                                  <Star className="size-3 fill-brand-mantis text-brand-mantis" />
+                                  {rating!.toFixed(1)} · {reviewCount}
+                                </p>
+                              ) : (
+                                <p className="mt-1 text-[11px] font-semibold text-brand-forest/45">New service</p>
+                              )
+                            ) : null}
+                          </div>
+                          <span className="grid size-9 place-items-center rounded-full bg-brand-mantis/15 text-brand-forest transition group-hover:bg-brand-mantis/25">
+                            <ArrowRight className="size-4" />
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  </Reveal>
                 );
               })}
             </div>
           ) : (
-            <div className="mt-8 rounded-[1.5rem] border border-dashed border-brand-forest/15 bg-white px-6 py-14 text-center">
+            <div className="mt-8 rounded-2xl bg-muted/40 px-6 py-14 text-center">
               <BriefcaseBusiness className="mx-auto size-9 text-brand-forest/25" />
               <p className="mt-4 font-bold text-brand-forest">No live services yet</p>
               <p className="mt-1 text-sm text-brand-forest/55">
@@ -496,6 +539,21 @@ export function SellerPublicProfile({
             </div>
           )}
         </section>
+      </div>
+
+      {/* Mobile sticky action bar */}
+      <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgb(0_57_18/0.08)] backdrop-blur-md sm:hidden">
+        <ContinueInApp
+          title="Message & book in the app"
+          description={`Open Kattegat to view ${name}'s full portfolio, message them, and book directly.`}
+          deepLinkPath={`/seller/${seller.userId}`}
+          webOrigin={origin}
+          appStoreUrl={appStoreUrl}
+          playStoreUrl={playStoreUrl}
+          mobileAppUrl={mobileAppUrl}
+          buttonLabel="Message & book"
+          className="w-full active:scale-[0.98]"
+        />
       </div>
     </div>
   );

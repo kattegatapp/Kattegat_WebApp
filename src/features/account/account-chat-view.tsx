@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, MessageCircle, Search, Send } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AccountAvatar } from "@/features/account/account-shared";
@@ -18,6 +19,8 @@ import {
   type AccountConversation,
 } from "@/lib/api/account-chat";
 import { cn } from "@/lib/utils";
+import { sellerPlanAccess } from "@/lib/auth/member-access";
+import { getPublicPlanFeatures } from "@/lib/api/plans";
 
 type AccountChatViewProps = {
   dashboard: AccountDashboard;
@@ -40,8 +43,16 @@ export function AccountChatView({
   );
 
   const tier = dashboard.sellerProfile?.tier ?? "starter";
-  const isStarter = tier === "starter" || tier === "free";
+  const planFeaturesQuery = useQuery({
+    queryKey: ["catalog", "plan-features"],
+    queryFn: getPublicPlanFeatures,
+    staleTime: 300_000,
+    enabled: Boolean(dashboard.user.sid),
+  });
+  const planAccess = sellerPlanAccess(tier, planFeaturesQuery.data);
+  const isStarter = !planAccess.canChatDirectly;
   const isSeller = identity === "seller";
+  const sellerChatLocked = isSeller && isStarter;
   const myUserId = dashboard.user.id;
 
   const conversationsQuery = useQuery({
@@ -79,6 +90,7 @@ export function AccountChatView({
 
   const sendMessage = useMutation({
     mutationFn: async () => {
+      if (sellerChatLocked) throw new Error("Upgrade to Pro or Vetted to send direct messages.");
       if (!selectedThread) throw new Error("Choose a conversation first.");
       const text = draft.trim();
       if (!text) throw new Error("Write a message first.");
@@ -301,16 +313,18 @@ export function AccountChatView({
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     onKeyDown={(event) => {
-                      if (event.key === "Enter" && !sendMessage.isPending) {
+                      if (event.key === "Enter" && !sendMessage.isPending && !sellerChatLocked) {
                         void sendMessage.mutateAsync();
                       }
                     }}
                     placeholder={
-                      selectedThread.status === "closed"
+                      sellerChatLocked
+                        ? "Direct chat requires Pro or Vetted"
+                        : selectedThread.status === "closed"
                         ? "This conversation is closed"
                         : "Type a message"
                     }
-                    disabled={selectedThread.status === "closed" || sendMessage.isPending}
+                    disabled={sellerChatLocked || selectedThread.status === "closed" || sendMessage.isPending}
                     className="min-w-0 flex-1 rounded-full border border-brand-forest/10 bg-white px-4 py-2.5 text-sm text-brand-forest outline-none placeholder:text-muted-foreground focus:border-brand-mantis/50 disabled:cursor-not-allowed disabled:opacity-70"
                   />
                   <button
@@ -318,6 +332,7 @@ export function AccountChatView({
                     onClick={() => void sendMessage.mutateAsync()}
                     disabled={
                       selectedThread.status === "closed" ||
+                      sellerChatLocked ||
                       sendMessage.isPending ||
                       !draft.trim()
                     }
@@ -327,6 +342,14 @@ export function AccountChatView({
                     <Send className="size-4" />
                   </button>
                 </div>
+                {sellerChatLocked ? (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Starter seller messages are routed through Kattegat Vetted. {" "}
+                    <Link href="/plans" className="font-bold text-brand-blue hover:underline">
+                      Upgrade for direct chat
+                    </Link>
+                  </p>
+                ) : null}
               </footer>
           </section>
         ) : (

@@ -32,6 +32,7 @@ import {
 } from "@/lib/auth/member-identity";
 import { logoutMember } from "@/lib/api/auth";
 import { fetchAccountConversations } from "@/lib/api/account-chat";
+import { canAccessMemberView, safeMemberView } from "@/lib/auth/member-access";
 
 type MemberAccountAppProps = {
   dashboard: AccountDashboard;
@@ -88,6 +89,7 @@ export function MemberAccountApp({
         : stored ?? defaultIdentity;
     const timer = window.setTimeout(() => {
       setIdentity(next);
+      setActiveView((current) => safeMemberView(current, next));
       writeStoredMemberIdentity(next);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -103,7 +105,12 @@ export function MemberAccountApp({
     if (next === "seller" && !dashboard.user.sid) return;
     if (next === "buyer" && !dashboard.user.bid) return;
     setIdentity(next);
+    setActiveView((current) => safeMemberView(current, next));
     writeStoredMemberIdentity(next);
+  }
+
+  function handleViewChange(next: AccountViewId) {
+    setActiveView(safeMemberView(next, identity));
   }
 
   const logout = useMutation({
@@ -119,7 +126,7 @@ export function MemberAccountApp({
       <MemberAccountShell
         dashboard={dashboard}
         activeView={activeView}
-        onViewChange={setActiveView}
+        onViewChange={handleViewChange}
         identity={identity}
         notifications={notifications}
         onIdentityChange={handleIdentityChange}
@@ -136,13 +143,13 @@ export function MemberAccountApp({
         <MemberGlassCanvas>
         <div key={activeView} className="account-view mx-auto w-full max-w-5xl">
           {activeView === "home" ? (
-            <AccountHomeView dashboard={dashboard} homeFeed={homeFeed} identity={identity} onNavigate={setActiveView} />
+            <AccountHomeView dashboard={dashboard} homeFeed={homeFeed} identity={identity} onNavigate={handleViewChange} />
           ) : null}
           {activeView === "categories" ? <AccountCategoriesView /> : null}
           {activeView === "requirements" ? <AccountOpenRequirementsView /> : null}
-          {activeView === "saved" ? <AccountSavedView /> : null}
-          {activeView === "my-listings" ? <AccountMyListingsView dashboard={dashboard} /> : null}
-          {activeView === "my-requirements" ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
+          {activeView === "saved" && canAccessMemberView(activeView, identity) ? <AccountSavedView /> : null}
+          {activeView === "my-listings" && canAccessMemberView(activeView, identity) ? <AccountMyListingsView dashboard={dashboard} /> : null}
+          {activeView === "my-requirements" && canAccessMemberView(activeView, identity) ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
           {activeView === "referrals" ? <AccountReferralsView dashboard={dashboard} /> : null}
           {activeView === "recommend" ? <AccountRecommendView /> : null}
           {activeView === "notifications" ? (
@@ -153,7 +160,7 @@ export function MemberAccountApp({
             />
           ) : null}
           {activeView === "dashboard" ? <AccountDashboardView dashboard={dashboard} identity={identity} /> : null}
-          {activeView === "membership" ? <AccountMembershipView dashboard={dashboard} /> : null}
+          {activeView === "membership" && canAccessMemberView(activeView, identity) ? <AccountMembershipView dashboard={dashboard} /> : null}
         </div>
         </MemberGlassCanvas>
         )}

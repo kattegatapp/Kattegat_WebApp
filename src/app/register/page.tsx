@@ -11,12 +11,19 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string | string[]; ref?: string | string[] }>;
 };
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
 
 export default async function RegisterPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  await redirectAuthenticatedMember(params.next);
+  const next = firstParam(params.next);
+  const referralCode = firstParam(params.ref).trim().toUpperCase();
+  const safeReferralCode = /^[A-Z0-9_-]{1,40}$/.test(referralCode) ? referralCode : "";
+  await redirectAuthenticatedMember(next || undefined);
 
   return (
     <MemberAuthShell
@@ -24,7 +31,7 @@ export default async function RegisterPage({ searchParams }: PageProps) {
       description="Join as a buyer or seller. You can add the other identity later — one account, dual identity."
     >
       <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-brand-forest/5" />}>
-        <MemberRegisterForm />
+        <MemberRegisterForm initialReferralCode={safeReferralCode} />
       </Suspense>
     </MemberAuthShell>
   );

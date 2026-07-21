@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-interface RevealProps {
+interface RevealProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   children: React.ReactNode;
   className?: string;
   delayMs?: number;
@@ -24,7 +24,13 @@ function isInViewport(node: HTMLElement) {
  * Scroll polish only — children stay fully visible on load/reload.
  * A transform animation is applied via classList when the block enters view.
  */
-export function Reveal({ children, className, delayMs = 0, as: Tag = "div" }: RevealProps) {
+export function Reveal({
+  children,
+  className,
+  delayMs = 0,
+  as: Tag = "div",
+  ...rest
+}: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -58,7 +64,7 @@ export function Reveal({ children, className, delayMs = 0, as: Tag = "div" }: Re
   const Element = Tag as React.ElementType;
 
   return (
-    <Element ref={ref} className={className}>
+    <Element ref={ref} className={className} {...rest}>
       {children}
     </Element>
   );

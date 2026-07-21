@@ -1,12 +1,14 @@
 import type { ReferralSummary } from "@/lib/api/account";
 
 export function resolveReferralShareUrl(referral: Pick<ReferralSummary, "shareUrl" | "code">) {
-  const fromApi = referral.shareUrl?.trim();
-  if (fromApi?.startsWith("http")) return fromApi;
+  const encodedCode = encodeURIComponent(referral.code.trim());
+
+  // The API may return an internal backend origin (for example :3000). Referral links
+  // must always use the public website origin so /r/{code} can perform the app/web handoff.
   if (typeof window !== "undefined") {
-    return `${window.location.origin}/r/${encodeURIComponent(referral.code)}`;
+    return `${window.location.origin}/r/${encodedCode}`;
   }
-  return `/r/${encodeURIComponent(referral.code)}`;
+  return `/r/${encodedCode}`;
 }
 
 export function buildReferralShareMessage(shareUrl: string, code: string) {
