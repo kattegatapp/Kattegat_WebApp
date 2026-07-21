@@ -291,6 +291,14 @@ export type PublicSellerMedia = {
   sortOrder: number;
 };
 
+export type PublicReview = {
+  id: string;
+  sellerId: string;
+  listingId: string | null;
+  rating: number;
+  createdAt: string;
+};
+
 export type PublicSellerDetail = {
   userId: string;
   sid: string | null;
@@ -413,21 +421,51 @@ export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDe
           sortOrder: item.sortOrder,
         }))
         .sort((a, b) => a.sortOrder - b.sortOrder),
-      listings: (data.listings ?? []).map((listing) => ({
-        id: listing.id,
-        title: listing.title?.trim() || "Service listing",
-        description: listing.description?.trim() || null,
-        location: listing.location?.trim() || null,
-        categoryId: listing.categoryId,
-        coverImage: safeRemoteImage(listing.coverImage ?? null),
-        pricing: listing.pricing ?? {},
-        aggregateRating: Number.isFinite(listing.aggregateRating) ? Number(listing.aggregateRating) : 0,
-        reviewCount: Number.isFinite(listing.reviewCount) ? Number(listing.reviewCount) : 0,
-        createdAt: listing.createdAt,
-      })),
+      listings: (data.listings ?? [])
+        .map((listing) => ({
+          id: listing.id,
+          title: listing.title?.trim() || "Service listing",
+          description: listing.description?.trim() || null,
+          location: listing.location?.trim() || null,
+          categoryId: listing.categoryId,
+          coverImage: safeRemoteImage(listing.coverImage ?? null),
+          pricing: listing.pricing ?? {},
+          aggregateRating: Number.isFinite(listing.aggregateRating) ? Number(listing.aggregateRating) : 0,
+          reviewCount: Number.isFinite(listing.reviewCount) ? Number(listing.reviewCount) : 0,
+          createdAt: listing.createdAt,
+        }))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     };
   } catch {
     return null;
+  }
+}
+
+export async function getPublicReviewsBySeller(sellerId: string): Promise<PublicReview[]> {
+  try {
+    const { data } = await apiFetchEnvelope<
+      Array<{
+        id: string;
+        sellerId: string;
+        listingId: string | null;
+        rating: number;
+        createdAt: string;
+      }>
+    >(
+      `/api/reviews?sellerId=${encodeURIComponent(sellerId)}`,
+      { cache: "no-store" },
+      { baseUrl: resolveBackendApiUrl() },
+    );
+
+    return data.map((review) => ({
+      id: review.id,
+      sellerId: review.sellerId,
+      listingId: review.listingId,
+      rating: Number.isFinite(review.rating) ? Number(review.rating) : 0,
+      createdAt: review.createdAt,
+    }));
+  } catch {
+    return [];
   }
 }
 
