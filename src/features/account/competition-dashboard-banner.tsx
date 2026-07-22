@@ -122,7 +122,7 @@ export function CompetitionDashboardBanner({
         <span className={`mt-1 block font-extrabold text-white ${compact ? "text-sm" : "text-base"}`}>Refer, climb and win</span>
         <span className="mt-1 block truncate text-xs text-[#C6F3CA]/80 sm:text-sm">
           {activeReferrals !== undefined
-            ? `${activeReferrals} active referral${activeReferrals === 1 ? "" : "s"} · Join and view the standings`
+            ? "Verified signups count · Join and view the standings"
             : "Accept the rules, join and climb the leaderboard"}
         </span>
         {competition.status === "live" && compact ? (

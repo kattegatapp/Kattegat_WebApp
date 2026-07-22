@@ -34,6 +34,7 @@ export type ReferralCompetitionStatus = {
   startsAt: string;
   endsAt: string;
   prizePoolAed: number;
+  requirePaymentToCount: boolean;
   prizes: Array<{ place: 1 | 2 | 3; amountAed: number; minimumActiveReferrals: number }>;
   status: "upcoming" | "live" | "paused" | "ended" | "cancelled";
   participant: { joined: boolean; acceptedAt: string | null; termsCurrent: boolean; eligible: boolean };

@@ -50,13 +50,14 @@ export interface AdminCompetitionParticipant {
 }
 export interface AdminCompetition {
   id: string; documentId: string; termsVersion: string; title: string; startsAt: string; endsAt: string;
-  prizePoolAed: number; status: AdminCompetitionStatus; participantCount: number;
+  prizePoolAed: number; requirePaymentToCount: boolean; status: AdminCompetitionStatus; participantCount: number;
   prizes: Array<{ place: 1 | 2 | 3; amountAed: number; minimumActiveReferrals: number }>;
   participants: AdminCompetitionParticipant[];
 }
 export type AdminCompetitionUpdate = {
   title?: string; status?: AdminCompetitionStatus; startsAt?: string; endsAt?: string;
   documentId?: string; termsVersion?: string; firstPrizeAed?: number; secondPrizeAed?: number;
+  requirePaymentToCount?: boolean;
   thirdPrizeAed?: number; firstThreshold?: number; secondThreshold?: number; thirdThreshold?: number;
 };
 export type VettedApplicationStatus = "submitted" | "under_review" | "accepted" | "denied" | "waitlisted";

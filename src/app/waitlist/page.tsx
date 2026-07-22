@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
-import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -25,11 +24,6 @@ export default async function WaitlistPage() {
 
   if (settings.features.maintenanceMode) {
     return <MaintenanceState message={settings.features.maintenanceMessage} />;
-  }
-
-  // Completely unavailable when waitlist registration is off — `/` stays the public home.
-  if (!settings.features.waitlistEnabled) {
-    notFound();
   }
 
   return (
@@ -59,21 +53,28 @@ export default async function WaitlistPage() {
           <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center py-10 text-center sm:py-14">
             <Badge className="border-brand-forest/10 bg-white/66 px-3 py-1.5 text-brand-forest shadow-sm backdrop-blur">
               <Sparkles className="h-3.5 w-3.5" />
-              Early access
+              {settings.features.waitlistEnabled ? "Early access" : "Waitlist closed"}
             </Badge>
             <h1 className="mt-6 max-w-3xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#080b0a] sm:text-5xl">
-              Claim your spot before doors open.
+              {settings.features.waitlistEnabled ? "Claim your spot before doors open." : "Kattegat is open."}
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-              First 1,000 get access before public launch. Sellers in the early cohort may unlock Founding
-              Member seats.
+              {settings.features.waitlistEnabled
+                ? "First 1,000 get access before public launch. Sellers in the early cohort may unlock Founding Member seats."
+                : "Waitlist registration is currently closed. You can continue to explore Kattegat, create an account, and use available services."}
             </p>
 
-            <div className="mt-10 w-full text-left">
-              <Suspense fallback={<div className="mx-auto h-[20rem] max-w-4xl rounded-[2rem] bg-white/50" aria-hidden />}>
-                <WaitlistForm />
-              </Suspense>
-            </div>
+            {settings.features.waitlistEnabled ? (
+              <div className="mt-10 w-full text-left">
+                <Suspense fallback={<div className="mx-auto h-[20rem] max-w-4xl rounded-[2rem] bg-white/50" aria-hidden />}>
+                  <WaitlistForm />
+                </Suspense>
+              </div>
+            ) : (
+              <Link href="/register" className="mt-8 inline-flex min-h-12 items-center rounded-xl bg-brand-mantis px-6 py-3 font-extrabold text-brand-forest shadow-lg shadow-brand-mantis/20">
+                Create an account
+              </Link>
+            )}
           </div>
         </div>
       </section>
