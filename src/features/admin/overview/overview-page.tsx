@@ -542,6 +542,7 @@ function MarketplaceCharts({ kpis }: { kpis: AdminOverviewKpis }) {
   const audience = [
     { name: "Buyers", value: kpiValue(kpis, "buyersTotal") },
     { name: "Partners", value: kpiValue(kpis, "sellersTotal") },
+    { name: "Dual identity", value: kpiValue(kpis, "dualIdentityTotal") },
   ];
   const listings = [
     { name: "Live", value: kpiValue(kpis, "listingsLive") },
@@ -576,7 +577,7 @@ function MarketplaceCharts({ kpis }: { kpis: AdminOverviewKpis }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
           title="Community composition"
-          description="Registered buyers and hospitality partners"
+          description="Buyer-only, seller-only, and dual-identity members"
           delayMs={40}
         >
           <AudienceDonut data={audience} total={audienceTotal} />

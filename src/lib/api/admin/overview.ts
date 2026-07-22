@@ -7,6 +7,8 @@ export interface AdminOverviewKpis {
   usersActive: number;
   sellersTotal: number;
   buyersTotal: number;
+  /** Accounts with both buyer and seller identities. */
+  dualIdentityTotal: number;
 
   listingsTotal: number;
   listingsDraft: number;
@@ -111,6 +113,7 @@ const KPI_DEFAULTS: AdminOverviewKpis = {
   usersActive: 0,
   sellersTotal: 0,
   buyersTotal: 0,
+  dualIdentityTotal: 0,
   listingsTotal: 0,
   listingsDraft: 0,
   pendingListings: 0,

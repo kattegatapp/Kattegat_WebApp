@@ -155,7 +155,7 @@ export function UsersManagementPage({
                 setRole(value);
                 setPage(1);
               }}
-              options={["all", "buyer", "seller"]}
+              options={["all", "buyer", "seller", "dual"]}
               allLabel="All user types"
             />
             <UserFilter
@@ -425,11 +425,13 @@ function AccountEditor({
               icon={<Building2 />}
               label="Account type"
               value={
-                user.sid
-                  ? "Seller account"
-                  : user.bid
-                    ? "Buyer account"
-                    : label(user.originalRole)
+                user.bid && user.sid
+                  ? "Buyer & seller"
+                  : user.sid
+                    ? "Seller account"
+                    : user.bid
+                      ? "Buyer account"
+                      : label(user.originalRole)
               }
             />
             <ProfileFact icon={<CalendarDays />} label="Joined Kattegat" value={joined} />
