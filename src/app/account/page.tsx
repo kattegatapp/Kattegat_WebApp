@@ -12,11 +12,14 @@ export const metadata: Metadata = {
 
 const ACCOUNT_VIEWS: readonly AccountViewId[] = [
   "home",
+  "browse",
   "categories",
   "requirements",
   "saved",
   "my-listings",
   "my-requirements",
+  "applications",
+  "verification",
   "referrals",
   "recommend",
   "notifications",
@@ -30,12 +33,20 @@ function accountView(value: string | string[] | undefined): AccountViewId {
   return ACCOUNT_VIEWS.includes(candidate as AccountViewId) ? (candidate as AccountViewId) : "home";
 }
 
+function firstString(value: string | string[] | undefined) {
+  return (Array.isArray(value) ? value[0] : value)?.trim() ?? "";
+}
+
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string | string[] }>;
+  searchParams: Promise<{
+    view?: string | string[];
+    q?: string | string[];
+    categoryId?: string | string[];
+  }>;
 }) {
-  const { view } = await searchParams;
+  const params = await searchParams;
   const { dashboard, impersonation, homeFeed, notifications } =
     await loadMemberWorkspaceOrRedirect("/account");
 
@@ -46,7 +57,9 @@ export default async function AccountPage({
         dashboard={dashboard}
         homeFeed={homeFeed}
         notifications={notifications}
-        initialView={accountView(view)}
+        initialView={accountView(params.view)}
+        initialBrowseQuery={firstString(params.q)}
+        initialBrowseCategoryId={firstString(params.categoryId)}
       />
     </div>
   );

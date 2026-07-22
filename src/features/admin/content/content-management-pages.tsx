@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { AdminApprovalsPage } from "@/features/admin/approvals/approvals-page";
+import { ListingEditSheet } from "@/features/admin/content/listing-edit-sheet";
 import {
   AdminEmptyState,
   AdminLoadingState,
@@ -240,6 +241,7 @@ export function ListingsManagementPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const [editingListingId, setEditingListingId] = useState<string | null>(null);
 
   const query = useQuery({
     queryKey: ["admin", "all-listings", q, status, page],
@@ -369,6 +371,9 @@ export function ListingsManagementPage() {
                       for pending listings.
                     </p>
                   )}
+                  <Button variant="outline" onClick={() => setEditingListingId(item.id)}>
+                    Edit listing and media
+                  </Button>
                 </CardContent>
               </Card>
             );
@@ -376,6 +381,13 @@ export function ListingsManagementPage() {
         </div>
       )}
       <Pagination page={page} count={items.length} setPage={setPage} />
+      <ListingEditSheet
+        listingId={editingListingId}
+        open={Boolean(editingListingId)}
+        onOpenChange={(open) => {
+          if (!open) setEditingListingId(null);
+        }}
+      />
     </div>
   );
 }

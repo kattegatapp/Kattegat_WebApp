@@ -38,6 +38,21 @@ export async function fetchAllListings(input: { q?: string; status?: string; pag
 
 export const fetchAdminListing = (listingId: string) =>
   apiFetch<AdminListingDetail>(`/api/admin/listings/${listingId}`, undefined, { baseUrl: "" });
+export const updateAdminListing = (
+  listingId: string,
+  input: { title?: string; description?: string | null; location?: string | null },
+) =>
+  apiFetch<null>(
+    `/api/admin/listings/${listingId}`,
+    { method: "PATCH", body: JSON.stringify(input) },
+    { baseUrl: "" },
+  );
+export const deleteAdminListingMedia = (listingId: string, mediaId: string) =>
+  apiFetch<null>(
+    `/api/admin/listings/${listingId}/media/${mediaId}`,
+    { method: "DELETE" },
+    { baseUrl: "" },
+  );
 export const updateListingAvailability = (id: string, available: boolean) => apiFetch<null>(`/api/admin/listings/${id}/availability`, { method: "PATCH", body: JSON.stringify({ available }) }, { baseUrl: "" });
 
 export async function fetchAllRequirements(input: { q?: string; status?: string; page: number }) {

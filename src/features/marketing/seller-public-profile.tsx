@@ -12,13 +12,13 @@ import {
   Star,
 } from "lucide-react";
 
-import { ContinueInApp } from "@/features/marketing/continue-in-app";
+import { ListingContactPanel, type ListingContactViewer } from "@/features/marketing/listing-contact-panel";
 import { Reveal } from "@/components/motion/reveal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { CatalogCategory, PublicReview, PublicSellerDetail } from "@/lib/api/marketing";
-import { listingPublicPath } from "@/lib/navigation/public-paths";
+import { listingPublicPath, sellerPublicPath } from "@/lib/navigation/public-paths";
 
 type SellerPublicProfileProps = {
   seller: PublicSellerDetail;
@@ -29,6 +29,9 @@ type SellerPublicProfileProps = {
   appStoreUrl: string | null;
   playStoreUrl: string | null;
   mobileAppUrl: string | null;
+  canChatDirectly: boolean;
+  contactAgentEnabled: boolean;
+  viewer: ListingContactViewer;
 };
 
 function tierLabel(tier: PublicSellerDetail["tier"]) {
@@ -178,9 +181,17 @@ export function SellerPublicProfile({
   appStoreUrl,
   playStoreUrl,
   mobileAppUrl,
+  canChatDirectly,
+  contactAgentEnabled,
+  viewer,
 }: SellerPublicProfileProps) {
   const name = seller.displayName || "Kattegat seller";
   const firstName = name.split(" ")[0] || name;
+  const publicPath = sellerPublicPath({
+    userId: seller.userId,
+    customSlug: seller.customSlug,
+    displayName: seller.displayName,
+  });
   const listings = sortListingsNewestFirst(seller.listings);
   const reviewsByListingId = reviews.reduce<Map<string, PublicReview[]>>((map, review) => {
     if (!review.listingId) return map;
@@ -221,7 +232,7 @@ export function SellerPublicProfile({
     { icon: BriefcaseBusiness, label: "Services", value: String(listings.length) },
     { icon: Star, label: "Overall rating", value: hasOverallRating ? overallRating!.toFixed(1) : "New" },
     { icon: Calendar, label: "Member since", value: memberSince ?? "—" },
-    { icon: MessageCircle, label: "Contact", value: "Via listing" },
+    { icon: MessageCircle, label: "Contact", value: canChatDirectly ? "Direct chat" : "Via agent" },
   ];
 
   return (
@@ -294,19 +305,24 @@ export function SellerPublicProfile({
                 </div>
               </div>
 
-              <ContinueInApp
-                title="Message & book in the app"
-                description={`Open Kattegat to view ${name}'s full portfolio, message them, and book directly.`}
-                deepLinkPath={`/seller/${seller.userId}`}
-                webOrigin={origin}
-                appStoreUrl={appStoreUrl}
-                playStoreUrl={playStoreUrl}
-                mobileAppUrl={mobileAppUrl}
-                buttonLabel="Message & book"
-                className="hidden active:scale-[0.98] sm:inline-flex sm:w-auto sm:shrink-0"
-              />
+              <div className="hidden w-full max-w-[15rem] sm:block sm:w-auto sm:shrink-0">
+                <ListingContactPanel
+                  sellerId={seller.userId}
+                  sellerName={name}
+                  sellerUserId={seller.userId}
+                  canChatDirectly={canChatDirectly}
+                  contactAgentEnabled={contactAgentEnabled}
+                  viewer={viewer}
+                  publicPath={publicPath}
+                  deepLinkPath={`/seller/${seller.userId}`}
+                  webOrigin={origin}
+                  appStoreUrl={appStoreUrl}
+                  playStoreUrl={playStoreUrl}
+                  mobileAppUrl={mobileAppUrl}
+                  compact
+                />
+              </div>
             </div>
-
             <div className="mt-6 flex overflow-x-auto rounded-2xl bg-muted/40 [-ms-overflow-style:none] [scrollbar-width:none] sm:mt-7 sm:overflow-visible [&::-webkit-scrollbar]:hidden">
               {stats.map((stat) => (
                 <StatItem key={stat.label} icon={stat.icon} label={stat.label} value={stat.value} />
@@ -543,16 +559,20 @@ export function SellerPublicProfile({
 
       {/* Mobile sticky action bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 bg-background/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgb(0_57_18/0.08)] backdrop-blur-md sm:hidden">
-        <ContinueInApp
-          title="Message & book in the app"
-          description={`Open Kattegat to view ${name}'s full portfolio, message them, and book directly.`}
+        <ListingContactPanel
+          sellerId={seller.userId}
+          sellerName={name}
+          sellerUserId={seller.userId}
+          canChatDirectly={canChatDirectly}
+          contactAgentEnabled={contactAgentEnabled}
+          viewer={viewer}
+          publicPath={publicPath}
           deepLinkPath={`/seller/${seller.userId}`}
           webOrigin={origin}
           appStoreUrl={appStoreUrl}
           playStoreUrl={playStoreUrl}
           mobileAppUrl={mobileAppUrl}
-          buttonLabel="Message & book"
-          className="w-full active:scale-[0.98]"
+          compact
         />
       </div>
     </div>

@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { SellerPublicProfile } from "@/features/marketing/seller-public-profile";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
+import { loadAccountDashboard } from "@/lib/api/account";
 import { getCatalogCategories, getPublicReviewsBySeller, getPublicSeller } from "@/lib/api/marketing";
+import { DEFAULT_PUBLIC_PLANS, getPublicPlanFeatures } from "@/lib/api/plans";
 import { getPublicAppSettings } from "@/lib/api/settings";
 import {
   decodePublicRouteParam,
@@ -63,11 +65,13 @@ export default async function SellerPage({ params }: PageProps) {
 
   if (!seller) notFound();
 
-  const [settings, categories, reviews, origin] = await Promise.all([
+  const [settings, categories, reviews, origin, plans, dashboard] = await Promise.all([
     getPublicAppSettings(),
     getCatalogCategories(),
     getPublicReviewsBySeller(seller.userId),
     getSiteOrigin(),
+    getPublicPlanFeatures(),
+    loadAccountDashboard(),
   ]);
 
   const pathInput = sellerPathInput(seller);
@@ -77,6 +81,13 @@ export default async function SellerPage({ params }: PageProps) {
 
   const name = seller.displayName || "Kattegat seller";
   const publicPath = sellerPublicPath(pathInput);
+  const sellerTier = seller.tier ?? "starter";
+  const tierFeatures =
+    plans.find((plan) => plan.tier === sellerTier) ??
+    DEFAULT_PUBLIC_PLANS.find((plan) => plan.tier === sellerTier) ??
+    DEFAULT_PUBLIC_PLANS[0]!;
+  const canChatDirectly = Boolean(tierFeatures.canChatDirectly);
+  const contactAgentEnabled = Boolean(settings.features.contactAgentEnabled);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -114,6 +125,14 @@ export default async function SellerPage({ params }: PageProps) {
           appStoreUrl={settings.links.appStoreUrl}
           playStoreUrl={settings.links.playStoreUrl}
           mobileAppUrl={settings.links.mobileAppUrl}
+          canChatDirectly={canChatDirectly}
+          contactAgentEnabled={contactAgentEnabled}
+          viewer={{
+            signedIn: Boolean(dashboard),
+            userId: dashboard?.user.id ?? null,
+            hasBuyerId: Boolean(dashboard?.user.bid),
+            hasSellerId: Boolean(dashboard?.user.sid),
+          }}
         />
       </article>
 

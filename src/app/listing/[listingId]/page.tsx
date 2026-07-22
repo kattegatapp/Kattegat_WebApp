@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowRight, MapPin, Star } from "lucide-react";
 
-import { ContinueInApp } from "@/features/marketing/continue-in-app";
+import { ListingContactPanel } from "@/features/marketing/listing-contact-panel";
 import { DUBAI_SEO_PAGES } from "@/features/marketing/local-seo";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
+import { loadAccountDashboard } from "@/lib/api/account";
 import {
   getCatalogCategories,
   getPublicListing,
@@ -14,6 +15,7 @@ import {
   getPublicSeller,
   searchListings,
 } from "@/lib/api/marketing";
+import { DEFAULT_PUBLIC_PLANS, getPublicPlanFeatures } from "@/lib/api/plans";
 import { getPublicAppSettings } from "@/lib/api/settings";
 import {
   decodePublicRouteParam,
@@ -92,11 +94,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ListingPage({ params }: PageProps) {
   const { listingId: listingKey } = await params;
   const listingId = decodePublicRouteParam(listingKey);
-  const [settings, listing, media, categories] = await Promise.all([
+  const [settings, listing, media, categories, plans, dashboard] = await Promise.all([
     getPublicAppSettings(),
     getPublicListing(listingId),
     getPublicListingMedia(listingId),
     getCatalogCategories(),
+    getPublicPlanFeatures(),
+    loadAccountDashboard(),
   ]);
 
   if (!listing) notFound();
@@ -142,6 +146,14 @@ export default async function ListingPage({ params }: PageProps) {
         .map((item) => [item.sellerId, item]),
     ).values(),
   ].slice(0, 4);
+
+  const sellerTier = seller?.tier ?? "starter";
+  const tierFeatures =
+    plans.find((plan) => plan.tier === sellerTier) ??
+    DEFAULT_PUBLIC_PLANS.find((plan) => plan.tier === sellerTier) ??
+    DEFAULT_PUBLIC_PLANS[0]!;
+  const canChatDirectly = Boolean(tierFeatures.canChatDirectly);
+  const contactAgentEnabled = Boolean(settings.features.contactAgentEnabled);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -235,13 +247,25 @@ export default async function ListingPage({ params }: PageProps) {
               </div>
               <p className="mt-4 text-sm leading-7 text-brand-forest/65">
                 {listing.description ||
-                  `${listing.title} is a live ${category?.name?.toLowerCase() || "marketplace"} listing in ${place} on Kattegat. Continue in the app to message ${sellerName} and book directly — with 0% booking commission.`}
+                  `${listing.title} is a live ${category?.name?.toLowerCase() || "marketplace"} listing in ${place} on Kattegat. Message ${sellerName} to book directly — with 0% booking commission.`}
               </p>
 
-              <div className="mt-6 flex flex-wrap gap-3">
-                <ContinueInApp
-                  title="Download the app to continue"
-                  description={`Open Kattegat to view “${listing.title}” by ${sellerName}, message the seller, and book directly.`}
+              <div className="mt-6 space-y-3">
+                <ListingContactPanel
+                  listingId={listing.id}
+                  listingTitle={listing.title}
+                  sellerId={listing.sellerId}
+                  sellerName={sellerName}
+                  sellerUserId={seller?.userId ?? listing.sellerId}
+                  canChatDirectly={canChatDirectly}
+                  contactAgentEnabled={contactAgentEnabled}
+                  viewer={{
+                    signedIn: Boolean(dashboard),
+                    userId: dashboard?.user.id ?? null,
+                    hasBuyerId: Boolean(dashboard?.user.bid),
+                    hasSellerId: Boolean(dashboard?.user.sid),
+                  }}
+                  publicPath={publicPath}
                   deepLinkPath={`/listing/${listing.id}`}
                   webOrigin={origin}
                   appStoreUrl={settings.links.appStoreUrl}
@@ -250,7 +274,7 @@ export default async function ListingPage({ params }: PageProps) {
                 />
                 <Link
                   href={sellerPath}
-                  className="inline-flex min-h-12 items-center rounded-2xl border border-brand-forest/15 bg-white px-5 text-sm font-extrabold"
+                  className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-brand-forest/15 bg-white px-5 text-sm font-extrabold sm:w-auto"
                 >
                   View seller
                 </Link>

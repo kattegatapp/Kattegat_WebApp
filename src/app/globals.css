@@ -1087,10 +1087,22 @@ textarea {
   flex-shrink: 0;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
   border-right: 1px solid rgb(0 57 18 / 0.08);
   background: #fff;
   padding: 1.25rem 0.875rem 1rem;
+  overscroll-behavior: contain;
+}
+
+.account-sidebar-nav {
+  min-height: 0;
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.25rem;
 }
 
 .account-layout-main {
@@ -1267,10 +1279,15 @@ textarea {
 
 .account-chat-wallpaper {
   background-color: #e5ddd5;
-  background-image:
-    radial-gradient(rgb(0 57 18 / 0.04) 1px, transparent 1px),
-    linear-gradient(180deg, rgb(247 249 248 / 0.65), rgb(238 242 240 / 0.9));
-  background-size: 18px 18px, auto;
+  background-image: url("/brand/chat/light-theme-background.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.dark .account-chat-wallpaper {
+  background-color: #0b141a;
+  background-image: url("/brand/chat/dark-theme-background.png");
 }
 
 @media (prefers-reduced-motion: reduce) {

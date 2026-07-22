@@ -31,9 +31,6 @@ import {
 import { AccountProfileEditDialog } from "@/features/account/account-profile-edit-dialog";
 import { ReferralSharePanel } from "@/features/account/referral-share-panel";
 import { Button } from "@/components/ui/button";
-import {
-  ACCOUNT_CATEGORIES,
-} from "@/features/account/marketplace-data";
 import type { AccountIdentity } from "@/features/account/types";
 import type { AccountDashboard, AccountListing } from "@/lib/api/account";
 import type { AccountNotification } from "@/lib/api/account-notifications";
@@ -43,6 +40,7 @@ import {
   fetchAccountUnreadCount,
 } from "@/lib/api/account-notifications";
 import { formatRelativeTime } from "@/lib/api/account-home";
+import { getCatalogCategories } from "@/lib/api/marketing";
 import { profileSetupPath } from "@/lib/auth/profile-completion";
 import { normalizeMemberDeepLink, isChatDeepLink } from "@/lib/navigation/member-deep-links";
 import { cn } from "@/lib/utils";
@@ -82,47 +80,82 @@ function StatTile({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function AccountCategoriesView() {
+export function AccountCategoriesView({
+  onBrowseCategory,
+}: {
+  onBrowseCategory?: (categoryId: string) => void;
+}) {
+  const categoriesQuery = useQuery({
+    queryKey: ["catalog", "categories"],
+    queryFn: getCatalogCategories,
+    staleTime: 300_000,
+  });
+  const categories = categoriesQuery.data ?? [];
+
   return (
     <ViewWrap>
       <SectionHeading title="All categories" />
-      <div className="flex flex-col gap-2">
-        {ACCOUNT_CATEGORIES.map((category) => {
-          const Icon = category.icon;
-          return (
-            <Link
-              key={category.id}
-              href={category.href}
-              className="group flex items-center gap-4 rounded-[16px] border border-brand-forest/10 bg-white px-4 py-3.5 transition hover:border-brand-mantis/25 hover:bg-brand-forest/5"
-            >
-              <span className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-mantis/10 text-brand-mantis">
-                <Icon className="size-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
+      {categoriesQuery.isPending ? (
+        <div className="flex flex-col gap-2">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-[72px] animate-pulse rounded-[16px] border border-brand-forest/10 bg-white"
+            />
+          ))}
+        </div>
+      ) : categories.length ? (
+        <div className="flex flex-col gap-2">
+          {categories.map((category) => {
+            const className =
+              "group flex w-full items-center gap-4 rounded-[16px] border border-brand-forest/10 bg-white px-4 py-3.5 text-left transition hover:border-brand-mantis/25 hover:bg-brand-forest/5";
+            const body = (
+              <>
+                <span className="grid size-11 shrink-0 place-items-center rounded-[12px] bg-brand-mantis/10 text-brand-mantis">
+                  <ClipboardList className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
                   <p className="font-bold text-brand-forest">{category.name}</p>
-                  {category.tag ? (
-                    <span
-                      className={cn(
-                        "rounded-md border px-2 py-0.5 text-[10px] font-bold",
-                        category.tag.tone === "free"
-                          ? "border-brand-emerald/35 text-brand-emerald"
-                          : "border-brand-blue/35 text-[#7ec8e8]",
-                      )}
-                    >
-                      {category.tag.label}
-                    </span>
-                  ) : null}
+                  <p className="mt-0.5 text-[13px] leading-5 text-brand-forest/65">
+                    Browse live services in {category.name}
+                  </p>
                 </div>
-                <p className="mt-0.5 text-[13px] leading-5 text-brand-forest/65">
-                  {category.description}
-                </p>
-              </div>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition group-hover:text-brand-mantis" />
-            </Link>
-          );
-        })}
-      </div>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground transition group-hover:text-brand-mantis" />
+              </>
+            );
+
+            if (onBrowseCategory) {
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  className={className}
+                  onClick={() => onBrowseCategory(category.id)}
+                >
+                  {body}
+                </button>
+              );
+            }
+
+            return (
+              <Link
+                key={category.id}
+                href={`/account?view=browse&categoryId=${encodeURIComponent(category.id)}`}
+                className={className}
+              >
+                {body}
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <AccountGlass className="rounded-[18px] p-8 text-center">
+          <p className="font-bold text-brand-forest">Categories unavailable</p>
+          <p className="mt-1 text-sm text-brand-forest/65">
+            Could not load the catalog right now. Try again shortly.
+          </p>
+        </AccountGlass>
+      )}
     </ViewWrap>
   );
 }
@@ -427,8 +460,11 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
       ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <StatTile label="Active bookings" value={String(listings.filter((l) => l.status === "live").length)} />
-        <StatTile label="Profile views" value="128" />
+        <StatTile
+          label="Live listings"
+          value={String(listings.filter((l) => l.status === "live").length)}
+        />
+        <StatTile label="All listings" value={String(listings.length)} />
       </div>
 
       <SectionHeading title="Workspace" />
@@ -483,7 +519,7 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
           <SectionHeading title="Your listings" />
           <AccountGlass className="rounded-[18px] p-4">
             <p className="mb-3 text-[12.5px] text-brand-forest/65">
-              {listings.length} listing{listings.length === 1 ? "" : "s"} · read-only on web
+              {listings.length} listing{listings.length === 1 ? "" : "s"} · manage in My listings
             </p>
             <ListingsSummary listings={listings} />
           </AccountGlass>

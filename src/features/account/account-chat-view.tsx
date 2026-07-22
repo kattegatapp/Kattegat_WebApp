@@ -88,6 +88,65 @@ export function AccountChatView({
 
   const threadMessages = messagesQuery.data ?? [];
 
+  useEffect(() => {
+    if (!selectedThread?.id) return;
+    let active = true;
+    let channel: { unsubscribe?: () => void } | null = null;
+
+    void (async () => {
+      try {
+        const realtime = await import("@/lib/chat/chat.realtime");
+        channel = await realtime.subscribeToConversationMessages(selectedThread.id, (message) => {
+          if (!active) return;
+          queryClient.setQueryData<AccountChatMessage[]>(
+            ["account", "chat", "messages", selectedThread.id],
+            (current) => {
+              const existing = current ?? [];
+              if (existing.some((item) => item.id === message.id)) return existing;
+              return [...existing, message].sort(
+                (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+              );
+            },
+          );
+          void queryClient.invalidateQueries({ queryKey: ["account", "chat", "conversations"] });
+        });
+      } catch {
+        // Realtime optional — REST still works.
+      }
+    })();
+
+    return () => {
+      active = false;
+      void import("@/lib/chat/chat.realtime").then((realtime) =>
+        realtime.unsubscribeRealtime(channel as never),
+      );
+    };
+  }, [queryClient, selectedThread?.id]);
+
+  useEffect(() => {
+    let active = true;
+    let channel: { unsubscribe?: () => void } | null = null;
+
+    void (async () => {
+      try {
+        const realtime = await import("@/lib/chat/chat.realtime");
+        channel = await realtime.subscribeToMyMessages(() => {
+          if (!active) return;
+          void queryClient.invalidateQueries({ queryKey: ["account", "chat", "conversations"] });
+        });
+      } catch {
+        // Realtime optional.
+      }
+    })();
+
+    return () => {
+      active = false;
+      void import("@/lib/chat/chat.realtime").then((realtime) =>
+        realtime.unsubscribeRealtime(channel as never),
+      );
+    };
+  }, [queryClient]);
+
   const sendMessage = useMutation({
     mutationFn: async () => {
       if (sellerChatLocked) throw new Error("Upgrade to Pro or Vetted to send direct messages.");
@@ -274,7 +333,7 @@ export function AccountChatView({
 
               <div
                 ref={messagesContainerRef}
-                className="account-chat-wallpaper account-chat-messages px-3 py-4 sm:px-5"
+                className="account-chat-wallpaper account-chat-messages flex flex-col px-3 py-4 sm:px-5"
               >
                 {messagesQuery.isPending ? (
                   <ChatMessagesSkeleton />
@@ -302,7 +361,13 @@ export function AccountChatView({
                     })}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No messages yet. Say hello.</p>
+                  <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                    <MessageCircle className="size-8 text-brand-mantis/80" />
+                    <p className="mt-3 font-bold text-brand-forest">No messages yet</p>
+                    <p className="mt-1 max-w-xs text-sm text-muted-foreground">
+                      Say hello to start the conversation.
+                    </p>
+                  </div>
                 )}
               </div>
 

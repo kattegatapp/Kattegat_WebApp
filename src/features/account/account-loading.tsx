@@ -46,24 +46,37 @@ export function ChatMessagesSkeleton() {
   );
 }
 
-export function AccountCardGridSkeleton({ count = 4, columns = 2 }: { count?: number; columns?: 1 | 2 }) {
+export function AccountCardGridSkeleton({
+  count = 6,
+  columns = 3,
+}: {
+  count?: number;
+  columns?: 1 | 2 | 3;
+}) {
   return (
     <div
-      className={cn("grid gap-3", columns === 2 ? "sm:grid-cols-2" : "grid-cols-1")}
+      className={cn(
+        "grid gap-3",
+        columns === 1
+          ? "grid-cols-1"
+          : columns === 2
+            ? "grid-cols-1 sm:grid-cols-2"
+            : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3",
+      )}
       role="status"
       aria-live="polite"
       aria-busy="true"
     >
       <span className="sr-only">Loading</span>
       {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="ios-glass-pane space-y-3 rounded-[18px] p-4">
+        <div key={index} className="space-y-3 rounded-[18px] border border-brand-forest/10 bg-white p-4">
           <div className="flex gap-2">
             <Skeleton className="h-5 w-16 rounded-full bg-brand-forest/8" />
             <Skeleton className="h-5 w-12 rounded-full bg-brand-forest/6" />
           </div>
           <Skeleton className="h-4 w-3/4 rounded-full bg-brand-forest/8" />
           <Skeleton className="h-3 w-full rounded-full bg-brand-forest/6" />
-          <Skeleton className="h-3 w-5/6 rounded-full bg-brand-forest/6" />
+          <Skeleton className="mt-2 h-8 w-full rounded-lg bg-brand-forest/5" />
         </div>
       ))}
     </div>

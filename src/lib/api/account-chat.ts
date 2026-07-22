@@ -46,3 +46,33 @@ export async function sendAccountConversationMessage(conversationId: string, bod
     { baseUrl: "" },
   );
 }
+
+export async function startAccountConversation(input: {
+  sellerId: string;
+  listingId?: string;
+  firstMessage: string;
+}) {
+  return apiFetch<AccountConversation>(
+    "/api/account/chat/conversations",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+    { baseUrl: "" },
+  );
+}
+
+export async function contactAgentForListing(input: {
+  sellerId: string;
+  listingId?: string;
+  message: string;
+}) {
+  return apiFetch<null>(
+    "/api/account/vetted/contact-agent",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    },
+    { baseUrl: "" },
+  );
+}

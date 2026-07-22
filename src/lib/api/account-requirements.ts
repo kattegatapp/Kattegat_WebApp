@@ -51,10 +51,21 @@ export function normalizeOpenRequirements(data: RequirementRow[]) {
 }
 
 /** Client — admin-approved open requirements via account BFF. */
-export async function fetchOpenRequirements(page = 1, pageSize = 24) {
+export async function fetchOpenRequirements(
+  page = 1,
+  pageSize = 24,
+  filters?: { jobType?: string; location?: string },
+) {
   try {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+    });
+    if (filters?.jobType) params.set("jobType", filters.jobType);
+    if (filters?.location?.trim()) params.set("location", filters.location.trim());
+
     const { data, meta } = await apiFetchEnvelope<RequirementRow[]>(
-      `/api/account/requirements?page=${page}&pageSize=${pageSize}`,
+      `/api/account/requirements?${params.toString()}`,
       { cache: "no-store" },
       { baseUrl: "" },
     );

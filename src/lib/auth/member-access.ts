@@ -3,7 +3,7 @@ import { DEFAULT_PUBLIC_PLANS, type PublicPlanFeatures, type PublicSellerTier } 
 export type MemberIdentity = "buyer" | "seller";
 
 const BUYER_ONLY_VIEWS = new Set(["saved", "my-requirements"]);
-const SELLER_ONLY_VIEWS = new Set(["my-listings", "membership"]);
+const SELLER_ONLY_VIEWS = new Set(["my-listings", "membership", "verification"]);
 
 export function normalizeSellerTier(tier: string | null | undefined): PublicSellerTier {
   if (tier === "pro") return "pro";

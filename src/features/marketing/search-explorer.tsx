@@ -438,7 +438,7 @@ export function SearchExplorer({
             Full marketplace
           </p>
           <p className="mt-2 max-w-md text-sm leading-7 text-brand-forest/60">
-            Message sellers and manage bookings in the Kattegat app.
+            Open a listing to message the seller on the web, or continue in the Kattegat app.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

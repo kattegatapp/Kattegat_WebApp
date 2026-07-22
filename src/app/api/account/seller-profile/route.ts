@@ -13,7 +13,7 @@ export async function PATCH(request: NextRequest) {
   if (session instanceof NextResponse) return session;
 
   const parsed = await parseSecureJson(request, updateSellerProfileSchema, {
-    maxBytes: 12_000,
+    maxBytes: 48_000,
     checkOrigin: true,
   });
   if (!parsed.ok) return parsed.response;

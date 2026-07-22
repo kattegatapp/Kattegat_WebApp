@@ -33,6 +33,12 @@ export type SellerProfileSummary = {
   reviewCount: number;
   vatRegistered: boolean;
   badges: string[];
+  profileMedia?: Array<{
+    id: string;
+    type: "photo" | "video_link";
+    url: string;
+    sortOrder: number;
+  }>;
 };
 
 export type AccountListing = {

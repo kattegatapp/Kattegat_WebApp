@@ -81,7 +81,21 @@ export function AccountGlass({
   );
 }
 
-/** Solid surface for dense list rows (listings, requirements) — easier to scan than glass. */
+/** Dense marketplace catalog grid — scales better than a long single-column list. */
+export const ACCOUNT_CATALOG_GRID =
+  "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3";
+
+export function AccountCatalogGrid({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}) {
+  return <div className={cn(ACCOUNT_CATALOG_GRID, className)}>{children}</div>;
+}
+
+/** Solid surface for dense catalog cards (listings, requirements) — easier to scan than glass. */
 export function AccountListCard({
   className,
   children,
@@ -172,5 +186,5 @@ export function ProNote({ children }: { children: ReactNode }) {
 }
 
 export function AccountViewWrap({ children }: { children: ReactNode }) {
-  return <div className="account-view mx-auto max-w-5xl">{children}</div>;
+  return <div className="account-view mx-auto max-w-6xl">{children}</div>;
 }

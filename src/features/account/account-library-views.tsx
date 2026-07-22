@@ -1,26 +1,22 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   ArrowRight,
   BriefcaseBusiness,
-  Gift,
   Heart,
+  MapPin,
   Megaphone,
   Pencil,
   Plus,
   Search,
-  Sparkles,
-  Trophy,
-  Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 
 import {
-  AccountAvatar,
+  AccountCatalogGrid,
   AccountGlass,
   AccountListCard,
   AccountViewIntro,
@@ -29,11 +25,9 @@ import {
 } from "@/features/account/account-shared";
 import { AccountCardGridSkeleton } from "@/features/account/account-loading";
 import { ListingEditorDialog } from "@/features/account/listing-editor-dialog";
-import { ReferralSharePanel } from "@/features/account/referral-share-panel";
 import { RequirementEditorDialog } from "@/features/account/requirement-editor-dialog";
+import { ApplyToRequirementDialog } from "@/features/account/account-applications-view";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import type { AccountDashboard, AccountListing } from "@/lib/api/account";
@@ -50,12 +44,7 @@ import {
   requirementEditable,
   type AccountRequirement,
 } from "@/lib/api/account-requirements";
-import {
-  fetchAccountReferralSummary,
-  fetchReferredUsers,
-  fetchReferralLeaderboard,
-} from "@/lib/api/account-referrals";
-import { fetchRecommendLeads, submitRecommendLead, type RecommendLead, type RecommendLeadStatus } from "@/lib/api/account-recommend";
+import { JOB_TYPE_OPTIONS } from "@/lib/validations/requirement";
 import { fetchSavedItems } from "@/lib/api/account-saved";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
 import { listingPublicPath, requirementPublicPath } from "@/lib/navigation/public-paths";
@@ -103,27 +92,70 @@ function EmptyState({
   );
 }
 
-function OpenRequirementCard({ item }: { item: AccountRequirement }) {
+function OpenRequirementCard({
+  item,
+  canApply,
+  onApply,
+}: {
+  item: AccountRequirement;
+  canApply?: boolean;
+  onApply?: (item: AccountRequirement) => void;
+}) {
+  const jobLabel =
+    JOB_TYPE_OPTIONS.find((option) => option.value === item.jobType)?.label ??
+    item.jobType.replaceAll("_", " ");
+
   return (
-    <Link href={requirementPublicPath({ id: item.id, title: item.title })} className="group block h-full">
-    <AccountListCard className="flex h-full min-w-0 flex-col p-4 sm:p-5 transition group-hover:border-brand-mantis/25">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-md border border-brand-forest/10 bg-muted px-2 py-0.5 text-[10.5px] font-bold text-brand-forest/65">
-          {item.jobType.replaceAll("_", " ")}
-        </span>
-        <span className="text-[11px] text-muted-foreground">{formatRelativeTime(item.createdAt)}</span>
-        {item.viewCount > 0 ? (
-          <span className="text-[11px] text-muted-foreground">{item.viewCount} views</span>
-        ) : null}
-      </div>
-      <h3 className="mt-2 text-[15px] font-bold leading-snug text-brand-forest">{item.title}</h3>
-      <p className="mt-2 line-clamp-3 text-[13px] leading-6 text-brand-forest/65">{item.description}</p>
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-3">
-        <span className="text-sm font-bold text-brand-mantis">{formatAedRange(item.budgetMin, item.budgetMax)}</span>
-        <span className="text-[12px] text-brand-forest/65">{item.location}</span>
-      </div>
+    <AccountListCard className="flex h-full min-w-0 flex-col overflow-hidden p-0 transition hover:border-brand-mantis/30 hover:shadow-md">
+      <Link
+        href={requirementPublicPath({ id: item.id, title: item.title })}
+        className="group flex min-w-0 flex-1 flex-col p-3.5 sm:p-4"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <span className="rounded-full border border-brand-forest/10 bg-brand-forest/[0.03] px-2 py-0.5 text-[10px] font-bold text-brand-forest/65">
+            {jobLabel}
+          </span>
+          <span className="shrink-0 text-[10px] text-muted-foreground">
+            {formatRelativeTime(item.createdAt)}
+          </span>
+        </div>
+
+        <h3 className="mt-2.5 line-clamp-2 min-h-[2.5rem] text-[14px] font-extrabold leading-snug tracking-tight text-brand-forest transition group-hover:text-brand-forest/85">
+          {item.title}
+        </h3>
+
+        {item.description ? (
+          <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-brand-forest/55">
+            {item.description}
+          </p>
+        ) : (
+          <div className="mt-1.5 min-h-[2.5rem]" />
+        )}
+
+        <div className="mt-auto flex items-end justify-between gap-2 border-t border-brand-forest/8 pt-2.5">
+          <p className="truncate text-[13px] font-extrabold text-brand-mantis">
+            {formatAedRange(item.budgetMin, item.budgetMax)}
+          </p>
+          <p className="inline-flex max-w-[48%] items-center gap-1 text-[11px] font-medium text-brand-forest/55">
+            <MapPin className="size-3 shrink-0" aria-hidden />
+            <span className="truncate">{item.location}</span>
+          </p>
+        </div>
+      </Link>
+
+      {canApply && onApply ? (
+        <div className="border-t border-brand-forest/8 px-3.5 py-2.5 sm:px-4">
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 w-full text-xs font-bold"
+            onClick={() => onApply(item)}
+          >
+            Apply
+          </Button>
+        </div>
+      ) : null}
     </AccountListCard>
-    </Link>
   );
 }
 
@@ -239,52 +271,62 @@ export function AccountMyListingsView({ dashboard }: { dashboard: AccountDashboa
       ) : null}
       {actionError ? <p className="mb-3 text-sm text-red-600">{actionError}</p> : null}
       {listingsQuery.isPending ? (
-        <AccountCardGridSkeleton count={3} columns={1} />
+        <AccountCardGridSkeleton count={6} columns={3} />
       ) : listings.length ? (
-        <div className="flex flex-col gap-3">
+        <AccountCatalogGrid>
           {listings.map((listing: AccountListing) => {
             const isListingActionPending = pendingListingId === listing.id;
             const pendingAction = isListingActionPending ? statusMutation.variables?.action : null;
 
             return (
-            <AccountListCard key={listing.id} className="p-4 sm:p-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="min-w-0 flex-1">
+              <AccountListCard key={listing.id} className="flex h-full flex-col p-3.5 sm:p-4">
+                <div className="flex min-w-0 flex-1 flex-col">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={listingStatusClass(listing.status)}>
                       {listing.status.replaceAll("_", " ")}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground">
                       {formatRelativeTime(listing.updatedAt)}
                     </span>
                   </div>
-                  <h3 className="mt-2 text-[15px] font-bold leading-snug text-brand-forest">{listing.title}</h3>
+                  <h3 className="mt-2 line-clamp-2 text-[14px] font-extrabold leading-snug text-brand-forest">
+                    {listing.title}
+                  </h3>
                   {listing.description ? (
-                    <p className="mt-1 line-clamp-2 text-[13px] leading-6 text-brand-forest/65">
+                    <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-brand-forest/60">
                       {listing.description}
                     </p>
                   ) : null}
-                  <p className="mt-2 text-[12px] text-brand-forest/55">{listing.location || "UAE"}</p>
+                  <p className="mt-2 text-[11px] text-brand-forest/55">{listing.location || "UAE"}</p>
                   {listing.rejectionReason ? (
-                    <p className="mt-2 text-[12px] text-red-600">Rejected: {listing.rejectionReason}</p>
+                    <p className="mt-2 text-[11px] text-red-600">Rejected: {listing.rejectionReason}</p>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap items-center gap-2 border-t border-brand-forest/8 pt-3 lg:max-w-[16rem] lg:shrink-0 lg:justify-end lg:border-t-0 lg:pt-0">
-                  <Button type="button" size="sm" variant="outline" onClick={() => openEdit(listing.id)}>
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-brand-forest/8 pt-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8 text-xs"
+                    onClick={() => openEdit(listing.id)}
+                  >
                     <Pencil className="size-3.5" />
                     Edit
                   </Button>
-                  {listing.status === "draft" || listing.status === "rejected" || listing.status === "unpublished" ? (
+                  {listing.status === "draft" ||
+                  listing.status === "rejected" ||
+                  listing.status === "unpublished" ? (
                     <Button
                       type="button"
                       size="sm"
+                      className="h-8 text-xs"
                       disabled={isListingActionPending}
                       onClick={() =>
                         statusMutation.mutate({ listingId: listing.id, action: "submit" })
                       }
                     >
                       {pendingAction === "submit" ? <Spinner className="size-3.5" /> : null}
-                      {listing.status === "unpublished" ? "Republish" : "Submit for review"}
+                      {listing.status === "unpublished" ? "Republish" : "Submit"}
                     </Button>
                   ) : null}
                   {listing.status === "live" ? (
@@ -293,6 +335,7 @@ export function AccountMyListingsView({ dashboard }: { dashboard: AccountDashboa
                         type="button"
                         size="sm"
                         variant="outline"
+                        className="h-8 text-xs"
                         disabled={isListingActionPending}
                         onClick={() =>
                           statusMutation.mutate({ listingId: listing.id, action: "unpublish" })
@@ -305,17 +348,16 @@ export function AccountMyListingsView({ dashboard }: { dashboard: AccountDashboa
                         href={listingPublicPath({ id: listing.id, title: listing.title })}
                         className="inline-flex items-center gap-1 text-xs font-bold text-brand-forest hover:underline"
                       >
-                        View live
+                        View
                         <ArrowRight className="size-3.5" />
                       </Link>
                     </>
                   ) : null}
                 </div>
-              </div>
-            </AccountListCard>
+              </AccountListCard>
             );
           })}
-        </div>
+        </AccountCatalogGrid>
       ) : (
         <EmptyState
           icon={BriefcaseBusiness}
@@ -346,9 +388,11 @@ export function AccountSavedView() {
   return (
     <AccountViewWrap>
       <SectionHeading title="Saved" className="!mt-0" />
-      <p className="mb-5 text-sm text-muted-foreground">Listings and requirements you saved while browsing.</p>
+      <p className="mb-5 text-sm text-muted-foreground">
+        Listings and requirements you saved while browsing.
+      </p>
       {savedQuery.isPending ? (
-        <p className="text-sm text-muted-foreground">Loading saved items…</p>
+        <AccountCardGridSkeleton count={6} columns={3} />
       ) : saved && (saved.listings.length > 0 || saved.requirements.length > 0) ? (
         <div className="space-y-8">
           {saved.listings.length > 0 ? (
@@ -356,24 +400,39 @@ export function AccountSavedView() {
               <h3 className="mb-3 text-sm font-extrabold uppercase tracking-[0.12em] text-muted-foreground">
                 Saved listings
               </h3>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <AccountCatalogGrid>
                 {saved.listings.map((listing) => (
-                  <Link key={listing.id} href={listingPublicPath({ id: listing.id, title: listing.title })}>
-                    <AccountGlass className="h-full rounded-[18px] p-4 transition hover:border-brand-mantis/25">
+                  <Link
+                    key={listing.id}
+                    href={listingPublicPath({ id: listing.id, title: listing.title })}
+                  >
+                    <AccountListCard className="h-full p-3.5 transition hover:border-brand-mantis/30 hover:shadow-md sm:p-4">
                       {listing.coverImage ? (
                         <div className="relative mb-3 aspect-[16/10] overflow-hidden rounded-xl bg-muted">
-                          <Image src={listing.coverImage} alt="" fill className="object-cover" sizes="240px" />
+                          <Image
+                            src={listing.coverImage}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                          />
                         </div>
                       ) : null}
-                      <p className="font-bold text-brand-forest">{listing.title}</p>
+                      <p className="line-clamp-2 text-[14px] font-extrabold leading-snug text-brand-forest">
+                        {listing.title}
+                      </p>
                       {listing.sellerName ? (
-                        <p className="mt-1 text-[12px] text-brand-forest/60">{listing.sellerName}</p>
+                        <p className="mt-1 truncate text-[12px] text-brand-forest/60">
+                          {listing.sellerName}
+                        </p>
                       ) : null}
-                      <p className="mt-2 text-[12px] text-brand-forest/55">{listing.location || "UAE"}</p>
-                    </AccountGlass>
+                      <p className="mt-2 text-[11px] text-brand-forest/55">
+                        {listing.location || "UAE"}
+                      </p>
+                    </AccountListCard>
                   </Link>
                 ))}
-              </div>
+              </AccountCatalogGrid>
             </section>
           ) : null}
           {saved.requirements.length > 0 ? (
@@ -381,11 +440,11 @@ export function AccountSavedView() {
               <h3 className="mb-3 text-sm font-extrabold uppercase tracking-[0.12em] text-muted-foreground">
                 Saved requirements
               </h3>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <AccountCatalogGrid>
                 {saved.requirements.map((item) => (
                   <OpenRequirementCard key={item.id} item={item} />
                 ))}
-              </div>
+              </AccountCatalogGrid>
             </section>
           ) : null}
         </div>
@@ -400,41 +459,166 @@ export function AccountSavedView() {
   );
 }
 
-export function AccountOpenRequirementsView() {
-  const requirementsQuery = useQuery({
-    queryKey: ["account", "requirements", "open"],
-    queryFn: () => fetchOpenRequirements(1, 48),
+export function AccountOpenRequirementsView({
+  canApply = false,
+}: {
+  canApply?: boolean;
+}) {
+  const [applyTarget, setApplyTarget] = useState<AccountRequirement | null>(null);
+  const [jobType, setJobType] = useState<string | null>(null);
+  const [location, setLocation] = useState("");
+  const deferredLocation = useDeferredValue(location.trim());
+  const pageSize = 24;
+
+  const requirementsQuery = useInfiniteQuery({
+    queryKey: ["account", "requirements", "open", jobType, deferredLocation, pageSize],
+    queryFn: ({ pageParam }) =>
+      fetchOpenRequirements(pageParam, pageSize, {
+        jobType: jobType ?? undefined,
+        location: deferredLocation || undefined,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages) => {
+      const loaded = pages.reduce((sum, page) => sum + page.items.length, 0);
+      return loaded < lastPage.total ? pages.length + 1 : undefined;
+    },
   });
-  const items = requirementsQuery.data?.items ?? [];
-  const total = requirementsQuery.data?.total ?? 0;
+
+  const items = useMemo(
+    () => requirementsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [requirementsQuery.data],
+  );
+  const total = requirementsQuery.data?.pages[0]?.total ?? 0;
+  const hasActiveFilters = Boolean(jobType) || deferredLocation.length > 0;
 
   return (
     <AccountViewWrap>
       <AccountViewIntro
         title="Browse requirements"
         badge="Marketplace"
-        description="Admin-approved buyer posts open for sellers to discover and apply. This is not your own posting history — use My requirements for that."
+        description="Open buyer posts you can discover and apply to."
       />
-      {!requirementsQuery.isPending ? (
-        <p className="mb-5 text-sm text-muted-foreground">
-          {total.toLocaleString()} open requirement{total === 1 ? "" : "s"} available now
-        </p>
-      ) : null}
-      {requirementsQuery.isPending ? (
-        <AccountCardGridSkeleton count={4} />
-      ) : items.length ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          {items.map((item) => (
-            <OpenRequirementCard key={item.id} item={item} />
-          ))}
+
+      <AccountGlass className="mb-5 rounded-[18px] p-3 sm:p-4">
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden
+          />
+          <Input
+            value={location}
+            onChange={(event) => setLocation(event.target.value)}
+            placeholder="Search by location"
+            className="h-11 border-brand-forest/10 bg-white pl-9"
+            aria-label="Filter requirements by location"
+          />
         </div>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button
+            type="button"
+            onClick={() => setJobType(null)}
+            className={cn(
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-bold transition",
+              !jobType
+                ? "border-brand-forest bg-brand-forest text-white"
+                : "border-brand-forest/10 bg-white text-brand-forest/70 hover:border-brand-mantis/30",
+            )}
+          >
+            All types
+          </button>
+          {JOB_TYPE_OPTIONS.map((option) => {
+            const selected = jobType === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setJobType(selected ? null : option.value)}
+                className={cn(
+                  "shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-bold transition",
+                  selected
+                    ? "border-brand-mantis/50 bg-brand-mantis/15 text-brand-forest"
+                    : "border-brand-forest/10 bg-white text-brand-forest/70 hover:border-brand-mantis/30",
+                )}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+          {hasActiveFilters ? (
+            <button
+              type="button"
+              onClick={() => {
+                setJobType(null);
+                setLocation("");
+              }}
+              className="shrink-0 rounded-full border border-brand-forest/10 bg-white px-3.5 py-1.5 text-[12px] font-bold text-brand-forest/55 hover:bg-brand-forest/5"
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+      </AccountGlass>
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium text-muted-foreground">
+          {requirementsQuery.isPending
+            ? "Loading…"
+            : `Showing ${items.length.toLocaleString()} of ${total.toLocaleString()}${
+                hasActiveFilters ? " matching filters" : " open"
+              }`}
+        </p>
+      </div>
+
+      {requirementsQuery.isPending ? (
+        <AccountCardGridSkeleton count={6} columns={3} />
+      ) : items.length ? (
+        <>
+          <AccountCatalogGrid>
+            {items.map((item) => (
+              <OpenRequirementCard
+                key={item.id}
+                item={item}
+                canApply={canApply}
+                onApply={setApplyTarget}
+              />
+            ))}
+          </AccountCatalogGrid>
+          {requirementsQuery.hasNextPage ? (
+            <div className="mt-5 flex justify-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="font-bold"
+                disabled={requirementsQuery.isFetchingNextPage}
+                onClick={() => void requirementsQuery.fetchNextPage()}
+              >
+                {requirementsQuery.isFetchingNextPage ? <Spinner className="size-4" /> : null}
+                Load more
+              </Button>
+            </div>
+          ) : null}
+        </>
       ) : (
         <EmptyState
           icon={Search}
-          title="No open requirements"
-          body="When buyers post requirements, they appear here after the admin team reviews and approves them."
+          title={hasActiveFilters ? "No matching requirements" : "No open requirements"}
+          body={
+            hasActiveFilters
+              ? "Try a different location or job type."
+              : "When buyers post requirements, they appear here after admin approval."
+          }
         />
       )}
+
+      <ApplyToRequirementDialog
+        open={Boolean(applyTarget)}
+        onOpenChange={(open) => {
+          if (!open) setApplyTarget(null);
+        }}
+        requirementId={applyTarget?.id ?? null}
+        requirementTitle={applyTarget?.title ?? ""}
+      />
     </AccountViewWrap>
   );
 }
@@ -490,40 +674,41 @@ export function AccountMyRequirementsView({ dashboard }: { dashboard: AccountDas
         </Button>
       </div>
       {mineQuery.isPending ? (
-        <AccountCardGridSkeleton count={4} />
+        <AccountCardGridSkeleton count={6} columns={3} />
       ) : items.length ? (
-        <div className="flex flex-col gap-3">
+        <AccountCatalogGrid>
           {items.map((item) => (
-            <AccountListCard key={item.id} className="flex min-w-0 flex-col p-4 sm:p-5">
+            <AccountListCard key={item.id} className="flex h-full min-w-0 flex-col p-3.5 sm:p-4">
               <div className="flex flex-wrap items-center gap-2">
                 {item.status ? (
                   <span className={requirementStatusClass(item.status)}>
                     {item.status.replaceAll("_", " ")}
                   </span>
                 ) : null}
-                <span className="rounded-md border border-brand-forest/10 bg-muted px-2 py-0.5 text-[10.5px] font-bold text-brand-forest/65">
-                  {item.jobType.replaceAll("_", " ")}
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {formatRelativeTime(item.createdAt)}
+                <span className="rounded-full border border-brand-forest/10 bg-muted px-2 py-0.5 text-[10px] font-bold text-brand-forest/65">
+                  {JOB_TYPE_OPTIONS.find((option) => option.value === item.jobType)?.label ??
+                    item.jobType.replaceAll("_", " ")}
                 </span>
               </div>
-              <h3 className="mt-2 text-[15px] font-bold leading-snug text-brand-forest">{item.title}</h3>
-              <p className="mt-1 line-clamp-3 text-[13px] leading-6 text-brand-forest/65">
+              <h3 className="mt-2 line-clamp-2 text-[14px] font-extrabold leading-snug text-brand-forest">
+                {item.title}
+              </h3>
+              <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-brand-forest/60">
                 {item.description}
               </p>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 gap-y-2">
-                <p className="text-sm font-bold text-brand-mantis">
+              <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-brand-forest/8 pt-2.5">
+                <p className="text-[13px] font-extrabold text-brand-mantis">
                   {formatAedRange(item.budgetMin, item.budgetMax)}
                 </p>
-                <p className="text-[12px] text-brand-forest/55">{item.location}</p>
+                <p className="truncate text-[11px] text-brand-forest/55">{item.location}</p>
               </div>
               {requirementEditable(item.status) ? (
-                <div className="mt-4 border-t border-brand-forest/8 pt-3">
+                <div className="mt-3">
                   <Button
                     type="button"
                     size="sm"
                     variant="outline"
+                    className="h-8 w-full text-xs"
                     onClick={() => openEdit(item.id)}
                   >
                     <Pencil className="size-3.5" />
@@ -533,7 +718,7 @@ export function AccountMyRequirementsView({ dashboard }: { dashboard: AccountDas
               ) : null}
             </AccountListCard>
           ))}
-        </div>
+        </AccountCatalogGrid>
       ) : (
         <EmptyState
           icon={Megaphone}
@@ -548,371 +733,6 @@ export function AccountMyRequirementsView({ dashboard }: { dashboard: AccountDas
         mode={editorMode}
         requirementId={activeRequirementId}
       />
-    </AccountViewWrap>
-  );
-}
-
-export function AccountReferralsView({ dashboard }: { dashboard: AccountDashboard }) {
-  const summaryQuery = useQuery({
-    queryKey: ["account", "referrals", "summary"],
-    queryFn: fetchAccountReferralSummary,
-    initialData: dashboard.referral ?? undefined,
-  });
-  const referredQuery = useQuery({
-    queryKey: ["account", "referrals", "referred-users"],
-    queryFn: fetchReferredUsers,
-  });
-  const leaderboardQuery = useQuery({
-    queryKey: ["account", "referrals", "leaderboard"],
-    queryFn: fetchReferralLeaderboard,
-  });
-
-  const referral = summaryQuery.data;
-  const walletTotal = (referral?.wallet.totalEarned ?? 0) / 100;
-
-  return (
-    <AccountViewWrap>
-      <SectionHeading title="Referrals" className="!mt-0" />
-      <p className="mb-5 text-sm text-muted-foreground">Share Kattegat and earn when people join and subscribe.</p>
-
-      {referral ? (
-        <>
-          <AccountGlass className="rounded-[20px] p-5">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Referral wallet</p>
-              <p className="mt-1 text-3xl font-extrabold text-brand-mantis">
-                {walletTotal.toFixed(2)} <span className="text-lg text-brand-forest">AED</span>
-              </p>
-              <p className="mt-1 text-[12.5px] text-brand-forest/65">
-                {referral.activeReferrals} active referral{referral.activeReferrals === 1 ? "" : "s"}
-              </p>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <AccountGlass className="rounded-[16px] px-4 py-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">This month</p>
-                <p className="mt-1 text-xl font-extrabold text-brand-forest">{(referral.wallet.thisMonth / 100).toFixed(2)} AED</p>
-              </AccountGlass>
-              <AccountGlass className="rounded-[16px] px-4 py-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Pending</p>
-                <p className="mt-1 text-xl font-extrabold text-brand-forest">{(referral.wallet.pending / 100).toFixed(2)} AED</p>
-              </AccountGlass>
-              <AccountGlass className="rounded-[16px] px-4 py-3.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Paid out</p>
-                <p className="mt-1 text-xl font-extrabold text-brand-forest">{(referral.wallet.paidOut / 100).toFixed(2)} AED</p>
-              </AccountGlass>
-            </div>
-          </AccountGlass>
-          <ReferralSharePanel referral={referral} className="mt-4" />
-        </>
-      ) : (
-        <EmptyState icon={Gift} title="Referrals unavailable" body="Referral rewards will appear here when the program is enabled for your account." />
-      )}
-
-      <SectionHeading title="People you referred" />
-      {referredQuery.isPending ? (
-        <p className="text-sm text-muted-foreground">Loading referred members…</p>
-      ) : referredQuery.data?.length ? (
-        <div className="flex flex-col gap-2">
-          {referredQuery.data.map((user) => (
-            <AccountGlass key={user.id} className="flex items-center gap-3 rounded-[16px] p-4">
-              <AccountAvatar name={user.name} imageUrl={user.avatarUrl} className="size-10 rounded-full text-sm" />
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-brand-forest">{user.name}</p>
-                <p className="text-[12px] text-brand-forest/60">
-                  {user.role} · joined {formatRelativeTime(user.joinedAt)}
-                </p>
-              </div>
-              {user.isSubscribed ? (
-                <span className="rounded-md border border-brand-emerald/35 bg-brand-emerald/10 px-2 py-0.5 text-[10px] font-bold text-brand-emerald">
-                  Subscribed
-                </span>
-              ) : null}
-            </AccountGlass>
-          ))}
-        </div>
-      ) : (
-        <EmptyState icon={Users} title="No referrals yet" body="Share your link — when friends join, they appear here." />
-      )}
-
-      <SectionHeading title="Leaderboard" />
-      {leaderboardQuery.isPending ? (
-        <p className="text-sm text-muted-foreground">Loading leaderboard…</p>
-      ) : leaderboardQuery.data?.entries.length ? (
-        <div className="flex flex-col gap-2">
-          {leaderboardQuery.data.entries.slice(0, 10).map((entry) => (
-            <AccountGlass
-              key={entry.userId}
-              className={cn(
-                "flex items-center gap-3 rounded-[16px] p-4",
-                entry.isCurrentUser && "border-brand-mantis/35",
-              )}
-            >
-              <span className="grid size-8 place-items-center rounded-full bg-brand-forest/5 text-xs font-extrabold text-brand-forest">
-                {entry.rank}
-              </span>
-              <AccountAvatar name={entry.displayName} imageUrl={entry.avatarUrl} className="size-9 rounded-full text-sm" />
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-brand-forest">
-                  {entry.displayName}
-                  {entry.isCurrentUser ? <span className="text-brand-mantis"> · You</span> : null}
-                </p>
-                <p className="text-[12px] text-brand-forest/60">{entry.referralCount} referrals</p>
-              </div>
-              {entry.rank <= 3 ? <Trophy className="size-4 text-brand-mantis" /> : null}
-            </AccountGlass>
-          ))}
-        </div>
-      ) : (
-        <EmptyState icon={Trophy} title="Leaderboard warming up" body="Be among the first referrers on Kattegat." />
-      )}
-    </AccountViewWrap>
-  );
-}
-
-const LEAD_STATUS_LABEL: Record<string, string> = {
-  submitted: "Submitted",
-  in_progress: "In progress",
-  confirmed: "Confirmed",
-  completed: "Completed",
-  not_proceeding: "Not proceeding",
-};
-
-function RecommendLeadsTracker({
-  isPending,
-  leads,
-  filtered,
-}: {
-  isPending: boolean;
-  leads: RecommendLead[] | undefined;
-  filtered: boolean;
-}) {
-  return (
-    <>
-      {isPending ? (
-        <AccountCardGridSkeleton count={3} columns={1} />
-      ) : leads?.length ? (
-        <div className="flex flex-col gap-3">
-          {leads.map((lead) => (
-            <AccountListCard key={lead.id} className="p-4 sm:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-bold text-brand-forest">{lead.clientName}</p>
-                  <p className="mt-1 text-[12px] text-muted-foreground">{formatRelativeTime(lead.createdAt)}</p>
-                </div>
-                <span className="rounded-md border border-brand-forest/10 bg-muted px-2 py-0.5 text-[10px] font-bold text-brand-forest">
-                  {LEAD_STATUS_LABEL[lead.status] ?? lead.status}
-                </span>
-              </div>
-              <p className="mt-2 text-[13px] leading-6 text-brand-forest/70">{lead.inquiry}</p>
-              {lead.rewardAmountFils != null ? (
-                <p className="mt-2 text-sm font-bold text-brand-mantis">
-                  Reward: AED {(lead.rewardAmountFils / 100).toFixed(2)}
-                </p>
-              ) : null}
-            </AccountListCard>
-          ))}
-        </div>
-      ) : (
-        <EmptyState
-          icon={Megaphone}
-          title={filtered ? "No leads match these filters" : "No recommended leads yet"}
-          body={filtered ? "Try another status or client name." : "Submit a lead from Recommend & earn and its status will appear here."}
-        />
-      )}
-    </>
-  );
-}
-
-export function AccountRecommendView() {
-  const queryClient = useQueryClient();
-  const [trackerOpen, setTrackerOpen] = useState(false);
-  const [leadStatus, setLeadStatus] = useState<RecommendLeadStatus | "all">("all");
-  const [leadSearch, setLeadSearch] = useState("");
-  const deferredLeadSearch = useDeferredValue(leadSearch.trim());
-  const [form, setForm] = useState({
-    clientName: "",
-    inquiry: "",
-    clientPhone: "",
-    clientEmail: "",
-  });
-
-  const leadsQuery = useQuery({
-    queryKey: ["account", "recommend", "leads", leadStatus, deferredLeadSearch],
-    queryFn: () => fetchRecommendLeads({
-      status: leadStatus === "all" ? undefined : leadStatus,
-      q: deferredLeadSearch || undefined,
-    }),
-  });
-
-  useEffect(() => {
-    if (!trackerOpen) return;
-    document.querySelector(".account-main-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
-  }, [trackerOpen]);
-
-  const submit = useMutation({
-    mutationFn: () => submitRecommendLead(form),
-    onSuccess: async () => {
-      setForm({ clientName: "", inquiry: "", clientPhone: "", clientEmail: "" });
-      await queryClient.invalidateQueries({ queryKey: ["account", "recommend", "leads"] });
-    },
-  });
-
-  const canSubmit =
-    form.clientName.trim().length > 0 &&
-    form.inquiry.trim().length > 0 &&
-    (form.clientPhone.trim().length > 0 || form.clientEmail.trim().length > 0) &&
-    !submit.isPending;
-
-  if (trackerOpen) {
-    return (
-      <AccountViewWrap>
-        <Button
-          type="button"
-          variant="ghost"
-          className="mb-4 -ml-2 h-9 px-2 text-brand-forest/70 hover:text-brand-forest"
-          onClick={() => setTrackerOpen(false)}
-        >
-          <ArrowLeft className="size-4" />
-          Back to Recommend & earn
-        </Button>
-        <SectionHeading title="Recommended leads" className="!mt-0" />
-        <p className="mb-5 text-sm text-muted-foreground">
-          Follow each recommendation from review to completion. Earnings are credited to your wallet once our team confirms the amount.
-        </p>
-        <div className="mb-5 grid gap-3 rounded-2xl border border-brand-forest/10 bg-white p-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto] sm:items-center">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-brand-forest/35" />
-            <Input
-              value={leadSearch}
-              onChange={(event) => setLeadSearch(event.target.value)}
-              placeholder="Filter by client name"
-              aria-label="Filter recommended leads by client name"
-              className="h-10 rounded-xl pl-9"
-            />
-          </div>
-          <select
-            value={leadStatus}
-            onChange={(event) => setLeadStatus(event.target.value as RecommendLeadStatus | "all")}
-            aria-label="Filter recommended leads by status"
-            className="h-10 rounded-xl border border-input bg-white px-3 text-sm font-semibold text-brand-forest outline-none focus:border-brand-mantis focus:ring-2 focus:ring-brand-mantis/20"
-          >
-            <option value="all">All statuses</option>
-            <option value="submitted">Submitted</option>
-            <option value="in_progress">In progress</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="completed">Completed</option>
-            <option value="not_proceeding">Not proceeding</option>
-          </select>
-          {leadStatus !== "all" || leadSearch ? (
-            <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={() => { setLeadStatus("all"); setLeadSearch(""); }}>
-              Clear
-            </Button>
-          ) : <span />}
-        </div>
-        <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{leadsQuery.data?.length ?? 0} matching lead{leadsQuery.data?.length === 1 ? "" : "s"}</span>
-          {leadsQuery.isFetching && !leadsQuery.isPending ? <span>Updating…</span> : null}
-        </div>
-        <RecommendLeadsTracker
-          isPending={leadsQuery.isPending}
-          leads={leadsQuery.data}
-          filtered={leadStatus !== "all" || Boolean(deferredLeadSearch)}
-        />
-      </AccountViewWrap>
-    );
-  }
-
-  return (
-    <AccountViewWrap>
-      <SectionHeading title="Recommend & earn" className="!mt-0" />
-      <p className="mb-5 text-sm text-muted-foreground">
-        Know someone who needs a service we offer? Pass it along — we handle it end to end and you earn a share of the management fee.
-      </p>
-
-      <button
-        type="button"
-        className="mb-5 w-full rounded-[20px] text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-mantis/40"
-        onClick={() => setTrackerOpen(true)}
-      >
-        <AccountGlass className="rounded-[20px] p-5 transition hover:border-brand-mantis/25 hover:bg-brand-forest/[0.02]">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-bold text-brand-forest">Track recommended leads</h3>
-              <p className="mt-1 text-[13px] text-brand-forest/65">
-                See each lead&apos;s status and whether it has earned yet.
-              </p>
-            </div>
-            <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-          </div>
-        </AccountGlass>
-      </button>
-
-      <AccountGlass className="rounded-[20px] p-5">
-        <h3 className="font-bold text-brand-forest">Submit a lead</h3>
-        <p className="mt-1 text-[13px] text-brand-forest/65">Share who needs talent and what they&apos;re looking for.</p>
-        <form
-          className="mt-4 grid gap-4 sm:grid-cols-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (!canSubmit) return;
-            submit.mutate();
-          }}
-        >
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="recommend-client-name">Client name</Label>
-            <Input
-              id="recommend-client-name"
-              value={form.clientName}
-              onChange={(e) => setForm((c) => ({ ...c, clientName: e.target.value }))}
-              className="h-10 rounded-xl"
-            />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="recommend-inquiry">What&apos;s the job?</Label>
-            <Textarea
-              id="recommend-inquiry"
-              value={form.inquiry}
-              onChange={(e) => setForm((c) => ({ ...c, inquiry: e.target.value }))}
-              rows={4}
-              className="min-h-[96px] rounded-xl"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="recommend-phone">Client phone</Label>
-            <Input
-              id="recommend-phone"
-              type="tel"
-              value={form.clientPhone}
-              onChange={(e) => setForm((c) => ({ ...c, clientPhone: e.target.value }))}
-              className="h-10 rounded-xl"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="recommend-email">Client email</Label>
-            <Input
-              id="recommend-email"
-              type="email"
-              autoCapitalize="none"
-              value={form.clientEmail}
-              onChange={(e) => setForm((c) => ({ ...c, clientEmail: e.target.value }))}
-              className="h-10 rounded-xl"
-            />
-          </div>
-          <p className="text-[12px] text-muted-foreground sm:col-span-2">Provide at least a phone number or email so our team can follow up.</p>
-          {submit.isError ? (
-            <p className="text-sm text-red-600 sm:col-span-2">
-              {submit.error instanceof Error ? submit.error.message : "Could not submit lead."}
-            </p>
-          ) : null}
-          {submit.isSuccess ? (
-            <p className="text-sm font-semibold text-brand-mantis sm:col-span-2">Lead submitted — we&apos;ll be in touch.</p>
-          ) : null}
-          <Button type="submit" disabled={!canSubmit} className="rounded-xl sm:col-span-2 sm:w-fit">
-            {submit.isPending ? <Spinner className="size-4" /> : <Sparkles className="size-4" />}
-            Submit lead
-          </Button>
-        </form>
-      </AccountGlass>
     </AccountViewWrap>
   );
 }

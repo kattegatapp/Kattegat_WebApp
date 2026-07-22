@@ -28,6 +28,7 @@ type ContinueInAppProps = {
   webOrigin?: string;
   className?: string;
   buttonLabel?: string;
+  variant?: "primary" | "outline";
 };
 
 function detectPlatform(): Platform {
@@ -58,6 +59,7 @@ export function ContinueInApp({
   webOrigin,
   className,
   buttonLabel = "Continue in app",
+  variant = "primary",
 }: ContinueInAppProps) {
   const [open, setOpen] = useState(false);
   const platform = useSyncExternalStore(subscribe, detectPlatform, () => "other" as Platform);
@@ -134,7 +136,10 @@ export function ContinueInApp({
         type="button"
         onClick={openInApp}
         className={cn(
-          "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand-mantis px-6 text-sm font-extrabold text-brand-forest transition hover:brightness-95",
+          "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-extrabold transition",
+          variant === "outline"
+            ? "border border-brand-forest/15 bg-white text-brand-forest hover:bg-brand-forest/[0.03]"
+            : "bg-brand-mantis text-brand-forest hover:brightness-95",
           className,
         )}
       >

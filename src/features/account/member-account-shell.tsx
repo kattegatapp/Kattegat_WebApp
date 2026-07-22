@@ -3,6 +3,7 @@
 import {
   BriefcaseBusiness,
   ClipboardList,
+  FileCheck2,
   Gift,
   Grid2x2,
   Heart,
@@ -13,6 +14,7 @@ import {
   MessageCircle,
   Plus,
   Search,
+  ShieldCheck,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -56,11 +58,14 @@ type NavItem = {
 
 const MARKETPLACE_NAV: NavItem[] = [
   { id: "home", label: "Home", icon: Home },
+  { id: "browse", label: "Browse listings", icon: Search },
   { id: "categories", label: "Categories", icon: Grid2x2 },
   { id: "requirements", label: "Browse requirements", icon: ClipboardList },
   { id: "saved", label: "Saved", icon: Heart, buyerOnly: true },
   { id: "my-listings", label: "My listings", icon: BriefcaseBusiness, sellerOnly: true },
   { id: "my-requirements", label: "My requirements", icon: Megaphone, buyerOnly: true },
+  { id: "applications", label: "Applications", icon: FileCheck2 },
+  { id: "verification", label: "Identity verification", icon: ShieldCheck, sellerOnly: true },
 ];
 
 const GROWTH_NAV: NavItem[] = [
@@ -76,11 +81,18 @@ type MemberAccountShellProps = {
   dashboard: AccountDashboard;
   activeView: AccountViewId;
   onViewChange: (view: AccountViewId) => void;
+  onMarketplaceSearch?: (query: string) => void;
+  marketplaceSearchQuery?: string;
   identity: AccountIdentity;
   notifications: AccountNotificationsState;
+  chatUnreadCount?: number;
   onIdentityChange: (identity: AccountIdentity) => void;
   onSignOut: () => void;
   signingOut?: boolean;
+  listingEditorOpen?: boolean;
+  onListingEditorOpenChange?: (open: boolean) => void;
+  requirementEditorOpen?: boolean;
+  onRequirementEditorOpenChange?: (open: boolean) => void;
   children: ReactNode;
 };
 
@@ -88,16 +100,28 @@ export function MemberAccountShell({
   dashboard,
   activeView,
   onViewChange,
+  onMarketplaceSearch,
+  marketplaceSearchQuery = "",
   identity,
   notifications,
+  chatUnreadCount = 0,
   onIdentityChange,
   onSignOut,
   signingOut,
+  listingEditorOpen: listingEditorOpenProp,
+  onListingEditorOpenChange,
+  requirementEditorOpen: requirementEditorOpenProp,
+  onRequirementEditorOpenChange,
   children,
 }: MemberAccountShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [listingEditorOpen, setListingEditorOpen] = useState(false);
-  const [requirementEditorOpen, setRequirementEditorOpen] = useState(false);
+  const [listingEditorOpenInternal, setListingEditorOpenInternal] = useState(false);
+  const [requirementEditorOpenInternal, setRequirementEditorOpenInternal] = useState(false);
+  const listingEditorOpen = listingEditorOpenProp ?? listingEditorOpenInternal;
+  const requirementEditorOpen = requirementEditorOpenProp ?? requirementEditorOpenInternal;
+  const setListingEditorOpen = onListingEditorOpenChange ?? setListingEditorOpenInternal;
+  const setRequirementEditorOpen =
+    onRequirementEditorOpenChange ?? setRequirementEditorOpenInternal;
   const mainScrollRef = useRef<HTMLDivElement>(null);
   const { user, sellerProfile, listings } = dashboard;
 
@@ -110,7 +134,14 @@ export function MemberAccountShell({
 
   const avatarUrl = user.avatarUrl || sellerProfile?.avatarUrl;
   const publicId = identity === "seller" ? user.sid : user.bid;
-  const workspaceNav = WORKSPACE_NAV;
+  const marketplaceNav = MARKETPLACE_NAV.map((item) =>
+    item.id === "applications"
+      ? { ...item, label: identity === "seller" ? "My applications" : "Applicants" }
+      : item,
+  );
+  const workspaceNav = WORKSPACE_NAV.map((item) =>
+    item.id === "chat" ? { ...item, badge: chatUnreadCount > 0 ? chatUnreadCount : undefined } : item,
+  );
 
   function selectView(view: AccountViewId) {
     setMobileOpen(false);
@@ -125,6 +156,7 @@ export function MemberAccountShell({
     publicId,
     user,
     identity,
+    marketplaceItems: marketplaceNav,
     workspaceItems: workspaceNav,
     growthItems: GROWTH_NAV,
     signingOut,
@@ -150,20 +182,22 @@ export function MemberAccountShell({
 
       {/* Mobile nav — only mounted in sheet, opened via hamburger */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent
+          <SheetContent
           side="left"
-          className="account-mobile-nav w-[min(88vw,300px)] gap-0 border-brand-forest/10 bg-white p-0 sm:max-w-[300px]"
+          className="account-mobile-nav flex h-dvh max-h-dvh w-[min(88vw,300px)] flex-col gap-0 overflow-hidden border-brand-forest/10 bg-white p-0 sm:max-w-[300px]"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>Account navigation</SheetTitle>
           </SheetHeader>
-          <AccountSidebarContent {...sidebarProps} />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <AccountSidebarContent {...sidebarProps} />
+          </div>
         </SheetContent>
       </Sheet>
 
       {/* Desktop sidebar — fixed, never scrolls with main content */}
       <div className="account-shell-body flex min-h-0 w-full flex-1 overflow-hidden">
-        <aside className="account-sidebar member-sidebar-glass hidden shrink-0 lg:flex">
+        <aside className="account-sidebar member-sidebar-glass hidden min-h-0 shrink-0 lg:flex">
           <AccountSidebarContent {...sidebarProps} />
         </aside>
 
@@ -186,13 +220,18 @@ export function MemberAccountShell({
             <Search className="size-4 shrink-0 text-muted-foreground max-sm:hidden" />
             <Input
               type="search"
-              placeholder="Search"
+              placeholder="Search listings"
+              defaultValue={marketplaceSearchQuery}
+              key={marketplaceSearchQuery}
               className="h-8 min-w-0 flex-1 border-0 bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 sm:h-9"
               onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  const q = event.currentTarget.value.trim();
-                  window.location.href = q ? `/search?q=${encodeURIComponent(q)}` : "/search";
+                if (event.key !== "Enter") return;
+                const q = event.currentTarget.value.trim();
+                if (onMarketplaceSearch) {
+                  onMarketplaceSearch(q);
+                  return;
                 }
+                window.location.href = q ? `/search?q=${encodeURIComponent(q)}` : "/search";
               }}
             />
           </div>
@@ -330,6 +369,7 @@ type AccountSidebarContentProps = {
   publicId?: string | null;
   user: AccountDashboard["user"];
   identity: AccountIdentity;
+  marketplaceItems: NavItem[];
   workspaceItems: NavItem[];
   growthItems: NavItem[];
   signingOut?: boolean;
@@ -345,6 +385,7 @@ function AccountSidebarContent({
   publicId,
   user,
   identity,
+  marketplaceItems,
   workspaceItems,
   growthItems,
   signingOut,
@@ -353,10 +394,10 @@ function AccountSidebarContent({
   onSignOut,
 }: AccountSidebarContentProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-y-auto p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] lg:p-0 lg:pb-0">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] lg:p-0 lg:pb-0">
       <Link
         href="/account"
-        className="flex items-center gap-3 px-2.5 pb-5 pt-0.5"
+        className="flex shrink-0 items-center gap-3 px-2.5 pb-5 pt-0.5"
         onClick={() => onSelectView("home")}
       >
         <span className="grid size-[38px] place-items-center rounded-xl border border-brand-forest/10 bg-white">
@@ -367,11 +408,13 @@ function AccountSidebarContent({
         </span>
       </Link>
 
-      <NavGroup label="Marketplace" items={MARKETPLACE_NAV} active={activeView} identity={identity} onSelect={onSelectView} />
-      <NavGroup label="Growth" items={growthItems} active={activeView} identity={identity} onSelect={onSelectView} />
-      <NavGroup label="Workspace" items={workspaceItems} active={activeView} identity={identity} onSelect={onSelectView} />
+      <div className="account-sidebar-nav min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain [-ms-overflow-style:none] [scrollbar-width:thin]">
+        <NavGroup label="Marketplace" items={marketplaceItems} active={activeView} identity={identity} onSelect={onSelectView} />
+        <NavGroup label="Growth" items={growthItems} active={activeView} identity={identity} onSelect={onSelectView} />
+        <NavGroup label="Workspace" items={workspaceItems} active={activeView} identity={identity} onSelect={onSelectView} />
+      </div>
 
-      <Card className="mt-auto gap-0 border-white/70 bg-white/45 p-3 shadow-none backdrop-blur-xl">
+      <Card className="mt-3 shrink-0 gap-0 border-white/70 bg-white/45 p-3 shadow-none backdrop-blur-xl">
         <div className="mb-3 flex items-center gap-2.5">
           <AccountAvatar name={displayName} imageUrl={avatarUrl} className="size-9 rounded-full text-sm" />
           <div className="min-w-0">
