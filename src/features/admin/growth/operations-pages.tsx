@@ -9,12 +9,13 @@ import {
   Loader2,
   Mail,
   Phone,
+  Search,
   UserRound,
   UserRoundX,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 
 import {
   AdminEmptyState,
@@ -135,9 +136,15 @@ export function RecommendedLeadsPage() {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [rewardAmount, setRewardAmount] = useState("");
+  const [statusFilter, setStatusFilter] = useState<RecommendLeadStatus | "all">("all");
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search.trim());
   const query = useQuery({
-    queryKey: ["admin", "recommend-leads"],
-    queryFn: fetchRecommendLeads,
+    queryKey: ["admin", "recommend-leads", statusFilter, deferredSearch],
+    queryFn: () => fetchRecommendLeads({
+      status: statusFilter === "all" ? undefined : statusFilter,
+      q: deferredSearch || undefined,
+    }),
     retry: false,
   });
   const mutation = useMutation({
@@ -161,6 +168,40 @@ export function RecommendedLeadsPage() {
         description="Every referral is a request for the Kattegat team to contact the client, understand what they need, and handle the opportunity."
         count={query.data?.length}
       />
+      <div className="ios-glass-pane grid gap-3 rounded-2xl border border-white/80 p-4 sm:grid-cols-[minmax(0,1fr)_14rem_auto] sm:items-center">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Filter by client name"
+            aria-label="Filter recommended leads by client name"
+            className="h-10 rounded-xl pl-9"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as RecommendLeadStatus | "all")}>
+          <SelectTrigger className="h-10 w-full rounded-xl">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="in_progress">In progress</SelectItem>
+            <SelectItem value="confirmed">Confirmed</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="not_proceeding">Not proceeding</SelectItem>
+          </SelectContent>
+        </Select>
+        {statusFilter !== "all" || search ? (
+          <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={() => { setStatusFilter("all"); setSearch(""); }}>
+            Clear
+          </Button>
+        ) : <span />}
+      </div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{query.data?.length ?? 0} matching lead{query.data?.length === 1 ? "" : "s"}</span>
+        {query.isFetching && !query.isPending ? <span>Updating…</span> : null}
+      </div>
       {mutation.isError ? (
         <Alert className="ios-glass-pane rounded-2xl border-red-200/60 bg-red-50/35 text-red-950 backdrop-blur-xl">
           <X />
@@ -348,8 +389,8 @@ export function RecommendedLeadsPage() {
       </div>
       {!query.data?.length ? (
         <AdminEmptyState
-          title="No recommended leads yet"
-          description="When a member recommends someone for Kattegat to handle, the referral and contact details will appear here."
+          title={statusFilter !== "all" || deferredSearch ? "No leads match these filters" : "No recommended leads yet"}
+          description={statusFilter !== "all" || deferredSearch ? "Try another status or client name." : "When a member recommends someone for Kattegat to handle, the referral and contact details will appear here."}
         />
       ) : null}
       <Dialog

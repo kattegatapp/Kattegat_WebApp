@@ -13,8 +13,16 @@ const submitRecommendLeadSchema = z
   })
   .strict();
 
-export async function GET() {
-  return proxyMemberBackend("/recommend/leads");
+const listRecommendLeadsSchema = z.object({
+  status: z.enum(["submitted", "in_progress", "confirmed", "completed", "not_proceeding"]).optional(),
+  q: z.string().trim().min(1).max(100).optional(),
+});
+
+export async function GET(request: NextRequest) {
+  const parsed = listRecommendLeadsSchema.safeParse(Object.fromEntries(request.nextUrl.searchParams));
+  if (!parsed.success) return Response.json({ success: false, error: { code: "VALIDATION_ERROR", message: "Invalid lead filters." } }, { status: 400 });
+  const query = new URLSearchParams(parsed.data).toString();
+  return proxyMemberBackend(`/recommend/leads${query ? `?${query}` : ""}`);
 }
 
 export async function POST(request: NextRequest) {

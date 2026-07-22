@@ -26,6 +26,19 @@ export type ReferralLeaderboardResult = {
   currentUser: ReferralLeaderboardEntry | null;
 };
 
+export type ReferralCompetitionStatus = {
+  id: string;
+  documentId: string;
+  termsVersion: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
+  prizePoolAed: number;
+  prizes: Array<{ place: 1 | 2 | 3; amountAed: number; minimumActiveReferrals: number }>;
+  status: "upcoming" | "live" | "paused" | "ended" | "cancelled";
+  participant: { joined: boolean; acceptedAt: string | null; termsCurrent: boolean; eligible: boolean };
+};
+
 export async function fetchAccountReferralSummary() {
   return apiFetch<ReferralSummary>("/api/account/referrals", undefined, { baseUrl: "" });
 }
@@ -36,4 +49,19 @@ export async function fetchReferredUsers() {
 
 export async function fetchReferralLeaderboard() {
   return apiFetch<ReferralLeaderboardResult>("/api/account/referrals/leaderboard", undefined, { baseUrl: "" });
+}
+
+export async function fetchReferralCompetition() {
+  return apiFetch<ReferralCompetitionStatus>("/api/account/referrals/competition", undefined, { baseUrl: "" });
+}
+
+export async function joinReferralCompetition(input: { documentId: string; termsVersion: string }) {
+  return apiFetch<ReferralCompetitionStatus>("/api/account/referrals/competition/join", {
+    method: "POST",
+    body: JSON.stringify({ acceptedDocumentId: input.documentId, acceptedTermsVersion: input.termsVersion, accepted: true }),
+  }, { baseUrl: "" });
+}
+
+export async function fetchCompetitionLeaderboard() {
+  return apiFetch<ReferralLeaderboardResult>("/api/account/referrals/competition/leaderboard", undefined, { baseUrl: "" });
 }

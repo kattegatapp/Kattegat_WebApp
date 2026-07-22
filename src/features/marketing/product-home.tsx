@@ -23,6 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { HeroCarousel } from "@/features/marketing/hero-carousel";
 import { dubaiHrefForQuery } from "@/features/marketing/local-seo";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
+import { CompetitionDashboardBanner } from "@/features/account/competition-dashboard-banner";
 import { SERVICE_CATEGORIES } from "@/features/marketing/service-categories";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import type { PublicAppSettings } from "@/lib/api/settings";
@@ -217,6 +218,14 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
               <span>Built in Dubai</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-brand-forest/10 bg-white px-4 py-5 sm:px-6 sm:py-7">
+        <div className="mx-auto max-w-6xl">
+          <CompetitionDashboardBanner
+            authAware
+          />
         </div>
       </section>
 

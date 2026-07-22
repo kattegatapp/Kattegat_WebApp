@@ -27,8 +27,12 @@ export type SubmitRecommendLeadInput = {
   clientEmail: string;
 };
 
-export async function fetchRecommendLeads() {
-  return apiFetch<RecommendLead[]>("/api/account/recommend/leads", undefined, { baseUrl: "" });
+export async function fetchRecommendLeads(filters: { status?: RecommendLeadStatus; q?: string } = {}) {
+  const query = new URLSearchParams();
+  if (filters.status) query.set("status", filters.status);
+  if (filters.q?.trim()) query.set("q", filters.q.trim());
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return apiFetch<RecommendLead[]>(`/api/account/recommend/leads${suffix}`, undefined, { baseUrl: "" });
 }
 
 export async function submitRecommendLead(input: SubmitRecommendLeadInput) {

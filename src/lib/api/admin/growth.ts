@@ -43,6 +43,22 @@ export interface AdminFoundingApplication {
   id: string; applicantId: string; applicantName: string | null; categoryName: string | null;
   whyYou: string; audienceReach: string | null; status: FoundingStatus; createdAt: string;
 }
+export type AdminCompetitionStatus = "upcoming" | "live" | "paused" | "ended" | "cancelled";
+export interface AdminCompetitionParticipant {
+  userId: string; name: string; email: string; acceptedAt: string; eligible: boolean;
+  disqualificationReason: string | null; referralCount: number; rank: number | null;
+}
+export interface AdminCompetition {
+  id: string; documentId: string; termsVersion: string; title: string; startsAt: string; endsAt: string;
+  prizePoolAed: number; status: AdminCompetitionStatus; participantCount: number;
+  prizes: Array<{ place: 1 | 2 | 3; amountAed: number; minimumActiveReferrals: number }>;
+  participants: AdminCompetitionParticipant[];
+}
+export type AdminCompetitionUpdate = {
+  title?: string; status?: AdminCompetitionStatus; startsAt?: string; endsAt?: string;
+  documentId?: string; termsVersion?: string; firstPrizeAed?: number; secondPrizeAed?: number;
+  thirdPrizeAed?: number; firstThreshold?: number; secondThreshold?: number; thirdThreshold?: number;
+};
 export type VettedApplicationStatus = "submitted" | "under_review" | "accepted" | "denied" | "waitlisted";
 export type VettedReviewDecision = "under_review" | "accepted" | "denied" | "waitlisted";
 export interface AdminVettedApplication {
@@ -77,10 +93,19 @@ export interface IdentityVerificationQueue {
   items: PendingIdentityVerification[]; page: number; pageSize: number; total: number;
 }
 
-export const fetchRecommendLeads = () => apiFetch<AdminRecommendLead[]>("/api/admin/recommend-leads", undefined, { baseUrl: "" });
+export const fetchRecommendLeads = (filters: { status?: RecommendLeadStatus; q?: string } = {}) => {
+  const query = new URLSearchParams();
+  if (filters.status) query.set("status", filters.status);
+  if (filters.q?.trim()) query.set("q", filters.q.trim());
+  const suffix = query.size ? `?${query.toString()}` : "";
+  return apiFetch<AdminRecommendLead[]>(`/api/admin/recommend-leads${suffix}`, undefined, { baseUrl: "" });
+};
 export const updateRecommendLead = (id: string, status: RecommendLeadStatus, amountFils?: number) => apiFetch<AdminRecommendLead>(`/api/admin/recommend-leads/${id}`, { method: "PATCH", body: JSON.stringify({ status, amountFils }) }, { baseUrl: "" });
 export const fetchFoundingApplications = () => apiFetch<AdminFoundingApplication[]>("/api/admin/founding-members", undefined, { baseUrl: "" });
 export const reviewFoundingApplication = (id: string, decision: "under_review" | "accepted" | "rejected" | "waitlisted") => apiFetch<null>(`/api/admin/founding-members/${id}/review`, { method: "POST", body: JSON.stringify({ decision }) }, { baseUrl: "" });
+export const fetchAdminCompetition = () => apiFetch<AdminCompetition>("/api/admin/competition", undefined, { baseUrl: "" });
+export const updateAdminCompetition = (input: AdminCompetitionUpdate) => apiFetch<AdminCompetition>("/api/admin/competition", { method: "PATCH", body: JSON.stringify(input) }, { baseUrl: "" });
+export const updateAdminCompetitionParticipant = (userId: string, eligible: boolean, reason?: string) => apiFetch<{ userId: string; eligible: boolean }>(`/api/admin/competition/participants/${userId}`, { method: "PATCH", body: JSON.stringify({ eligible, reason }) }, { baseUrl: "" });
 export const fetchVettedApplications = (status?: VettedApplicationStatus | "all") => {
   const query = status && status !== "all" ? `?status=${status}` : "";
   return apiFetch<AdminVettedApplication[]>(`/api/admin/vetted${query}`, undefined, { baseUrl: "" });

@@ -26,6 +26,7 @@ import {
   ScrollText,
   Server,
   Sparkles,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -226,6 +227,13 @@ export const adminNavItems: AdminNavItem[] = [
     icon: Banknote,
     description: "Member withdrawal requests against their earnings",
     badgeKey: "payouts",
+    anyOf: ["growth.write"],
+  },
+  {
+    title: "Referral Competition",
+    href: adminPath("/competition"),
+    icon: Trophy,
+    description: "Control timing, prizes, terms, and top referrers",
     anyOf: ["growth.write"],
   },
   {

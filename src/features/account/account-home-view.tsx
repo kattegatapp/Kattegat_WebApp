@@ -24,6 +24,7 @@ import {
   SectionHeading,
   accountDisplayName,
 } from "@/features/account/account-shared";
+import { CompetitionDashboardBanner } from "@/features/account/competition-dashboard-banner";
 import type { AccountIdentity, AccountViewId } from "@/features/account/types";
 import type { AccountDashboard } from "@/lib/api/account";
 import {
@@ -280,6 +281,12 @@ export function AccountHomeView({ dashboard, homeFeed, identity, onNavigate }: A
           </Button>
         </div>
       </section>
+
+      <CompetitionDashboardBanner
+        activeReferrals={dashboard.referral?.activeReferrals}
+        ctaLabel="View competition"
+        compact
+      />
 
       {/* Quick actions — different per identity */}
       <section>

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 
 import {
   AccountAvatar,
@@ -55,7 +55,7 @@ import {
   fetchReferredUsers,
   fetchReferralLeaderboard,
 } from "@/lib/api/account-referrals";
-import { fetchRecommendLeads, submitRecommendLead, type RecommendLead } from "@/lib/api/account-recommend";
+import { fetchRecommendLeads, submitRecommendLead, type RecommendLead, type RecommendLeadStatus } from "@/lib/api/account-recommend";
 import { fetchSavedItems } from "@/lib/api/account-saved";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
 import { listingPublicPath, requirementPublicPath } from "@/lib/navigation/public-paths";
@@ -680,9 +680,11 @@ const LEAD_STATUS_LABEL: Record<string, string> = {
 function RecommendLeadsTracker({
   isPending,
   leads,
+  filtered,
 }: {
   isPending: boolean;
   leads: RecommendLead[] | undefined;
+  filtered: boolean;
 }) {
   return (
     <>
@@ -713,8 +715,8 @@ function RecommendLeadsTracker({
       ) : (
         <EmptyState
           icon={Megaphone}
-          title="No recommended leads yet"
-          body="Submit a lead from Recommend & earn and its status will appear here."
+          title={filtered ? "No leads match these filters" : "No recommended leads yet"}
+          body={filtered ? "Try another status or client name." : "Submit a lead from Recommend & earn and its status will appear here."}
         />
       )}
     </>
@@ -724,6 +726,9 @@ function RecommendLeadsTracker({
 export function AccountRecommendView() {
   const queryClient = useQueryClient();
   const [trackerOpen, setTrackerOpen] = useState(false);
+  const [leadStatus, setLeadStatus] = useState<RecommendLeadStatus | "all">("all");
+  const [leadSearch, setLeadSearch] = useState("");
+  const deferredLeadSearch = useDeferredValue(leadSearch.trim());
   const [form, setForm] = useState({
     clientName: "",
     inquiry: "",
@@ -732,8 +737,11 @@ export function AccountRecommendView() {
   });
 
   const leadsQuery = useQuery({
-    queryKey: ["account", "recommend", "leads"],
-    queryFn: fetchRecommendLeads,
+    queryKey: ["account", "recommend", "leads", leadStatus, deferredLeadSearch],
+    queryFn: () => fetchRecommendLeads({
+      status: leadStatus === "all" ? undefined : leadStatus,
+      q: deferredLeadSearch || undefined,
+    }),
   });
 
   useEffect(() => {
@@ -771,7 +779,45 @@ export function AccountRecommendView() {
         <p className="mb-5 text-sm text-muted-foreground">
           Follow each recommendation from review to completion. Earnings are credited to your wallet once our team confirms the amount.
         </p>
-        <RecommendLeadsTracker isPending={leadsQuery.isPending} leads={leadsQuery.data} />
+        <div className="mb-5 grid gap-3 rounded-2xl border border-brand-forest/10 bg-white p-3 sm:grid-cols-[minmax(0,1fr)_13rem_auto] sm:items-center">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-brand-forest/35" />
+            <Input
+              value={leadSearch}
+              onChange={(event) => setLeadSearch(event.target.value)}
+              placeholder="Filter by client name"
+              aria-label="Filter recommended leads by client name"
+              className="h-10 rounded-xl pl-9"
+            />
+          </div>
+          <select
+            value={leadStatus}
+            onChange={(event) => setLeadStatus(event.target.value as RecommendLeadStatus | "all")}
+            aria-label="Filter recommended leads by status"
+            className="h-10 rounded-xl border border-input bg-white px-3 text-sm font-semibold text-brand-forest outline-none focus:border-brand-mantis focus:ring-2 focus:ring-brand-mantis/20"
+          >
+            <option value="all">All statuses</option>
+            <option value="submitted">Submitted</option>
+            <option value="in_progress">In progress</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="not_proceeding">Not proceeding</option>
+          </select>
+          {leadStatus !== "all" || leadSearch ? (
+            <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={() => { setLeadStatus("all"); setLeadSearch(""); }}>
+              Clear
+            </Button>
+          ) : <span />}
+        </div>
+        <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+          <span>{leadsQuery.data?.length ?? 0} matching lead{leadsQuery.data?.length === 1 ? "" : "s"}</span>
+          {leadsQuery.isFetching && !leadsQuery.isPending ? <span>Updating…</span> : null}
+        </div>
+        <RecommendLeadsTracker
+          isPending={leadsQuery.isPending}
+          leads={leadsQuery.data}
+          filtered={leadStatus !== "all" || Boolean(deferredLeadSearch)}
+        />
       </AccountViewWrap>
     );
   }

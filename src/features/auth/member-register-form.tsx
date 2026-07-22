@@ -35,7 +35,13 @@ import {
 const inputClass =
   "h-12 rounded-xl border-brand-forest/12 bg-white pl-10 text-brand-forest shadow-sm placeholder:text-brand-forest/35 focus-visible:border-brand-mantis/55 focus-visible:ring-brand-mantis/20";
 
-export function MemberRegisterForm({ initialReferralCode = "" }: { initialReferralCode?: string }) {
+export function MemberRegisterForm({
+  initialReferralCode = "",
+  nextPath = null,
+}: {
+  initialReferralCode?: string;
+  nextPath?: string | null;
+}) {
   const refFromUrl = initialReferralCode.trim().toUpperCase();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -72,7 +78,10 @@ export function MemberRegisterForm({ initialReferralCode = "" }: { initialReferr
         return;
       }
       if (result.user) {
-        window.location.assign("/account/setup");
+        const setupPath = nextPath
+          ? `/account/setup?next=${encodeURIComponent(nextPath)}`
+          : "/account/setup";
+        window.location.assign(setupPath);
       }
     },
     onError: (error) => {
@@ -91,7 +100,7 @@ export function MemberRegisterForm({ initialReferralCode = "" }: { initialReferr
             We sent a confirmation link to your email. After you verify, sign in to open your
             account.
           </p>
-          <Button variant="outline" nativeButton={false} render={<Link href="/login" />}>
+          <Button variant="outline" nativeButton={false} render={<Link href={nextPath ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"} />}>
             Go to sign in
           </Button>
         </AlertDescription>
