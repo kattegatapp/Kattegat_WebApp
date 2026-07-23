@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import type { AccountIdentity } from "@/features/account/types";
 
 export type BookingAction = "start" | "submit_completion" | "confirm_completion" | "cancel";
 
@@ -34,22 +35,28 @@ export type AccountWorkItem = {
   viewerRole: "buyer" | "seller";
 };
 
-export function fetchAccountWork() {
-  return apiFetch<AccountWorkItem[]>("/api/account/bookings", undefined, { baseUrl: "" });
+export function fetchAccountWork(identity: AccountIdentity) {
+  return apiFetch<AccountWorkItem[]>(`/api/account/bookings?identity=${identity}`, undefined, {
+    baseUrl: "",
+  });
 }
 
-export function acceptAccountContract(contractId: string) {
+export function acceptAccountContract(contractId: string, identity: AccountIdentity) {
   return apiFetch<AccountWorkItem>(
     `/api/account/bookings/contracts/${contractId}/accept`,
-    { method: "POST", body: JSON.stringify({}) },
+    { method: "POST", body: JSON.stringify({ identity }) },
     { baseUrl: "" },
   );
 }
 
-export function transitionAccountBooking(bookingId: string, action: BookingAction) {
+export function transitionAccountBooking(
+  bookingId: string,
+  action: BookingAction,
+  identity: AccountIdentity,
+) {
   return apiFetch<AccountWorkItem>(
     `/api/account/bookings/${bookingId}/status`,
-    { method: "PATCH", body: JSON.stringify({ action }) },
+    { method: "PATCH", body: JSON.stringify({ action, identity }) },
     { baseUrl: "" },
   );
 }

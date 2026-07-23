@@ -29,12 +29,14 @@ import {
 } from "@/lib/billing/pricing";
 import {
   createBillingCheckoutSession,
+  createBillingPortalSession,
   fetchBillingMe,
   loginForBilling,
   logoutBilling,
   type BillingPlan,
   type BillingUser,
 } from "@/lib/api/billing";
+import { ApiRequestError } from "@/lib/api/client";
 import type { PublicPlanFeatures } from "@/lib/api/plans";
 import { INPUT_LIMITS } from "@/lib/security/input";
 import { memberLoginSchema, type MemberLoginValues } from "@/lib/validations/auth";
@@ -53,6 +55,8 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
+  const [alreadyPro, setAlreadyPro] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   const loginForm = useForm<MemberLoginValues>({
     resolver: zodResolver(memberLoginSchema) as Resolver<MemberLoginValues>,
@@ -97,12 +101,33 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
       const { url } = await createBillingCheckoutSession(billingCycle);
       window.location.href = url;
     } catch (error) {
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Checkout could not be started. Try again or contact support.",
-      );
+      if (error instanceof ApiRequestError && error.code === "PRO_ALREADY_ACTIVE") {
+        setAlreadyPro(true);
+        setSubmitError(null);
+      } else {
+        setSubmitError(
+          error instanceof Error
+            ? error.message
+            : "Checkout could not be started. Try again or contact support.",
+        );
+      }
       setCheckoutLoading(false);
+    }
+  }
+
+  async function openBillingPortal() {
+    setPortalLoading(true);
+    setSubmitError(null);
+    try {
+      const { url } = await createBillingPortalSession();
+      window.location.href = url;
+    } catch (error) {
+      setSubmitError(
+        error instanceof ApiRequestError
+          ? error.message
+          : "Could not open billing portal. Try /billing or contact support.",
+      );
+      setPortalLoading(false);
     }
   }
 
@@ -262,7 +287,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                 <ShieldCheck className="size-4 text-brand-mantis" />
                 <p className="mt-2 text-sm font-extrabold">Cancel anytime</p>
                 <p className="mt-1 text-xs leading-6 text-brand-forest/55">
-                  Manage or cancel your subscription from your billing settings after purchase.
+                  Manage or cancel from Billing → Manage Pro subscription (Stripe Customer Portal).
                 </p>
               </div>
             </div>
@@ -324,6 +349,42 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
               </div>
             ) : user?.sid ? (
               <div className="space-y-5">
+                {alreadyPro ? (
+                  <div className="space-y-4 rounded-2xl border border-brand-mantis/30 bg-brand-mantis/10 p-4">
+                    <div>
+                      <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">
+                        Already on Pro
+                      </p>
+                      <h2 className="mt-2 text-xl font-extrabold">No new checkout needed</h2>
+                      <p className="mt-2 text-sm leading-7 text-brand-forest/65">
+                        This account already has Pro. Open Billing to update your card, download
+                        invoices, or cancel.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      disabled={portalLoading}
+                      onClick={() => void openBillingPortal()}
+                      className="h-12 w-full rounded-xl bg-brand-mantis font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white"
+                    >
+                      {portalLoading ? (
+                        <>
+                          <Loader2 className="size-4 animate-spin" />
+                          Opening portal…
+                        </>
+                      ) : (
+                        "Manage Pro subscription"
+                      )}
+                    </Button>
+                    <Link
+                      href="/billing"
+                      className="block text-center text-sm font-extrabold text-brand-blue hover:text-brand-forest"
+                    >
+                      Go to billing account
+                    </Link>
+                  </div>
+                ) : (
+                  <>
                 <div>
                   <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-brand-blue">
                     Signed in
@@ -354,12 +415,15 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                     </>
                   )}
                 </Button>
+                  </>
+                )}
 
                 <button
                   type="button"
                   className="w-full text-center text-xs font-semibold text-brand-blue hover:underline"
                   onClick={() => {
                     setUser(null);
+                    setAlreadyPro(false);
                     void logoutBilling();
                   }}
                 >

@@ -53,7 +53,9 @@ export interface PublicAppSettings {
     defaultCity: string;
     timezone: string;
     minimumAppVersion: string | null;
-    minimumSupportedBuildNumber: number | null;
+    /** iOS and Android build numbers increment independently — see Operations settings. */
+    minimumSupportedBuildNumberIos: number | null;
+    minimumSupportedBuildNumberAndroid: number | null;
     latestAppVersion: string | null;
     /** When true, clients below minimum version must upgrade. */
     forceUpgrade: boolean;
@@ -131,7 +133,8 @@ export const fallbackAppSettings: PublicAppSettings = {
     defaultCity: "Dubai",
     timezone: "Asia/Dubai",
     minimumAppVersion: null,
-    minimumSupportedBuildNumber: null,
+    minimumSupportedBuildNumberIos: null,
+    minimumSupportedBuildNumberAndroid: null,
     latestAppVersion: null,
     forceUpgrade: false,
     maxListingPhotosDefault: 12,

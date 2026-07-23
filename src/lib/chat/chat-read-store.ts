@@ -1,7 +1,10 @@
 /**
- * Device-local "opened this thread since the last message" tracking.
- * There is no server-side read receipt yet (same deliberate trade-off as mobile) —
- * this only powers this browser's chat list dots and nav unread badge.
+ * Device-local "opened this thread since the last message" tracking — powers this
+ * browser's chat list dots and nav unread badge specifically. Distinct from the
+ * server-side, per-message read receipt (`messages.read_at`, set via
+ * `markConversationRead`) that drives the WhatsApp-style checkmarks the *other*
+ * participant sees on their own sent messages — that one is cross-device and visible to
+ * the sender; this one is purely local UI state for whoever's browsing this device.
  */
 
 const STORAGE_KEY = "kattegat-chat-read";

@@ -46,6 +46,7 @@ import type { AccountIdentity, AccountViewId } from "@/features/account/types";
 import { HeaderProgressLine } from "@/components/header-progress-line";
 import type { AccountDashboard } from "@/lib/api/account";
 import type { AccountNotificationsState } from "@/lib/api/account-notifications";
+import { canAccessFeatureView, type AccountFeatureFlags } from "@/lib/chat/chat-access";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -93,6 +94,7 @@ type MemberAccountShellProps = {
   identity: AccountIdentity;
   notifications: AccountNotificationsState;
   chatUnreadCount?: number;
+  features: AccountFeatureFlags;
   onIdentityChange: (identity: AccountIdentity) => void;
   onSignOut: () => void;
   signingOut?: boolean;
@@ -112,6 +114,7 @@ export function MemberAccountShell({
   identity,
   notifications,
   chatUnreadCount = 0,
+  features,
   onIdentityChange,
   onSignOut,
   signingOut,
@@ -146,9 +149,11 @@ export function MemberAccountShell({
       ? { ...item, label: identity === "seller" ? "My applications" : "Applicants" }
       : item,
   );
-  const workspaceNav = WORKSPACE_NAV.map((item) =>
-    item.id === "chat" ? { ...item, badge: chatUnreadCount > 0 ? chatUnreadCount : undefined } : item,
+  const workspaceNav = WORKSPACE_NAV.filter((item) => canAccessFeatureView(item.id, features)).map(
+    (item) =>
+      item.id === "chat" ? { ...item, badge: chatUnreadCount > 0 ? chatUnreadCount : undefined } : item,
   );
+  const growthNav = GROWTH_NAV.filter((item) => canAccessFeatureView(item.id, features));
 
   function selectView(view: AccountViewId) {
     setMobileOpen(false);
@@ -165,7 +170,7 @@ export function MemberAccountShell({
     identity,
     marketplaceItems: marketplaceNav,
     workspaceItems: workspaceNav,
-    growthItems: GROWTH_NAV,
+    growthItems: growthNav,
     signingOut,
     onSelectView: selectView,
     onIdentityChange,
@@ -317,8 +322,12 @@ export function MemberAccountShell({
             signingOut={signingOut}
             onOpenSettings={() => selectView("dashboard")}
             onOpenMembership={identity === "seller" ? () => selectView("membership") : undefined}
-            onOpenReferrals={() => selectView("referrals")}
-            onOpenRecommend={() => selectView("recommend")}
+            onOpenReferrals={
+              features.referralsEnabled ? () => selectView("referrals") : undefined
+            }
+            onOpenRecommend={
+              features.recommendationsEnabled ? () => selectView("recommend") : undefined
+            }
             onSignOut={onSignOut}
           />
         </header>

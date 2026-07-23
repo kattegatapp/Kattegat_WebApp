@@ -11,8 +11,13 @@ export async function POST(request: NextRequest) {
   });
   if (!parsed.ok) return parsed.response;
 
+  const idempotencyKey =
+    request.headers.get("idempotency-key")?.trim() ||
+    `checkout:${parsed.data.plan}:${crypto.randomUUID()}`;
+
   return proxySellerBackend("/payments/checkout-session", {
     method: "POST",
     body: JSON.stringify(parsed.data),
+    headers: { "Idempotency-Key": idempotencyKey },
   });
 }

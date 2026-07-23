@@ -6,7 +6,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { formatFilsAsAed } from "@/lib/admin/money";
-import { fetchBillingHistory, fetchBillingMe, type BillingUser } from "@/lib/api/billing";
+import {
+  createBillingPortalSession,
+  fetchBillingHistory,
+  fetchBillingMe,
+  type BillingUser,
+} from "@/lib/api/billing";
+import { ApiRequestError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 
 const STATUS_STYLES = {
@@ -19,6 +25,8 @@ const STATUS_STYLES = {
 export function BillingAccountContent() {
   const [user, setUser] = useState<BillingUser | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -39,6 +47,22 @@ export function BillingAccountContent() {
     enabled: Boolean(user?.sid),
     retry: false,
   });
+
+  async function openBillingPortal() {
+    setPortalLoading(true);
+    setPortalError(null);
+    try {
+      const { url } = await createBillingPortalSession();
+      window.location.href = url;
+    } catch (error) {
+      setPortalError(
+        error instanceof ApiRequestError
+          ? error.message
+          : "Could not open Stripe Billing Portal. Upgrade to Pro first, or contact support.",
+      );
+      setPortalLoading(false);
+    }
+  }
 
   if (loadingSession) {
     return (
@@ -77,20 +101,38 @@ export function BillingAccountContent() {
           {user.businessName || user.username || "Seller account"}
         </h2>
         <p className="mt-1 text-sm text-brand-forest/55">{user.email}</p>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-brand-forest/60">
+          Update your card, download invoices, or cancel Pro in Stripe&apos;s Customer Portal. Changes
+          sync back to Kattegat via webhook.
+        </p>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link
-            href="/plans/checkout"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white"
+          <button
+            type="button"
+            disabled={portalLoading}
+            onClick={() => void openBillingPortal()}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest hover:bg-brand-forest hover:text-white disabled:opacity-60"
           >
-            Manage Pro plan
-          </Link>
+            {portalLoading ? <Loader2 className="size-4 animate-spin" /> : null}
+            Manage Pro subscription
+          </button>
           <Link
             href="/plans"
             className="inline-flex h-11 items-center justify-center rounded-xl border border-brand-forest/12 px-5 text-sm font-extrabold hover:border-brand-mantis/50"
           >
             View plans
           </Link>
+          <Link
+            href="/plans/checkout"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-brand-forest/12 px-5 text-sm font-extrabold hover:border-brand-mantis/50"
+          >
+            Upgrade checkout
+          </Link>
         </div>
+        {portalError ? (
+          <p role="alert" className="mt-4 text-sm font-semibold text-red-700">
+            {portalError}
+          </p>
+        ) : null}
       </div>
 
       <div className="rounded-[1.75rem] border border-brand-forest/10 bg-white p-6 shadow-[0_18px_50px_rgb(0_57_18/0.08)] sm:p-7">

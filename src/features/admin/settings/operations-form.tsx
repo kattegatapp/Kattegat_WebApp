@@ -63,13 +63,20 @@ export function SettingsOperationsForm({ embedded = false }: { embedded?: boolea
             onChange={(value) => updateField("latestAppVersion", value || null)}
           />
           <NumberField
-            label="Minimum build number"
-            value={sectionData.minimumSupportedBuildNumber}
-            onChange={(value) => updateField("minimumSupportedBuildNumber", value)}
+            label="Minimum build number (iOS)"
+            value={sectionData.minimumSupportedBuildNumberIos}
+            onChange={(value) => updateField("minimumSupportedBuildNumberIos", value)}
+            hint="iOS buildNumber, not the marketing version."
+          />
+          <NumberField
+            label="Minimum build number (Android)"
+            value={sectionData.minimumSupportedBuildNumberAndroid}
+            onChange={(value) => updateField("minimumSupportedBuildNumberAndroid", value)}
+            hint="Android versionCode — increments independently from iOS, set separately."
           />
           <SwitchField
             label="Force upgrade"
-            description="Block only users below the minimum version or build number."
+            description="Block only users below the minimum version or build number for their platform."
             checked={sectionData.forceUpgrade}
             onChange={(value) => updateField("forceUpgrade", value)}
           />

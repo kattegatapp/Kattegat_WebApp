@@ -36,6 +36,7 @@ export async function proxySellerBackend(
   init?: {
     method?: string;
     body?: string;
+    headers?: Record<string, string>;
   },
 ) {
   const session = await requireSellerSession();
@@ -48,6 +49,7 @@ export async function proxySellerBackend(
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session}`,
+        ...init?.headers,
       },
       body: init?.body,
     });

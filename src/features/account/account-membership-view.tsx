@@ -32,10 +32,12 @@ import {
   type PublicSellerTier,
 } from "@/lib/api/plans";
 import { normalizeSellerTier, sellerPlanAccess } from "@/lib/auth/member-access";
+import type { AccountFeatureFlags } from "@/lib/chat/chat-access";
 import { cn } from "@/lib/utils";
 
 type AccountMembershipViewProps = {
   dashboard: AccountDashboard;
+  features?: Pick<AccountFeatureFlags, "paymentsEnabled">;
 };
 
 const TIER_META: Record<
@@ -125,7 +127,7 @@ function currentPlanSummary(tier: PublicSellerTier, access: PublicPlanFeatures) 
   return unlocked;
 }
 
-export function AccountMembershipView({ dashboard }: AccountMembershipViewProps) {
+export function AccountMembershipView({ dashboard, features }: AccountMembershipViewProps) {
   const currentTier = normalizeSellerTier(dashboard.sellerProfile?.tier);
   const plansQuery = useQuery({
     queryKey: ["catalog", "plan-features"],
@@ -138,6 +140,7 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
   const CurrentIcon = meta.icon;
   const price = planPrice(access);
   const summary = currentPlanSummary(currentTier, access);
+  const paymentsEnabled = features?.paymentsEnabled !== false;
 
   const verificationQuery = useQuery({
     queryKey: ["account", "identity-verification"],
@@ -157,6 +160,11 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
         Your seller plan controls chat, discovery, and listing limits. Upgrade on web — the mobile
         app stays focused on booking, not billing.
       </p>
+      {!paymentsEnabled ? (
+        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Plan purchases are temporarily unavailable. You can still review what each plan includes.
+        </p>
+      ) : null}
 
       {/* Current plan hero */}
       <section className="relative overflow-hidden rounded-[1.5rem] border border-brand-forest/10 bg-gradient-to-br from-brand-forest via-[#0a2e1a] to-brand-blue p-5 text-white sm:p-7">
@@ -197,7 +205,7 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {currentTier === "starter" ? (
+            {currentTier === "starter" && paymentsEnabled ? (
               <Link
                 href="/plans/checkout"
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest transition hover:brightness-95"
@@ -207,20 +215,31 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
               </Link>
             ) : null}
             {currentTier === "pro" ? (
+              <>
+                <Link
+                  href="/billing"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-mantis px-5 text-sm font-extrabold text-brand-forest transition hover:brightness-95"
+                >
+                  <CreditCard className="size-4" />
+                  Manage subscription
+                </Link>
+                <Link
+                  href="/contact"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/15"
+                >
+                  Talk about White Glove
+                </Link>
+              </>
+            ) : null}
+            {paymentsEnabled && currentTier !== "pro" ? (
               <Link
-                href="/contact"
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/15"
+                href="/billing"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-transparent px-5 text-sm font-bold text-white/90 transition hover:bg-white/10"
               >
-                Talk about White Glove
+                <CreditCard className="size-4" />
+                Billing
               </Link>
             ) : null}
-            <Link
-              href="/billing"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-transparent px-5 text-sm font-bold text-white/90 transition hover:bg-white/10"
-            >
-              <CreditCard className="size-4" />
-              Billing
-            </Link>
           </div>
         </div>
       </section>
@@ -334,7 +353,7 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
                   <span className="inline-flex w-full items-center justify-center rounded-xl border border-brand-forest/10 py-2.5 text-sm font-bold text-brand-forest/55">
                     Current plan
                   </span>
-                ) : plan.tier === "pro" ? (
+                ) : plan.tier === "pro" && paymentsEnabled ? (
                   <Link
                     href="/plans/checkout"
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-mantis py-2.5 text-sm font-extrabold text-brand-forest transition hover:brightness-95"
@@ -342,6 +361,10 @@ export function AccountMembershipView({ dashboard }: AccountMembershipViewProps)
                     Upgrade to Pro
                     <ArrowRight className="size-4" />
                   </Link>
+                ) : plan.tier === "pro" ? (
+                  <span className="inline-flex w-full items-center justify-center rounded-xl border border-brand-forest/10 py-2.5 text-sm font-bold text-brand-forest/55">
+                    Checkout unavailable
+                  </span>
                 ) : plan.tier === "white_glove" ? (
                   <Link
                     href="/contact"

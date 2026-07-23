@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { getPublicAppSettings } from "@/lib/api/settings";
 import { proxyMemberBackend, requireMemberSession } from "@/lib/auth/session";
 import { parseSecureJson } from "@/lib/security/request";
 
@@ -20,6 +21,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const session = await requireMemberSession();
   if (session instanceof NextResponse) return session;
+
+  const settings = await getPublicAppSettings();
+  if (!settings.features.chatEnabled) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { message: "Messaging is temporarily unavailable.", code: "CHAT_DISABLED" },
+      },
+      { status: 403 },
+    );
+  }
 
   const parsed = await parseSecureJson(request, startConversationSchema, {
     maxBytes: 8_192,

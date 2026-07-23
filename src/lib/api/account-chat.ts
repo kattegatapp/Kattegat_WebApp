@@ -22,6 +22,7 @@ export type AccountChatMessage = {
   type: "text" | "image" | "link" | "file";
   body: string | null;
   createdAt: string;
+  readAt: string | null;
 };
 
 export async function fetchAccountConversations() {
@@ -43,6 +44,16 @@ export async function sendAccountConversationMessage(conversationId: string, bod
       method: "POST",
       body: JSON.stringify({ body, type: "text" }),
     },
+    { baseUrl: "" },
+  );
+}
+
+/** Marks every message the caller received in this conversation as read — the sender's
+ * open chat sees the checkmarks turn blue live via the existing realtime subscription. */
+export async function markAccountConversationRead(conversationId: string) {
+  return apiFetch<{ readAt: string }>(
+    `/api/account/chat/conversations/${conversationId}/read`,
+    { method: "POST", body: JSON.stringify({}) },
     { baseUrl: "" },
   );
 }

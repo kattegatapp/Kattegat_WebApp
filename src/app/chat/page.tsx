@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ChatInboxPage() {
-  const { dashboard, impersonation, homeFeed, notifications } =
+  const { dashboard, impersonation, homeFeed, notifications, features } =
     await loadMemberWorkspaceOrRedirect("/chat");
 
   return (
@@ -21,6 +21,7 @@ export default async function ChatInboxPage() {
         dashboard={dashboard}
         homeFeed={homeFeed}
         notifications={notifications}
+        features={features}
         initialView="chat"
       />
     </div>

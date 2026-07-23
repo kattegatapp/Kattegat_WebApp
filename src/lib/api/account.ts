@@ -78,6 +78,15 @@ export type ReferralSummary = {
     pending: number;
     paidOut: number;
   };
+  // wallet.totalEarned broken down by source — referral residuals, Recommend & Earn, and
+  // Stripe-paid invoices (see invoices.service.ts's markPaidFromCheckout) all credit the
+  // same wallet, so a source-specific figure should come from here, never be derived by
+  // subtracting the others.
+  walletBreakdown: {
+    referral: number;
+    recommend: number;
+    invoice: number;
+  };
   activeReferrals: number;
   tier: string;
 };

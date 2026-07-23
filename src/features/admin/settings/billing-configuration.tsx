@@ -284,8 +284,36 @@ export function BillingConfiguration() {
           <p className="text-xs text-muted-foreground">
             Listen for: <code>checkout.session.completed</code>,{" "}
             <code>invoice.payment_succeeded</code>, <code>customer.subscription.updated</code>,{" "}
-            <code>customer.subscription.deleted</code>.
+            <code>customer.subscription.deleted</code>, <code>charge.refunded</code>,{" "}
+            <code>charge.dispute.created</code>.
           </p>
+          <div className="rounded-xl border border-amber-200/80 bg-amber-50/80 p-3 text-xs leading-6 text-amber-950">
+            <p className="font-bold">Before enabling live payments</p>
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              <li>
+                Point the webhook at your public API host (
+                <code className="rounded bg-white/70 px-1">API_PUBLIC_URL</code> /{" "}
+                <code className="rounded bg-white/70 px-1">PUBLIC_API_URL</code>), not the WebApp URL —
+                path is <code className="rounded bg-white/70 px-1">/api/payments/webhook</code>.
+              </li>
+              <li>
+                Switch to live keys (<code className="rounded bg-white/70 px-1">sk_live_…</code>) and
+                save the live webhook signing secret.
+              </li>
+              <li>
+                In Stripe Dashboard → Settings → Billing → Customer portal, enable cancel / update
+                payment method so Manage Pro works.
+              </li>
+              <li>
+                Turn off <strong>Free access</strong> in Features before charging real cards, then
+                enable <strong>Payments</strong>.
+              </li>
+              <li>
+                Apply backend migration <code className="rounded bg-white/70 px-1">0091_invoice_refund_unwind</code>{" "}
+                so refunds/disputes unwind paid invoices.
+              </li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 

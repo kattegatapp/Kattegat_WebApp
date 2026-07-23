@@ -29,7 +29,7 @@ import { AccountReferralsView } from "@/features/account/account-referrals-view"
 import type { AccountIdentity, AccountViewId } from "@/features/account/types";
 import type { AccountConversation } from "@/lib/api/account-chat";
 import type { AccountHomeFeed } from "@/lib/api/account-home";
-import type { AccountNotificationsState } from "@/lib/api/account-notifications";
+import type { AccountNotification, AccountNotificationsState } from "@/lib/api/account-notifications";
 import type { AccountDashboard } from "@/lib/api/account";
 import {
   defaultMemberIdentity,
@@ -46,12 +46,17 @@ import {
   requiredMemberIdentity,
   safeMemberView,
 } from "@/lib/auth/member-access";
+import {
+  canAccessFeatureView,
+  type AccountFeatureFlags,
+} from "@/lib/chat/chat-access";
 import { cn } from "@/lib/utils";
 
 type MemberAccountAppProps = {
   dashboard: AccountDashboard;
   homeFeed: AccountHomeFeed;
   notifications: AccountNotificationsState;
+  features: AccountFeatureFlags;
   initialView?: AccountViewId;
   initialConversationId?: string;
   initialBrowseQuery?: string;
@@ -102,13 +107,15 @@ export function MemberAccountApp({
   dashboard,
   homeFeed,
   notifications,
+  features,
   initialView = "home",
   initialConversationId,
   initialBrowseQuery = "",
   initialBrowseCategoryId = "",
 }: MemberAccountAppProps) {
   const queryClient = useQueryClient();
-  const [activeView, setActiveView] = useState<AccountViewId>(initialView);
+  const safeInitialView = canAccessFeatureView(initialView, features) ? initialView : "home";
+  const [activeView, setActiveView] = useState<AccountViewId>(safeInitialView);
   const [browseQuery, setBrowseQuery] = useState(initialBrowseQuery);
   const [browseCategoryId, setBrowseCategoryId] = useState(initialBrowseCategoryId);
   const [listingEditorOpen, setListingEditorOpen] = useState(false);
@@ -156,6 +163,63 @@ export function MemberAccountApp({
     return identityForConversation(thread, dashboard.user.id);
   }, [initialConversationId, deepLinkConversationsQuery.data, dashboard.user.id]);
 
+  // Always-on, app-shell-level realtime — the chat nav badge and notification bell both
+  // need to update live no matter which page is active, not just while the chat view
+  // itself happens to be mounted (that view has its own separate subscription for the
+  // open thread's messages). Dynamic imports match `account-chat-view.tsx`'s existing
+  // pattern for these "use client"-only websocket modules.
+  useEffect(() => {
+    const userId = dashboard.user.id;
+    let active = true;
+    let messagesChannel: unknown = null;
+    let notificationsChannel: unknown = null;
+
+    void (async () => {
+      try {
+        const chatRealtime = await import("@/lib/chat/chat.realtime");
+        messagesChannel = await chatRealtime.subscribeToMyMessages(() => {
+          if (!active) return;
+          void queryClient.invalidateQueries({ queryKey: ["account", "chat", "conversations"] });
+        });
+      } catch {
+        // Realtime optional — refetch-on-focus still covers it.
+      }
+      try {
+        const notificationsRealtime = await import("@/lib/notifications/notifications.realtime");
+        notificationsChannel = await notificationsRealtime.subscribeToAccountNotifications(
+          userId,
+          (notification) => {
+            if (!active) return;
+            queryClient.setQueryData<{ count: number }>(
+              ["account", "notifications", "unread-count"],
+              (current) => ({ count: (current?.count ?? 0) + 1 }),
+            );
+            queryClient.setQueryData<AccountNotification[]>(
+              ["account", "notifications"],
+              (current) => {
+                const existing = current ?? [];
+                if (existing.some((item) => item.id === notification.id)) return existing;
+                return [notification, ...existing];
+              },
+            );
+          },
+        );
+      } catch {
+        // Realtime optional.
+      }
+    })();
+
+    return () => {
+      active = false;
+      void import("@/lib/chat/chat.realtime").then((realtime) =>
+        realtime.unsubscribeRealtime(messagesChannel as never),
+      );
+      void import("@/lib/notifications/notifications.realtime").then((realtime) =>
+        realtime.unsubscribeAccountRealtime(notificationsChannel as never),
+      );
+    };
+  }, [dashboard.user.id, queryClient]);
+
   useEffect(() => {
     const stored = readStoredMemberIdentity(dashboard.user.sid, dashboard.user.bid);
     const requiredIdentity = requiredMemberIdentity(initialView);
@@ -176,6 +240,9 @@ export function MemberAccountApp({
       if (requiredIdentity && !hasRequiredIdentity) {
         setAccessNotice(requiredIdentity);
         setActiveView("dashboard");
+      } else if (!canAccessFeatureView(initialView, features)) {
+        setAccessNotice(null);
+        setActiveView("home");
       } else {
         setAccessNotice(null);
         setActiveView((current) => safeMemberView(current, next));
@@ -190,15 +257,18 @@ export function MemberAccountApp({
     deepLinkIdentity,
     defaultIdentity,
     initialConversationId,
+    features,
   ]);
+
+  const displayView = canAccessFeatureView(activeView, features) ? activeView : "home";
 
   useEffect(() => {
     syncAccountQueryParams({
-      view: activeView,
-      browseQuery: activeView === "browse" ? browseQuery : undefined,
-      browseCategoryId: activeView === "browse" ? browseCategoryId : undefined,
+      view: displayView,
+      browseQuery: displayView === "browse" ? browseQuery : undefined,
+      browseCategoryId: displayView === "browse" ? browseCategoryId : undefined,
     });
-  }, [activeView, browseQuery, browseCategoryId]);
+  }, [displayView, browseQuery, browseCategoryId]);
 
   function handleIdentityChange(next: AccountIdentity) {
     if (next === "seller" && !dashboard.user.sid) return;
@@ -212,6 +282,10 @@ export function MemberAccountApp({
   }
 
   function handleViewChange(next: AccountViewId) {
+    if (!canAccessFeatureView(next, features)) {
+      setActiveView("home");
+      return;
+    }
     if (next === "browse") setBrowseCategoryId("");
     const requiredIdentity = requiredMemberIdentity(next);
     if (requiredIdentity) {
@@ -269,13 +343,14 @@ export function MemberAccountApp({
     <div className="flex min-h-0 flex-1 flex-col">
       <MemberAccountShell
         dashboard={dashboard}
-        activeView={activeView}
+        activeView={displayView}
         onViewChange={handleViewChange}
         onMarketplaceSearch={handleMarketplaceSearch}
-        marketplaceSearchQuery={activeView === "browse" ? browseQuery : ""}
+        marketplaceSearchQuery={displayView === "browse" ? browseQuery : ""}
         identity={identity}
         notifications={notifications}
-        chatUnreadCount={chatUnreadCount}
+        chatUnreadCount={features.chatEnabled ? chatUnreadCount : 0}
+        features={features}
         onIdentityChange={handleIdentityChange}
         onSignOut={() => logout.mutate()}
         signingOut={logout.isPending}
@@ -284,77 +359,85 @@ export function MemberAccountApp({
         requirementEditorOpen={requirementEditorOpen}
         onRequirementEditorOpenChange={setRequirementEditorOpen}
       >
-        {activeView === "chat" ? (
+        {displayView === "chat" && features.chatEnabled ? (
           <AccountChatView
             dashboard={dashboard}
             identity={identity}
             initialConversationId={initialConversationId}
+            features={features}
           />
         ) : (
         <MemberGlassCanvas>
         <div
-          key={activeView}
+          key={displayView}
           className={cn(
             "account-view mx-auto w-full",
-            activeView === "home" || activeView === "browse" ? "max-w-6xl" : "max-w-5xl",
+            displayView === "home" || displayView === "browse" ? "max-w-6xl" : "max-w-5xl",
           )}
         >
-          {activeView === "home" ? (
+          {displayView === "home" ? (
             <AccountHomeView
               dashboard={dashboard}
               homeFeed={homeFeed}
               identity={identity}
-              chatUnreadCount={chatUnreadCount}
+              chatUnreadCount={features.chatEnabled ? chatUnreadCount : 0}
               notifications={notifications.items}
+              features={features}
               onNavigate={handleViewChange}
               onCreateListing={() => setListingEditorOpen(true)}
               onCreateRequirement={() => setRequirementEditorOpen(true)}
               onContinueBrowse={handleContinueBrowse}
             />
           ) : null}
-          {activeView === "browse" ? (
+          {displayView === "browse" ? (
             <AccountBrowseListingsView
               initialQuery={browseQuery}
               initialCategoryId={browseCategoryId}
               onQueryChange={handleBrowseQueryChange}
             />
           ) : null}
-          {activeView === "categories" ? (
+          {displayView === "categories" ? (
             <AccountCategoriesView onBrowseCategory={handleBrowseCategory} />
           ) : null}
-          {activeView === "requirements" ? (
+          {displayView === "requirements" ? (
             <AccountOpenRequirementsView canApply={identity === "seller" && Boolean(dashboard.user.sid)} />
           ) : null}
-          {activeView === "saved" && canAccessMemberView(activeView, identity) ? <AccountSavedView /> : null}
-          {activeView === "my-listings" && canAccessMemberView(activeView, identity) ? <AccountMyListingsView dashboard={dashboard} /> : null}
-          {activeView === "my-requirements" && canAccessMemberView(activeView, identity) ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
-          {activeView === "applications" ? <AccountApplicationsView identity={identity} /> : null}
-          {activeView === "jobs-bookings" && canAccessMemberView(activeView, identity) ? (
-            <AccountJobsBookingsView />
+          {displayView === "saved" && canAccessMemberView(displayView, identity) ? <AccountSavedView /> : null}
+          {displayView === "my-listings" && canAccessMemberView(displayView, identity) ? <AccountMyListingsView dashboard={dashboard} /> : null}
+          {displayView === "my-requirements" && canAccessMemberView(displayView, identity) ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
+          {displayView === "applications" ? <AccountApplicationsView identity={identity} /> : null}
+          {displayView === "jobs-bookings" && canAccessMemberView(displayView, identity) ? (
+            <AccountJobsBookingsView identity={identity} />
           ) : null}
-          {activeView === "seller-tools" && canAccessMemberView(activeView, identity) ? (
+          {displayView === "seller-tools" && canAccessMemberView(displayView, identity) ? (
             <AccountSellerToolsView />
           ) : null}
-          {activeView === "verification" && canAccessMemberView(activeView, identity) ? (
+          {displayView === "verification" && canAccessMemberView(displayView, identity) ? (
             <AccountVerificationView />
           ) : null}
-          {activeView === "referrals" ? <AccountReferralsView dashboard={dashboard} /> : null}
-          {activeView === "recommend" ? <AccountRecommendView /> : null}
-          {activeView === "notifications" ? (
+          {displayView === "referrals" && features.referralsEnabled ? (
+            <AccountReferralsView dashboard={dashboard} />
+          ) : null}
+          {displayView === "recommend" && features.recommendationsEnabled ? (
+            <AccountRecommendView />
+          ) : null}
+          {displayView === "notifications" ? (
             <AccountNotificationsView
               identity={identity}
               notifications={notifications.items}
               unreadCount={notifications.unreadCount}
             />
           ) : null}
-          {activeView === "dashboard" ? (
+          {displayView === "dashboard" ? (
             <AccountDashboardView
               dashboard={dashboard}
               identity={identity}
               accessNotice={accessNotice}
             />
           ) : null}
-          {activeView === "membership" && canAccessMemberView(activeView, identity) ? <AccountMembershipView dashboard={dashboard} /> : null}
+          {displayView === "membership" && canAccessMemberView(displayView, identity) ? (
+            <AccountMembershipView dashboard={dashboard} features={features} />
+          ) : null}
         </div>
         </MemberGlassCanvas>
         )}

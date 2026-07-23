@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, MessageCircle, Search, Send } from "lucide-react";
+import { ArrowLeft, CheckCheck, FileText, MessageCircle, Search, Send } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AccountAvatar } from "@/features/account/account-shared";
 import { ChatConversationListSkeleton, ChatMessagesSkeleton } from "@/features/account/account-loading";
+import { QuoteComposer } from "@/features/account/quote-composer";
 import type { AccountIdentity } from "@/features/account/types";
 import { Button } from "@/components/ui/button";
 import type { AccountDashboard } from "@/lib/api/account";
@@ -14,11 +15,17 @@ import { formatRelativeTime } from "@/lib/api/account-home";
 import {
   fetchAccountConversationMessages,
   fetchAccountConversations,
+  markAccountConversationRead,
   sendAccountConversationMessage,
   type AccountChatMessage,
   type AccountConversation,
 } from "@/lib/api/account-chat";
 import { isConversationUnread } from "@/lib/chat/chat-read-store";
+import {
+  effectiveCanChatDirectly,
+  isComposerLocked,
+  type AccountFeatureFlags,
+} from "@/lib/chat/chat-access";
 import { useChatLastViewedAt, useMarkChatViewed } from "@/hooks/use-chat-read";
 import { cn } from "@/lib/utils";
 import { sellerPlanAccess } from "@/lib/auth/member-access";
@@ -28,18 +35,21 @@ type AccountChatViewProps = {
   dashboard: AccountDashboard;
   identity?: AccountIdentity;
   initialConversationId?: string;
+  features?: Pick<AccountFeatureFlags, "chatEnabled" | "freeAccessMode">;
 };
 
 export function AccountChatView({
   dashboard,
   identity,
   initialConversationId,
+  features,
 }: AccountChatViewProps) {
   const queryClient = useQueryClient();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [activeThread, setActiveThread] = useState<string | null>(initialConversationId ?? null);
   const [draft, setDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [quoteComposerOpen, setQuoteComposerOpen] = useState(false);
   const lastViewedAt = useChatLastViewedAt();
   const markViewed = useMarkChatViewed();
 
@@ -51,10 +61,12 @@ export function AccountChatView({
     enabled: Boolean(dashboard.user.sid),
   });
   const planAccess = sellerPlanAccess(tier, planFeaturesQuery.data);
-  const isStarter = !planAccess.canChatDirectly;
+  const canChatDirectly = effectiveCanChatDirectly(planAccess.canChatDirectly, features);
+  const isStarter = !canChatDirectly;
   const isSeller = identity === "seller";
-  const sellerChatLocked = isSeller && isStarter;
   const myUserId = dashboard.user.id;
+  const chatEnabled = features?.chatEnabled !== false;
+  const freeAccessMode = Boolean(features?.freeAccessMode);
 
   const conversationsQuery = useQuery({
     queryKey: ["account", "chat", "conversations"],
@@ -80,6 +92,22 @@ export function AccountChatView({
   }, [conversations, searchQuery]);
 
   const selectedThread = conversations.find((thread) => thread.id === activeThread) ?? null;
+  // Quotes are Pro/White-Glove-only (Seller Tools), same gate as `canSendQuote` on mobile —
+  // and require an actual buyer on the thread, since an admin-initiated support conversation
+  // has no buyerId and the backend would reject a quote against it.
+  const canSendQuote =
+    isSeller &&
+    Boolean(selectedThread?.buyerId) &&
+    selectedThread?.status !== "closed" &&
+    (tier === "pro" || tier === "white_glove");
+  const composer = isComposerLocked({
+    identity: identity ?? "buyer",
+    canChatDirectly,
+    conversation: selectedThread,
+    chatEnabled,
+    freeAccessMode,
+  });
+  const composerLocked = composer.locked;
 
   const messagesQuery = useQuery({
     queryKey: ["account", "chat", "messages", selectedThread?.id],
@@ -89,11 +117,20 @@ export function AccountChatView({
 
   const threadMessages = messagesQuery.data ?? [];
 
+  // Server-side read receipt — separate from `markViewed`'s local-only "unread dot"
+  // tracking below. Best-effort: a failed read receipt shouldn't block viewing the thread.
+  const markRead = useMutation({
+    mutationFn: markAccountConversationRead,
+  });
+  const markReadRef = useRef(markRead.mutate);
+  markReadRef.current = markRead.mutate;
+
   // Mark read on open, and again whenever new messages land while this thread is on screen
   // (same as mobile chat-read-store).
   useEffect(() => {
     if (!selectedThread?.id) return;
     markViewed(selectedThread.id);
+    markReadRef.current(selectedThread.id);
   }, [markViewed, selectedThread?.id, threadMessages.length]);
 
   useEffect(() => {
@@ -104,20 +141,33 @@ export function AccountChatView({
     void (async () => {
       try {
         const realtime = await import("@/lib/chat/chat.realtime");
-        channel = await realtime.subscribeToConversationMessages(selectedThread.id, (message) => {
-          if (!active) return;
-          queryClient.setQueryData<AccountChatMessage[]>(
-            ["account", "chat", "messages", selectedThread.id],
-            (current) => {
-              const existing = current ?? [];
-              if (existing.some((item) => item.id === message.id)) return existing;
-              return [...existing, message].sort(
-                (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-              );
-            },
-          );
-          void queryClient.invalidateQueries({ queryKey: ["account", "chat", "conversations"] });
-        });
+        channel = await realtime.subscribeToConversationMessages(
+          selectedThread.id,
+          (message) => {
+            if (!active) return;
+            queryClient.setQueryData<AccountChatMessage[]>(
+              ["account", "chat", "messages", selectedThread.id],
+              (current) => {
+                const existing = current ?? [];
+                if (existing.some((item) => item.id === message.id)) return existing;
+                return [...existing, message].sort(
+                  (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+                );
+              },
+            );
+            void queryClient.invalidateQueries({ queryKey: ["account", "chat", "conversations"] });
+          },
+          // Read-receipt update — turns this message's ticks blue on the sender's screen
+          // the moment the recipient opens the thread, no refetch needed.
+          (message) => {
+            if (!active) return;
+            queryClient.setQueryData<AccountChatMessage[]>(
+              ["account", "chat", "messages", selectedThread.id],
+              (current) =>
+                (current ?? []).map((item) => (item.id === message.id ? message : item)),
+            );
+          },
+        );
       } catch {
         // Realtime optional — REST still works.
       }
@@ -157,7 +207,7 @@ export function AccountChatView({
 
   const sendMessage = useMutation({
     mutationFn: async () => {
-      if (sellerChatLocked) throw new Error("Upgrade to Pro or Vetted to send direct messages.");
+      if (composerLocked) throw new Error(composer.reason ?? "Messaging is unavailable.");
       if (!selectedThread) throw new Error("Choose a conversation first.");
       const text = draft.trim();
       if (!text) throw new Error("Write a message first.");
@@ -201,12 +251,12 @@ export function AccountChatView({
 
   const emptyTitle = isSeller
     ? isStarter
-      ? "Direct chat is locked"
+      ? "No conversations yet"
       : "No buyer conversations yet"
     : "No conversations yet";
   const emptyBody = isSeller
     ? isStarter
-      ? "Upgrade to Pro or White Glove to receive direct buyer chats."
+      ? "Kattegat Vetted threads appear here. Direct buyer chat unlocks with Pro or White Glove."
       : "When buyers message you, threads will appear here."
     : "Message a seller from their profile or listing to start chatting.";
 
@@ -339,6 +389,17 @@ export function AccountChatView({
                     {selectedThread.status === "closed" ? "Closed" : "Active now"}
                   </p>
                 </div>
+                {canSendQuote ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setQuoteComposerOpen(true)}
+                    className="shrink-0 gap-1.5 bg-brand-forest text-white hover:bg-brand-forest/90"
+                  >
+                    <FileText className="size-3.5" />
+                    Quote
+                  </Button>
+                ) : null}
               </header>
 
               <div
@@ -362,8 +423,18 @@ export function AccountChatView({
                             )}
                           >
                             <p className="whitespace-pre-wrap text-[14px] leading-6">{msg.body ?? ""}</p>
-                            <p className="mt-1 text-right text-[10px] text-brand-forest/50">
+                            <p className="mt-1 flex items-center justify-end gap-1 text-[10px] text-brand-forest/50">
                               {formatRelativeTime(msg.createdAt)}
+                              {fromMe ? (
+                                <CheckCheck
+                                  className={cn(
+                                    "size-4 shrink-0",
+                                    msg.readAt ? "text-brand-blue" : "text-brand-forest/40",
+                                  )}
+                                  strokeWidth={2.5}
+                                  aria-label={msg.readAt ? "Read" : "Sent"}
+                                />
+                              ) : null}
                             </p>
                           </div>
                         </div>
@@ -388,41 +459,35 @@ export function AccountChatView({
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     onKeyDown={(event) => {
-                      if (event.key === "Enter" && !sendMessage.isPending && !sellerChatLocked) {
+                      if (event.key === "Enter" && !sendMessage.isPending && !composerLocked) {
                         void sendMessage.mutateAsync();
                       }
                     }}
-                    placeholder={
-                      sellerChatLocked
-                        ? "Direct chat requires Pro or Vetted"
-                        : selectedThread.status === "closed"
-                        ? "This conversation is closed"
-                        : "Type a message"
-                    }
-                    disabled={sellerChatLocked || selectedThread.status === "closed" || sendMessage.isPending}
+                    placeholder={composer.reason ?? "Type a message"}
+                    disabled={composerLocked || sendMessage.isPending}
                     className="min-w-0 flex-1 rounded-full border border-brand-forest/10 bg-white px-4 py-2.5 text-sm text-brand-forest outline-none placeholder:text-muted-foreground focus:border-brand-mantis/50 disabled:cursor-not-allowed disabled:opacity-70"
                   />
                   <button
                     type="button"
                     onClick={() => void sendMessage.mutateAsync()}
-                    disabled={
-                      selectedThread.status === "closed" ||
-                      sellerChatLocked ||
-                      sendMessage.isPending ||
-                      !draft.trim()
-                    }
+                    disabled={composerLocked || sendMessage.isPending || !draft.trim()}
                     className="grid size-11 shrink-0 place-items-center rounded-full bg-brand-mantis text-brand-forest shadow-sm transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                     aria-label="Send message"
                   >
                     <Send className="size-4" />
                   </button>
                 </div>
-                {sellerChatLocked ? (
+                {composerLocked && isSeller && isStarter && selectedThread.status === "open" ? (
                   <p className="mt-2 text-center text-xs text-muted-foreground">
-                    Starter seller messages are routed through Kattegat Vetted. {" "}
+                    Direct buyer chat requires Pro or White Glove. Vetted threads stay open.{" "}
                     <Link href="/plans" className="font-bold text-brand-blue hover:underline">
                       Upgrade for direct chat
                     </Link>
+                  </p>
+                ) : null}
+                {!chatEnabled ? (
+                  <p className="mt-2 text-center text-xs text-muted-foreground">
+                    Messaging is temporarily turned off by the platform.
                   </p>
                 ) : null}
               </footer>
@@ -439,6 +504,14 @@ export function AccountChatView({
           </section>
         )}
       </div>
+      {selectedThread && canSendQuote && quoteComposerOpen ? (
+        <QuoteComposer
+          onClose={() => setQuoteComposerOpen(false)}
+          conversationId={selectedThread.id}
+          counterpartyName={selectedThread.counterpartyName}
+          onSent={() => setQuoteComposerOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

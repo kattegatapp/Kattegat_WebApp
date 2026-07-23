@@ -48,9 +48,26 @@ export async function registerForBilling(input: {
 }
 
 export async function createBillingCheckoutSession(plan: BillingPlan) {
+  const idempotencyKey =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
   return apiFetch<{ url: string }>(
     "/api/billing/checkout-session",
-    { method: "POST", body: JSON.stringify({ plan }) },
+    {
+      method: "POST",
+      body: JSON.stringify({ plan }),
+      headers: { "Idempotency-Key": idempotencyKey },
+    },
+    { baseUrl: "" },
+  );
+}
+
+export async function createBillingPortalSession() {
+  return apiFetch<{ url: string }>(
+    "/api/billing/billing-portal",
+    { method: "POST", body: JSON.stringify({}) },
     { baseUrl: "" },
   );
 }

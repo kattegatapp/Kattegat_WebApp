@@ -55,6 +55,11 @@ import type { ListingSearchHit } from "@/lib/api/marketing";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
 import { readBrowseResume } from "@/lib/auth/browse-resume";
 import { sellerPlanAccess } from "@/lib/auth/member-access";
+import {
+  canAccessFeatureView,
+  effectiveCanChatDirectly,
+  type AccountFeatureFlags,
+} from "@/lib/chat/chat-access";
 import { listingPublicPath, requirementPublicPath } from "@/lib/navigation/public-paths";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +69,7 @@ type AccountHomeViewProps = {
   identity: AccountIdentity;
   chatUnreadCount?: number;
   notifications?: AccountNotification[];
+  features?: AccountFeatureFlags;
   onNavigate: (view: AccountViewId) => void;
   onCreateListing?: () => void;
   onCreateRequirement?: () => void;
@@ -320,22 +326,31 @@ function InboxItem({
 
 function HomePromoCarousel({
   identity,
+  features,
   onNavigate,
 }: {
   identity: AccountIdentity;
+  features?: AccountFeatureFlags;
   onNavigate: (view: AccountViewId) => void;
 }) {
-  const slides = identity === "seller" ? SELLER_HOME_PROMOS : BUYER_HOME_PROMOS;
+  const slides = useMemo(() => {
+    const all = identity === "seller" ? SELLER_HOME_PROMOS : BUYER_HOME_PROMOS;
+    if (!features) return all;
+    return all.filter((slide) => canAccessFeatureView(slide.action, features));
+  }, [features, identity]);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = window.setInterval(() => {
       setIndex((current) => (current + 1) % slides.length);
     }, 5200);
     return () => window.clearInterval(timer);
   }, [slides.length]);
 
-  const slide = slides[index] ?? slides[0]!;
+  if (!slides.length) return null;
+
+  const slide = slides[index % slides.length] ?? slides[0]!;
   const Icon = slide.icon;
 
   return (
@@ -404,6 +419,7 @@ export function AccountHomeView({
   identity,
   chatUnreadCount = 0,
   notifications = [],
+  features,
   onNavigate,
   onCreateListing,
   onCreateRequirement,
@@ -437,7 +453,8 @@ export function AccountHomeView({
     enabled: isSeller && Boolean(user.sid),
   });
   const planAccess = sellerPlanAccess(sellerProfile?.tier, planFeaturesQuery.data);
-  const chatLocked = isSeller && !planAccess.canChatDirectly;
+  const chatLocked =
+    isSeller && !effectiveCanChatDirectly(planAccess.canChatDirectly, features);
 
   const verificationQuery = useQuery({
     queryKey: ["account", "identity-verification"],
@@ -558,7 +575,7 @@ export function AccountHomeView({
       detail: chatUnreadCount > 0 ? "Open Chat Room" : "No unread threads",
       onClick: () => onNavigate("chat"),
       tone: chatUnreadCount > 0 ? ("accent" as const) : ("default" as const),
-      show: true,
+      show: features?.chatEnabled !== false,
     },
     {
       key: "apps",
@@ -1094,7 +1111,7 @@ export function AccountHomeView({
 
         {/* RIGHT — discovery */}
         <div className="space-y-6">
-          <HomePromoCarousel identity={identity} onNavigate={onNavigate} />
+          <HomePromoCarousel identity={identity} features={features} onNavigate={onNavigate} />
 
           {isSeller ? (
             <>

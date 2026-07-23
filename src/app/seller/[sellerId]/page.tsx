@@ -86,8 +86,11 @@ export default async function SellerPage({ params }: PageProps) {
     plans.find((plan) => plan.tier === sellerTier) ??
     DEFAULT_PUBLIC_PLANS.find((plan) => plan.tier === sellerTier) ??
     DEFAULT_PUBLIC_PLANS[0]!;
-  const canChatDirectly = Boolean(tierFeatures.canChatDirectly);
-  const contactAgentEnabled = Boolean(settings.features.contactAgentEnabled);
+  const canChatDirectly =
+    Boolean(settings.features.chatEnabled) &&
+    (Boolean(settings.features.freeAccessMode) || Boolean(tierFeatures.canChatDirectly));
+  const contactAgentEnabled =
+    Boolean(settings.features.contactAgentEnabled) && Boolean(settings.features.chatEnabled);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",

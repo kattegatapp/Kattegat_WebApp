@@ -5,15 +5,17 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Check,
+  CreditCard,
   Download,
   Loader2,
   MapPin,
   MessageCircle,
+  Receipt,
   RefreshCw,
   Star,
   Trophy,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 
 import {
   AccountAvatar,
@@ -34,11 +36,30 @@ import {
   type BookingAction,
 } from "@/lib/api/account-bookings";
 import { fetchAccountConversations } from "@/lib/api/account-chat";
+import {
+  createAccountInvoiceCheckoutSession,
+  fetchAccountReceivedInvoices,
+  type AccountInvoice,
+} from "@/lib/api/account-invoices";
+import {
+  fetchAccountReceivedQuotes,
+  respondToAccountQuote,
+  type AccountQuote,
+} from "@/lib/api/account-quotes";
 import { ApiRequestError } from "@/lib/api/client";
+import type { AccountIdentity } from "@/features/account/types";
 import { cn } from "@/lib/utils";
 
 type WorkspaceTab = "awards" | "bookings";
 const STAGES = ["Awarded", "Contract", "Confirmed", "In progress", "Completed"];
+
+function subscribeNoop() {
+  return () => undefined;
+}
+
+function readInvoicePaidFlag() {
+  return Boolean(new URLSearchParams(window.location.search).get("invoicePaid"));
+}
 
 function stageIndex(item: AccountWorkItem) {
   if (item.booking?.status === "completed") return 4;
@@ -76,47 +97,68 @@ function formatSchedule(value: string | null) {
 
 function Timeline({ item }: { item: AccountWorkItem }) {
   const active = stageIndex(item);
+  // Fraction of the way from the first to the last milestone — drives the animated fill.
+  // Dot centers sit at the midpoint of each 1/STAGES.length column, so the track itself
+  // only needs to span from the first dot's center to the last dot's (10%..90% of width).
+  // Clamped defensively — stageIndex should always be in range, but a stray value here
+  // would otherwise silently under/overshoot the fill instead of erroring.
+  const rawProgress = STAGES.length > 1 ? active / (STAGES.length - 1) : 0;
+  const progress = Math.min(1, Math.max(0, rawProgress));
+  const isLive = active < STAGES.length - 1;
+
   return (
-    <ol aria-label="Job progress" className="grid grid-cols-5">
-      {STAGES.map((stage, index) => (
-        <li key={stage} className="relative flex min-w-0 flex-col items-center text-center">
-          {index > 0 ? (
-            <span
-              className={cn(
-                "absolute left-0 top-2.5 h-0.5 w-1/2",
-                index <= active ? "bg-brand-mantis" : "bg-brand-forest/10",
-              )}
-            />
-          ) : null}
-          {index < STAGES.length - 1 ? (
-            <span
-              className={cn(
-                "absolute right-0 top-2.5 h-0.5 w-1/2",
-                index < active ? "bg-brand-mantis" : "bg-brand-forest/10",
-              )}
-            />
-          ) : null}
-          <span
-            className={cn(
-              "relative z-10 grid size-5 place-items-center rounded-full border-2",
-              index <= active
-                ? "border-brand-mantis bg-brand-mantis text-brand-forest"
-                : "border-brand-forest/15 bg-white",
-            )}
-          >
-            {index <= active ? <Check className="size-3" aria-hidden /> : null}
-          </span>
-          <span className="mt-2 truncate text-[9px] font-bold text-brand-forest/55 sm:text-[10px]">
-            {stage}
-          </span>
-        </li>
-      ))}
-    </ol>
+    // `<ol>` may only contain `<li>` (or script-supporting) children per the HTML content
+    // model — the connector lines live in this wrapping `relative` div instead, so they're
+    // siblings of the list rather than invalid direct children of it, which server-rendered
+    // HTML would otherwise hand the browser's parser as malformed markup on first paint.
+    <div className="relative">
+      <span
+        aria-hidden
+        className="absolute left-[10%] right-[10%] top-2.5 h-0.5 -translate-y-1/2 rounded-full bg-brand-forest/10"
+      />
+      <span
+        aria-hidden
+        className="absolute left-[10%] top-2.5 h-0.5 -translate-y-1/2 rounded-full bg-brand-mantis transition-[width] duration-700 ease-out"
+        style={{ width: `${progress * 80}%` }}
+      />
+      <ol aria-label="Job progress" className="relative flex items-start">
+        {STAGES.map((stage, index) => {
+          const complete = index <= active;
+          const isCurrent = index === active && isLive;
+          return (
+            <li
+              key={stage}
+              className="relative flex min-w-0 flex-1 flex-col items-center text-center"
+            >
+              <span className="relative grid size-5 place-items-center">
+                {isCurrent ? (
+                  <span className="absolute inset-0 animate-ping rounded-full bg-brand-mantis/60" />
+                ) : null}
+                <span
+                  className={cn(
+                    "relative z-10 grid size-5 place-items-center rounded-full border-2 transition-all duration-500 ease-out",
+                    complete
+                      ? "scale-100 border-brand-mantis bg-brand-mantis text-brand-forest"
+                      : "scale-90 border-brand-forest/15 bg-white",
+                  )}
+                >
+                  {complete ? <Check className="size-3" aria-hidden /> : null}
+                </span>
+              </span>
+              <span className="mt-2 truncate text-[9px] font-bold text-brand-forest/55 sm:text-[10px]">
+                {stage}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
 function WorkCard({
   item,
+  identity,
   conversationId,
   busy,
   onAccept,
@@ -124,6 +166,7 @@ function WorkCard({
   onReview,
 }: {
   item: AccountWorkItem;
+  identity: AccountIdentity;
   conversationId?: string;
   busy: boolean;
   onAccept: () => void;
@@ -225,7 +268,7 @@ function WorkCard({
         ) : null}
         <a
           className={buttonVariants({ size: "sm", variant: "outline" })}
-          href={`/api/account/bookings/contracts/${item.contract.id}/document`}
+          href={`/api/account/bookings/contracts/${item.contract.id}/document?identity=${identity}`}
           download
         >
             <Download className="size-3.5" aria-hidden />
@@ -288,11 +331,228 @@ function WorkCard({
   );
 }
 
-export function AccountJobsBookingsView() {
+/**
+ * Buyer-only. Quotes sent in-app (buyer_id-linked clients) appear here so the buyer can
+ * accept or decline without relying on the seller's "Accept & invoice" shortcut.
+ */
+function ReceivedQuotesSection() {
+  const client = useQueryClient();
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const quotesQuery = useQuery({
+    queryKey: ["account", "quotes", "received"],
+    queryFn: fetchAccountReceivedQuotes,
+  });
+  const respond = useMutation({
+    mutationFn: ({ quoteId, response }: { quoteId: string; response: "accept" | "decline" }) =>
+      respondToAccountQuote(quoteId, response),
+    onSuccess: async (_data, variables) => {
+      setError(null);
+      setNotice(
+        variables.response === "accept"
+          ? "Quote accepted. Your booking and invoice are ready."
+          : "Quote declined.",
+      );
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["account", "quotes", "received"] }),
+        client.invalidateQueries({ queryKey: ["account", "bookings"] }),
+        client.invalidateQueries({ queryKey: ["account", "invoices", "received"] }),
+      ]);
+    },
+    onError: (err) =>
+      setError(err instanceof ApiRequestError ? err.message : "Could not update quote."),
+  });
+
+  const pending = (quotesQuery.data ?? []).filter((quote) => quote.status === "sent");
+  if (quotesQuery.isPending || !pending.length) {
+    return notice ? (
+      <p className="mb-5 rounded-xl border border-brand-mantis/25 bg-brand-mantis/10 px-4 py-3 text-sm font-medium text-brand-forest">
+        {notice}
+      </p>
+    ) : null;
+  }
+
+  return (
+    <div className="mb-5">
+      <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-brand-forest/70">
+        Quotes awaiting your response
+      </h2>
+      {notice ? (
+        <p className="mb-3 rounded-xl border border-brand-mantis/25 bg-brand-mantis/10 px-4 py-3 text-sm font-medium text-brand-forest">
+          {notice}
+        </p>
+      ) : null}
+      {error ? <p className="mb-3 text-sm font-medium text-red-600">{error}</p> : null}
+      <div className="grid gap-3 md:grid-cols-2">
+        {pending.map((quote: AccountQuote) => (
+          <AccountGlass key={quote.id} className="rounded-[18px] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-bold text-brand-forest">Professional quote</p>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                  {quote.lineItems.map((item) => item.description).join(", ") || "Quoted services"}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full border border-brand-mantis/30 bg-brand-mantis/10 px-2.5 py-1 text-[10px] font-bold capitalize text-brand-forest">
+                {quote.status}
+              </span>
+            </div>
+            <p className="mt-3 text-2xl font-extrabold text-brand-forest">{formatMoney(quote.total)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Incl. VAT ({((quote.vatRate || 0.05) * 100).toFixed(0)}%): {formatMoney(quote.vat)}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={respond.isPending}
+                onClick={() => respond.mutate({ quoteId: quote.id, response: "accept" })}
+              >
+                {respond.isPending &&
+                respond.variables?.quoteId === quote.id &&
+                respond.variables.response === "accept" ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : null}
+                Accept quote
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={respond.isPending}
+                onClick={() => respond.mutate({ quoteId: quote.id, response: "decline" })}
+              >
+                {respond.isPending &&
+                respond.variables?.quoteId === quote.id &&
+                respond.variables.response === "decline" ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : null}
+                Decline
+              </Button>
+            </div>
+          </AccountGlass>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Buyer-only. Two ways to settle an invoice, both lead to the same `paid` status: the
+ * seller marks it paid manually once they've received payment some other way (bank
+ * transfer, cash — the pre-existing path, unchanged), or the buyer pays online here via
+ * Stripe Checkout, which marks it paid automatically the moment the webhook lands. No
+ * platform commission is taken; money goes to Kattegat's own Stripe balance the same way
+ * subscription payments do, and the seller withdraws it through the existing manual,
+ * admin-approved payout flow — there's no Stripe Connect here.
+ */
+function ReceivedInvoicesSection() {
+  const invoicePaid = useSyncExternalStore(subscribeNoop, readInvoicePaidFlag, () => false);
+  const [error, setError] = useState<string | null>(null);
+  const invoicesQuery = useQuery({
+    queryKey: ["account", "invoices", "received"],
+    queryFn: fetchAccountReceivedInvoices,
+  });
+  const payNow = useMutation({
+    mutationFn: createAccountInvoiceCheckoutSession,
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+    onError: (err) =>
+      setError(err instanceof ApiRequestError ? err.message : "Could not start checkout."),
+  });
+  const outstanding = (invoicesQuery.data ?? []).filter((invoice) => invoice.status !== "paid");
+
+  if (invoicesQuery.isPending) return null;
+  if (!outstanding.length && !invoicePaid) return null;
+
+  return (
+    <div className="mb-5">
+      {invoicePaid ? (
+        <p className="mb-3 rounded-xl border border-brand-mantis/25 bg-brand-mantis/10 px-4 py-3 text-sm font-medium text-brand-forest">
+          Payment received. Your invoice will show as paid once Stripe confirms — usually within a
+          few seconds.
+        </p>
+      ) : null}
+      {outstanding.length ? (
+        <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-brand-forest/70">
+          Invoices awaiting payment
+        </h2>
+      ) : null}
+      {error ? <p className="mb-3 text-sm font-medium text-red-600">{error}</p> : null}
+      {outstanding.length ? (
+      <div className="grid gap-3 md:grid-cols-2">
+        {outstanding.map((invoice: AccountInvoice) => (
+          <AccountGlass key={invoice.id} className="rounded-[18px] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-brand-mantis/10 text-brand-mantis">
+                  <Receipt className="size-4.5" aria-hidden />
+                </span>
+                <div>
+                  <p className="font-bold text-brand-forest">{invoice.number}</p>
+                  <p className="text-xs text-muted-foreground">{invoice.clientName}</p>
+                </div>
+              </div>
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold capitalize",
+                  invoice.status === "overdue"
+                    ? "bg-red-50 text-red-600"
+                    : "border border-brand-mantis/30 bg-brand-mantis/10 text-brand-forest",
+                )}
+              >
+                {invoice.status}
+              </span>
+            </div>
+            <p className="mt-3 text-2xl font-extrabold text-brand-forest">{formatMoney(invoice.total)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Incl. VAT (5%): {formatMoney(invoice.vat)}
+              {invoice.dueDate ? ` · Due ${formatSchedule(invoice.dueDate)}` : " · Due on receipt"}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={payNow.isPending}
+                onClick={() => payNow.mutate(invoice.id)}
+              >
+                {payNow.isPending && payNow.variables === invoice.id ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <CreditCard className="size-3.5" aria-hidden />
+                )}
+                Pay {formatMoney(invoice.total)} now
+              </Button>
+              <a
+                className={buttonVariants({ size: "sm", variant: "outline" })}
+                href={`/api/account/invoices/received/${invoice.id}/document`}
+                download
+              >
+                <Download className="size-3.5" aria-hidden />
+                Invoice PDF
+              </a>
+            </div>
+            <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+              Already paid your seller directly? No action needed here — they&apos;ll mark it paid once
+              received.
+            </p>
+          </AccountGlass>
+        ))}
+      </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function AccountJobsBookingsView({ identity }: { identity: AccountIdentity }) {
   const client = useQueryClient();
   const [tab, setTab] = useState<WorkspaceTab>("awards");
   const [actionError, setActionError] = useState<string | null>(null);
-  const workQuery = useQuery({ queryKey: ["account", "bookings"], queryFn: fetchAccountWork });
+  const workQuery = useQuery({
+    queryKey: ["account", "bookings", identity],
+    queryFn: () => fetchAccountWork(identity),
+  });
   const conversationsQuery = useQuery({
     queryKey: ["account", "chat", "conversations"],
     queryFn: fetchAccountConversations,
@@ -313,7 +573,7 @@ export function AccountJobsBookingsView() {
   );
 
   const accept = useMutation({
-    mutationFn: acceptAccountContract,
+    mutationFn: (contractId: string) => acceptAccountContract(contractId, identity),
     onSuccess: async () => {
       setActionError(null);
       await client.invalidateQueries({ queryKey: ["account", "bookings"] });
@@ -323,7 +583,7 @@ export function AccountJobsBookingsView() {
   });
   const transition = useMutation({
     mutationFn: ({ bookingId, action }: { bookingId: string; action: BookingAction }) =>
-      transitionAccountBooking(bookingId, action),
+      transitionAccountBooking(bookingId, action, identity),
     onSuccess: async () => {
       setActionError(null);
       await client.invalidateQueries({ queryKey: ["account", "bookings"] });
@@ -346,6 +606,13 @@ export function AccountJobsBookingsView() {
         badge="Marketplace"
         description="Contracts, schedules, delivery and completed work."
       />
+
+      {identity === "buyer" ? (
+        <>
+          <ReceivedQuotesSection />
+          <ReceivedInvoicesSection />
+        </>
+      ) : null}
 
       <div className="mb-5 grid grid-cols-2 gap-3">
         <AccountGlass className="flex items-center gap-3 rounded-[18px] p-4">
@@ -388,6 +655,7 @@ export function AccountJobsBookingsView() {
             <WorkCard
               key={item.contract.id}
               item={item}
+              identity={identity}
               conversationId={conversationByPair.get(`${item.contract.buyerId}:${item.contract.sellerId}`)}
               busy={busy}
               onAccept={() => accept.mutate(item.contract.id)}

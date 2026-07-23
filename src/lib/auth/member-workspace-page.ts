@@ -4,6 +4,8 @@ import { readImpersonationState } from "@/lib/admin/impersonation";
 import { loadAccountHomeFeed } from "@/lib/api/account-home.server";
 import { loadAccountNotifications } from "@/lib/api/account-notifications.server";
 import { loadAccountDashboard } from "@/lib/api/account";
+import { getPublicAppSettings } from "@/lib/api/settings";
+import { pickAccountFeatureFlags } from "@/lib/chat/chat-access";
 import {
   profileSetupPath,
   resolveProfileSetupStep,
@@ -21,11 +23,18 @@ export async function loadMemberWorkspaceOrRedirect(nextPath: string) {
     redirect(profileSetupPath(setupStep, nextPath));
   }
 
-  const [impersonation, homeFeed, notifications] = await Promise.all([
+  const [impersonation, homeFeed, notifications, settings] = await Promise.all([
     readImpersonationState(),
     loadAccountHomeFeed(),
     loadAccountNotifications(),
+    getPublicAppSettings(),
   ]);
 
-  return { dashboard, impersonation, homeFeed, notifications };
+  return {
+    dashboard,
+    impersonation,
+    homeFeed,
+    notifications,
+    features: pickAccountFeatureFlags(settings.features),
+  };
 }

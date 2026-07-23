@@ -49,7 +49,7 @@ export default async function AccountPage({
   }>;
 }) {
   const params = await searchParams;
-  const { dashboard, impersonation, homeFeed, notifications } =
+  const { dashboard, impersonation, homeFeed, notifications, features } =
     await loadMemberWorkspaceOrRedirect("/account");
 
   return (
@@ -59,6 +59,7 @@ export default async function AccountPage({
         dashboard={dashboard}
         homeFeed={homeFeed}
         notifications={notifications}
+        features={features}
         initialView={accountView(params.view)}
         initialBrowseQuery={firstString(params.q)}
         initialBrowseCategoryId={firstString(params.categoryId)}

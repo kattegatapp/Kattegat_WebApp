@@ -1,15 +1,9 @@
 "use client";
 
-import { createClient, type RealtimeChannel, type SupabaseClient } from "@supabase/supabase-js";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 
-import { apiFetch } from "@/lib/api/client";
 import type { AccountChatMessage } from "@/lib/api/account-chat";
-
-type RealtimeSession = {
-  accessToken: string;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-};
+import { getRealtimeClient, replaceExistingChannel } from "@/lib/realtime/client";
 
 type MessageRow = {
   id: string;
@@ -18,11 +12,9 @@ type MessageRow = {
   type: AccountChatMessage["type"];
   body: string | null;
   created_at: string;
+  read_at: string | null;
 };
 
-let sessionPromise: Promise<RealtimeSession> | null = null;
-let client: SupabaseClient | null = null;
-let clientToken: string | null = null;
 let myMessagesSubscriberCount = 0;
 
 function toMessage(row: MessageRow): AccountChatMessage {
@@ -33,70 +25,44 @@ function toMessage(row: MessageRow): AccountChatMessage {
     type: row.type,
     body: row.body,
     createdAt: row.created_at,
+    readAt: row.read_at,
   };
 }
 
-async function loadRealtimeSession() {
-  if (!sessionPromise) {
-    sessionPromise = apiFetch<RealtimeSession>("/api/account/realtime-session", undefined, {
-      baseUrl: "",
-    }).catch((error) => {
-      sessionPromise = null;
-      throw error;
-    });
-  }
-  return sessionPromise;
-}
-
-async function getRealtimeClient() {
-  const session = await loadRealtimeSession();
-  if (!client || clientToken !== session.accessToken) {
-    client = createClient(session.supabaseUrl, session.supabaseAnonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-      },
-      global: {
-        headers: {
-          Authorization: `Bearer ${session.accessToken}`,
-        },
-      },
-    });
-    // Realtime websocket auth is separate from REST headers — required for RLS filters.
-    client.realtime.setAuth(session.accessToken);
-    clientToken = session.accessToken;
-  }
-  return client;
-}
-
-function replaceExistingChannel(supabase: SupabaseClient, name: string) {
-  const realtimeTopic = `realtime:${name}`;
-  const existing = supabase.getChannels().find((channel) => channel.topic === realtimeTopic);
-  if (existing) void supabase.removeChannel(existing);
-}
-
-/** Postgres Changes on `messages` for one conversation — same pattern as mobile. */
+/** Postgres Changes on `messages` for one conversation — same pattern as mobile.
+ * `onUpdate` fires for read-receipt UPDATEs (`markConversationRead` sets `read_at`), so
+ * the sender's open chat can turn its checkmarks blue live without a refetch. */
 export async function subscribeToConversationMessages(
   conversationId: string,
   onInsert: (message: AccountChatMessage) => void,
+  onUpdate?: (message: AccountChatMessage) => void,
 ): Promise<RealtimeChannel> {
   const supabase = await getRealtimeClient();
   const channelName = `conversation:${conversationId}`;
   replaceExistingChannel(supabase, channelName);
-  return supabase
-    .channel(channelName)
-    .on(
+  const channel = supabase.channel(channelName).on(
+    "postgres_changes",
+    {
+      event: "INSERT",
+      schema: "public",
+      table: "messages",
+      filter: `conversation_id=eq.${conversationId}`,
+    },
+    (payload) => onInsert(toMessage(payload.new as MessageRow)),
+  );
+  if (onUpdate) {
+    channel.on(
       "postgres_changes",
       {
-        event: "INSERT",
+        event: "UPDATE",
         schema: "public",
         table: "messages",
         filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => onInsert(toMessage(payload.new as MessageRow)),
-    )
-    .subscribe();
+      (payload) => onUpdate(toMessage(payload.new as MessageRow)),
+    );
+  }
+  return channel.subscribe();
 }
 
 /** List-wide inserts — RLS scopes to conversations this member belongs to. */
