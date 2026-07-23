@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
     "localhost",
     "192.168.30.13",
     "192.168.30.8",
+    "192.168.30.18",
   ],
   images: {
     remotePatterns: [
@@ -60,6 +61,21 @@ const nextConfig: NextConfig = {
         headers: [
           { key: "Content-Type", value: "application/json" },
           { key: "Cache-Control", value: "public, max-age=3600, must-revalidate" },
+        ],
+      },
+      {
+        source: "/sitemap.xml",
+        headers: [
+          { key: "Content-Type", value: "application/xml; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+      {
+        source: "/robots.txt",
+        headers: [
+          { key: "Content-Type", value: "text/plain; charset=utf-8" },
+          { key: "Cache-Control", value: "public, max-age=3600, s-maxage=3600" },
         ],
       },
     ];

@@ -558,3 +558,53 @@ export async function listSitemapListings(maxItems = 2000): Promise<
 
   return items.slice(0, maxItems);
 }
+
+/** Crawl budget helper — paginate open/shortlisting requirements for sitemap generation. */
+export async function listSitemapRequirements(maxItems = 2000): Promise<
+  Array<{ id: string; title: string; updatedAt?: string | null; createdAt?: string | null }>
+> {
+  const pageSize = 50;
+  const maxPages = Math.ceil(maxItems / pageSize);
+  const items: Array<{
+    id: string;
+    title: string;
+    updatedAt?: string | null;
+    createdAt?: string | null;
+  }> = [];
+
+  for (let page = 1; page <= maxPages; page += 1) {
+    try {
+      const { data, meta } = await apiFetchEnvelope<
+        Array<{
+          id: string;
+          title?: string | null;
+          updatedAt?: string | null;
+          createdAt?: string | null;
+        }>
+      >(
+        `/api/requirements?page=${page}&pageSize=${pageSize}`,
+        { cache: "no-store" },
+        { baseUrl: resolveBackendApiUrl() },
+      );
+
+      for (const requirement of data) {
+        if (!requirement.id) continue;
+        items.push({
+          id: requirement.id,
+          title: requirement.title?.trim() || "Open requirement",
+          updatedAt: requirement.updatedAt ?? null,
+          createdAt: requirement.createdAt ?? null,
+        });
+      }
+
+      const total = meta?.total ?? data.length;
+      if (data.length === 0 || items.length >= total || items.length >= maxItems) {
+        break;
+      }
+    } catch {
+      break;
+    }
+  }
+
+  return items.slice(0, maxItems);
+}

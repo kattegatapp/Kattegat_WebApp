@@ -3,9 +3,14 @@ import type { MetadataRoute } from "next";
 import {
   getCatalogCategories,
   listSitemapListings,
+  listSitemapRequirements,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
-import { listingPublicPath, sellerPublicPath } from "@/lib/navigation/public-paths";
+import {
+  listingPublicPath,
+  requirementPublicPath,
+  sellerPublicPath,
+} from "@/lib/navigation/public-paths";
 import { DUBAI_SEO_PAGES } from "@/features/marketing/local-seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -43,9 +48,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.92,
   }));
 
-  const [categories, listings] = await Promise.all([
+  const [categories, listings, requirements] = await Promise.all([
     getCatalogCategories(),
     listSitemapListings(2000),
+    listSitemapRequirements(2000),
   ]);
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((category) => ({
@@ -61,6 +67,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
     priority: 0.8,
   }));
+
+  const requirementRoutes: MetadataRoute.Sitemap = requirements.map((requirement) => {
+    const modified = requirement.updatedAt || requirement.createdAt;
+    const lastModified = modified ? new Date(modified) : now;
+    return {
+      url: `${origin}${requirementPublicPath({ id: requirement.id, title: requirement.title })}`,
+      lastModified: Number.isNaN(lastModified.getTime()) ? now : lastModified,
+      changeFrequency: "daily" as const,
+      priority: 0.78,
+    };
+  });
 
   const sellerPaths = new Map<string, string>();
   for (const listing of listings) {
@@ -87,6 +104,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...dubaiRoutes,
     ...categoryRoutes,
     ...listingRoutes,
+    ...requirementRoutes,
     ...sellerRoutes,
   ];
 }
