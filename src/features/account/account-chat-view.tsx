@@ -18,6 +18,8 @@ import {
   type AccountChatMessage,
   type AccountConversation,
 } from "@/lib/api/account-chat";
+import { isConversationUnread } from "@/lib/chat/chat-read-store";
+import { useChatLastViewedAt, useMarkChatViewed } from "@/hooks/use-chat-read";
 import { cn } from "@/lib/utils";
 import { sellerPlanAccess } from "@/lib/auth/member-access";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
@@ -38,9 +40,8 @@ export function AccountChatView({
   const [activeThread, setActiveThread] = useState<string | null>(initialConversationId ?? null);
   const [draft, setDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [openedThreads, setOpenedThreads] = useState<string[]>(
-    initialConversationId ? [initialConversationId] : [],
-  );
+  const lastViewedAt = useChatLastViewedAt();
+  const markViewed = useMarkChatViewed();
 
   const tier = dashboard.sellerProfile?.tier ?? "starter";
   const planFeaturesQuery = useQuery({
@@ -87,6 +88,13 @@ export function AccountChatView({
   });
 
   const threadMessages = messagesQuery.data ?? [];
+
+  // Mark read on open, and again whenever new messages land while this thread is on screen
+  // (same as mobile chat-read-store).
+  useEffect(() => {
+    if (!selectedThread?.id) return;
+    markViewed(selectedThread.id);
+  }, [markViewed, selectedThread?.id, threadMessages.length]);
 
   useEffect(() => {
     if (!selectedThread?.id) return;
@@ -172,7 +180,7 @@ export function AccountChatView({
 
   function openThread(threadId: string) {
     setActiveThread(threadId);
-    setOpenedThreads((current) => (current.includes(threadId) ? current : [...current, threadId]));
+    markViewed(threadId);
   }
 
   function previewText(thread: AccountConversation) {
@@ -182,11 +190,13 @@ export function AccountChatView({
   }
 
   function hasUnread(thread: AccountConversation) {
-    return Boolean(
-      thread.lastMessageSenderId &&
-        thread.lastMessageSenderId !== myUserId &&
-        !openedThreads.includes(thread.id),
-    );
+    return isConversationUnread({
+      conversationId: thread.id,
+      lastMessageAt: thread.lastMessageAt,
+      lastMessageSenderId: thread.lastMessageSenderId,
+      myUserId,
+      lastViewedAt,
+    });
   }
 
   const emptyTitle = isSeller

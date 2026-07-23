@@ -484,7 +484,10 @@ export type PublicRequirementDetail = {
   viewCount: number;
 };
 
-export async function getPublicRequirement(requirementKey: string): Promise<PublicRequirementDetail | null> {
+export async function getPublicRequirement(
+  requirementKey: string,
+  accessToken?: string | null,
+): Promise<PublicRequirementDetail | null> {
   try {
     const { data } = await apiFetchEnvelope<{
       id: string;
@@ -499,7 +502,14 @@ export async function getPublicRequirement(requirementKey: string): Promise<Publ
       status: string;
       createdAt: string;
       viewCount?: number;
-    }>(`/api/requirements/${encodeURIComponent(requirementKey)}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
+    }>(
+      `/api/requirements/${encodeURIComponent(requirementKey)}`,
+      {
+        cache: "no-store",
+        headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+      },
+      { baseUrl: resolveBackendApiUrl() },
+    );
 
     return {
       id: data.id,

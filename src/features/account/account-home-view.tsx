@@ -339,8 +339,30 @@ function HomePromoCarousel({
   const Icon = slide.icon;
 
   return (
-    <section className="overflow-hidden rounded-[1.35rem] bg-gradient-to-br p-[1px]">
-      <div className={cn("rounded-[1.3rem] bg-gradient-to-br p-5 text-white sm:p-6", slide.gradient)}>
+    <section
+      aria-roledescription="carousel"
+      aria-label={`${identity === "seller" ? "Seller" : "Buyer"} dashboard highlights`}
+      className="overflow-hidden rounded-[1.35rem] bg-brand-forest p-[1px]"
+    >
+      <div
+        key={slide.id}
+        className={cn(
+          "relative isolate min-h-[18rem] overflow-hidden rounded-[1.3rem] bg-gradient-to-br p-5 text-white sm:p-6",
+          slide.gradient,
+        )}
+      >
+        <Image
+          src={slide.image}
+          alt={slide.imageAlt}
+          fill
+          sizes="(max-width: 1024px) 100vw, 34vw"
+          className="absolute inset-0 -z-20 size-full object-cover transition-opacity duration-500"
+          style={{ objectPosition: slide.imagePosition }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-black/85 via-black/35 to-black/15"
+        />
         <div className="flex items-start justify-between gap-3">
           <span className="grid size-11 place-items-center rounded-2xl bg-white/12">
             <Icon className="size-5" />
@@ -350,7 +372,8 @@ function HomePromoCarousel({
               <button
                 key={item.id}
                 type="button"
-                aria-label={`Show tip ${i + 1}`}
+                aria-label={`Show ${item.title}`}
+                aria-current={i === index}
                 onClick={() => setIndex(i)}
                 className={cn(
                   "h-1.5 rounded-full transition",
@@ -449,6 +472,8 @@ export function AccountHomeView({
 
   const pendingSellerApps = myApplications.filter((item) => openApplicationStatuses(item.status));
   const pendingBuyerApps = receivedApplications.filter((item) => openApplicationStatuses(item.status));
+  const awardedSellerJobs = myApplications.filter((item) => item.status === "awarded");
+  const awardedCount = receivedApplications.filter((item) => item.status === "awarded").length;
 
   const applicantsByRequirement = useMemo(() => {
     const map = new Map<string, number>();
@@ -491,7 +516,8 @@ export function AccountHomeView({
               : `You applied · ${item.requirement.title}`,
           detail: `${applicationStatusLabel(item.status)} · ${formatRelativeTime(item.updatedAt || item.createdAt)}`,
           createdAt: item.updatedAt || item.createdAt,
-          onClick: () => onNavigate("applications"),
+          onClick: () =>
+            onNavigate(item.status === "awarded" ? "jobs-bookings" : "applications"),
         }))
       : receivedApplications.slice(0, 3).map((item: ReceivedApplication) => ({
           id: `r-${item.id}`,
@@ -507,6 +533,24 @@ export function AccountHomeView({
   }, [isSeller, myApplications, notifications, onNavigate, receivedApplications]);
 
   const inboxItems = [
+    {
+      key: "awarded-jobs",
+      icon: BriefcaseBusiness,
+      label:
+        (isSeller ? awardedSellerJobs.length : awardedCount) > 0
+          ? `${isSeller ? awardedSellerJobs.length : awardedCount} awarded job${(isSeller ? awardedSellerJobs.length : awardedCount) === 1 ? "" : "s"}`
+          : "Jobs & Bookings",
+      detail:
+        (isSeller ? awardedSellerJobs.length : awardedCount) > 0
+          ? isSeller ? "Review work awarded to you" : "Review contracts and confirmed work"
+          : "Your awarded work hub",
+      onClick: () => onNavigate("jobs-bookings"),
+      tone:
+        (isSeller ? awardedSellerJobs.length : awardedCount) > 0
+          ? ("accent" as const)
+          : ("default" as const),
+      show: true,
+    },
     {
       key: "chat",
       icon: MessageCircle,
@@ -660,15 +704,26 @@ export function AccountHomeView({
       {/* 3 primary actions */}
       <section>
         <SectionHeading title="Quick actions" />
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {isSeller ? (
             <>
+              <QuickAction
+                icon={BriefcaseBusiness}
+                label="Jobs & Bookings"
+                description={
+                  awardedSellerJobs.length > 0
+                    ? `${awardedSellerJobs.length} awarded job${awardedSellerJobs.length === 1 ? "" : "s"}`
+                    : "See awarded jobs and bookings"
+                }
+                onClick={() => onNavigate("jobs-bookings")}
+                accent={awardedSellerJobs.length > 0}
+              />
               <QuickAction
                 icon={ClipboardList}
                 label="Browse requirements"
                 description="Find buyer posts you can apply to"
                 onClick={() => onNavigate("requirements")}
-                accent
+                accent={awardedSellerJobs.length === 0}
               />
               <QuickAction
                 icon={BriefcaseBusiness}
@@ -690,11 +745,22 @@ export function AccountHomeView({
           ) : (
             <>
               <QuickAction
+                icon={BriefcaseBusiness}
+                label="Jobs & Bookings"
+                description={
+                  awardedCount > 0
+                    ? `${awardedCount} awarded job${awardedCount === 1 ? "" : "s"}`
+                    : "Contracts and confirmed work"
+                }
+                onClick={() => onNavigate("jobs-bookings")}
+                accent={awardedCount > 0}
+              />
+              <QuickAction
                 icon={Search}
                 label="Browse listings"
                 description="Find DJs, chefs, photographers & more"
                 onClick={() => onNavigate("browse")}
-                accent
+                accent={awardedCount === 0}
               />
               <QuickAction
                 icon={ClipboardList}

@@ -19,6 +19,8 @@ const ACCOUNT_VIEWS: readonly AccountViewId[] = [
   "my-listings",
   "my-requirements",
   "applications",
+  "jobs-bookings",
+  "seller-tools",
   "verification",
   "referrals",
   "recommend",

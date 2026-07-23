@@ -3,7 +3,18 @@ import { DEFAULT_PUBLIC_PLANS, type PublicPlanFeatures, type PublicSellerTier } 
 export type MemberIdentity = "buyer" | "seller";
 
 const BUYER_ONLY_VIEWS = new Set(["saved", "my-requirements"]);
-const SELLER_ONLY_VIEWS = new Set(["my-listings", "membership", "verification"]);
+const SELLER_ONLY_VIEWS = new Set([
+  "my-listings",
+  "membership",
+  "verification",
+  "seller-tools",
+]);
+
+export function requiredMemberIdentity(view: string): MemberIdentity | null {
+  if (BUYER_ONLY_VIEWS.has(view)) return "buyer";
+  if (SELLER_ONLY_VIEWS.has(view)) return "seller";
+  return null;
+}
 
 export function normalizeSellerTier(tier: string | null | undefined): PublicSellerTier {
   if (tier === "pro") return "pro";
@@ -20,9 +31,8 @@ export function sellerPlanAccess(
 }
 
 export function canAccessMemberView(view: string, identity: MemberIdentity) {
-  if (BUYER_ONLY_VIEWS.has(view)) return identity === "buyer";
-  if (SELLER_ONLY_VIEWS.has(view)) return identity === "seller";
-  return true;
+  const requiredIdentity = requiredMemberIdentity(view);
+  return requiredIdentity == null || identity === requiredIdentity;
 }
 
 export function safeMemberView<T extends string>(view: T, identity: MemberIdentity): T | "home" {

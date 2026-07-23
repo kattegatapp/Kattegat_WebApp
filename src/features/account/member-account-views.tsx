@@ -5,7 +5,6 @@ import {
   BadgeCheck,
   Bell,
   Building2,
-  Check,
   ChevronRight,
   ClipboardList,
   CreditCard,
@@ -15,7 +14,6 @@ import {
   MessageCircle,
   Sparkles,
   TrendingUp,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -45,7 +43,11 @@ import { profileSetupPath } from "@/lib/auth/profile-completion";
 import { normalizeMemberDeepLink, isChatDeepLink } from "@/lib/navigation/member-deep-links";
 import { cn } from "@/lib/utils";
 
-type DashboardProps = { dashboard: AccountDashboard; identity?: AccountIdentity };
+type DashboardProps = {
+  dashboard: AccountDashboard;
+  identity?: AccountIdentity;
+  accessNotice?: AccountIdentity | null;
+};
 
 function tierLabel(tier?: string | null) {
   if (!tier) return "Starter";
@@ -360,7 +362,7 @@ function ListingsSummary({ listings }: { listings: AccountListing[] }) {
   );
 }
 
-export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
+export function AccountDashboardView({ dashboard, identity, accessNotice }: DashboardProps) {
   const { user, sellerProfile, listings, referral } = dashboard;
   const isSeller = identity === "seller";
   const { becomeSeller, becomeBuyer } = useIdentityMutations();
@@ -396,6 +398,31 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
 
   return (
     <ViewWrap>
+      {accessNotice ? (
+        <div role="status" aria-live="polite">
+          <AccountGlass className="mb-4 rounded-[20px] border border-brand-mantis/30 bg-brand-mantis/[0.08] p-5">
+            <div className="flex items-start gap-3">
+              {accessNotice === "seller" ? (
+                <Building2 className="mt-0.5 size-5 shrink-0 text-brand-mantis" />
+              ) : (
+                <Heart className="mt-0.5 size-5 shrink-0 text-brand-blue" />
+              )}
+              <div>
+                <p className="font-extrabold text-brand-forest">
+                  {accessNotice === "seller"
+                    ? "Seller identity required"
+                    : "Buyer identity required"}
+                </p>
+                <p className="mt-1 text-[13px] leading-6 text-brand-forest/70">
+                  {accessNotice === "seller"
+                    ? "Add a seller identity to access listings, Seller Tools, membership and verification. Your buyer profile stays on the same account."
+                    : "Add a buyer identity to save services and publish requirements. Your seller profile stays on the same account."}
+                </p>
+              </div>
+            </div>
+          </AccountGlass>
+        </div>
+      ) : null}
       <AccountGlass className="rounded-[22px] p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-4">
@@ -529,96 +556,4 @@ export function AccountDashboardView({ dashboard, identity }: DashboardProps) {
   );
 }
 
-const MEMBERSHIP_TIERS = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "Free",
-    features: ["Public profile", "Vetted inquiry routing", "Basic discovery", "Referral wallet"],
-    cta: "current" as const,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "From AED 99/mo",
-    features: ["Direct client chat", "Priority discovery", "Portfolio highlights", "Pro badge"],
-    cta: "upgrade" as const,
-    href: "/plans/checkout",
-  },
-  {
-    id: "vetted",
-    name: "Vetted",
-    price: "Managed",
-    features: ["White-glove onboarding", "Agent-managed listings", "Premium placement", "Vetted badge"],
-    cta: "apply" as const,
-    href: "/contact",
-  },
-];
-
-function MembershipCta({ cta, href }: { cta: "current" | "upgrade" | "apply"; href?: string }) {
-  if (cta === "current") {
-    return <span className="inline-flex w-full items-center justify-center rounded-xl border border-brand-forest/10 py-2.5 text-xs font-bold text-brand-forest/65">Current plan</span>;
-  }
-  if (cta === "upgrade") {
-    return (
-      <Link href={href ?? "/plans"} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-brand-mantis to-brand-emerald py-2.5 text-xs font-bold text-brand-forest">
-        <Users className="size-3.5" /> Upgrade to Pro
-      </Link>
-    );
-  }
-  return (
-    <Link href={href ?? "/contact"} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#C9A24B]/35 bg-[#C9A24B]/10 py-2.5 text-xs font-bold text-[#E4C87F]">
-      <Bell className="size-3.5" /> Apply for Vetted
-    </Link>
-  );
-}
-
-export function AccountMembershipView({ dashboard }: DashboardProps) {
-  const currentTier = dashboard.sellerProfile?.tier ?? "starter";
-  const normalized =
-    currentTier === "white_glove" ? "vetted" : currentTier === "pro" ? "pro" : "starter";
-
-  return (
-    <ViewWrap>
-      <SectionHeading title="Membership" />
-      <p className="mb-5 max-w-xl text-[14px] leading-7 text-brand-forest/65">
-        Upgrade for direct chat and discovery, or apply for managed Vetted service.
-      </p>
-      <div className="grid gap-4 lg:grid-cols-3">
-        {MEMBERSHIP_TIERS.map((plan) => {
-          const isCurrent = plan.id === normalized;
-          return (
-            <AccountGlass
-              key={plan.id}
-              className={cn(
-                "flex flex-col rounded-[20px] p-5",
-                isCurrent && "border-brand-mantis/35",
-              )}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-extrabold text-brand-forest">{plan.name}</h3>
-                {isCurrent ? (
-                  <span className="rounded-md border border-brand-mantis/35 bg-brand-mantis/10 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-mantis">
-                    Current
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-1 text-sm font-bold text-brand-mantis">{plan.price}</p>
-              <ul className="mt-4 flex flex-1 flex-col gap-2">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-[13px] text-brand-forest/65">
-                    <Check className="mt-0.5 size-3.5 shrink-0 text-brand-emerald" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-5">
-                <MembershipCta cta={plan.cta} href={"href" in plan ? plan.href : undefined} />
-              </div>
-            </AccountGlass>
-          );
-        })}
-      </div>
-    </ViewWrap>
-  );
-}
+export { AccountMembershipView } from "@/features/account/account-membership-view";

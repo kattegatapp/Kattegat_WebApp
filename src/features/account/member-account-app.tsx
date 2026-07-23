@@ -9,6 +9,8 @@ import { AccountBrowseListingsView } from "@/features/account/account-browse-lis
 import { AccountHomeView } from "@/features/account/account-home-view";
 import { AccountChatView } from "@/features/account/account-chat-view";
 import { AccountApplicationsView } from "@/features/account/account-applications-view";
+import { AccountJobsBookingsView } from "@/features/account/account-jobs-bookings-view";
+import { AccountSellerToolsView } from "@/features/account/account-seller-tools-view";
 import { AccountVerificationView } from "@/features/account/account-verification-view";
 import {
   AccountCategoriesView,
@@ -35,9 +37,15 @@ import {
   writeStoredMemberIdentity,
 } from "@/lib/auth/member-identity";
 import { writeBrowseResume } from "@/lib/auth/browse-resume";
+import { isConversationUnread } from "@/lib/chat/chat-read-store";
+import { useChatLastViewedAt } from "@/hooks/use-chat-read";
 import { logoutMember } from "@/lib/api/auth";
 import { fetchAccountConversations } from "@/lib/api/account-chat";
-import { canAccessMemberView, safeMemberView } from "@/lib/auth/member-access";
+import {
+  canAccessMemberView,
+  requiredMemberIdentity,
+  safeMemberView,
+} from "@/lib/auth/member-access";
 import { cn } from "@/lib/utils";
 
 type MemberAccountAppProps = {
@@ -105,6 +113,7 @@ export function MemberAccountApp({
   const [browseCategoryId, setBrowseCategoryId] = useState(initialBrowseCategoryId);
   const [listingEditorOpen, setListingEditorOpen] = useState(false);
   const [requirementEditorOpen, setRequirementEditorOpen] = useState(false);
+  const [accessNotice, setAccessNotice] = useState<"buyer" | "seller" | null>(null);
 
   const defaultIdentity = useMemo<AccountIdentity>(
     () => defaultMemberIdentity(dashboard.user.sid, dashboard.user.bid),
@@ -112,6 +121,7 @@ export function MemberAccountApp({
   );
 
   const [identity, setIdentity] = useState<AccountIdentity>(defaultIdentity);
+  const lastViewedAt = useChatLastViewedAt();
 
   const deepLinkConversationsQuery = useQuery({
     queryKey: ["account", "chat", "conversations"],
@@ -127,12 +137,17 @@ export function MemberAccountApp({
   const chatUnreadCount = useMemo(() => {
     const threads = conversationsQuery.data ?? [];
     return threads.filter((thread) => {
-      if (!thread.lastMessageSenderId || thread.lastMessageSenderId === dashboard.user.id) return false;
-      if (identity === "seller") return thread.sellerId === dashboard.user.id;
-      if (identity === "buyer") return thread.buyerId === dashboard.user.id;
-      return true;
+      if (identity === "seller" && thread.sellerId !== dashboard.user.id) return false;
+      if (identity === "buyer" && thread.buyerId !== dashboard.user.id) return false;
+      return isConversationUnread({
+        conversationId: thread.id,
+        lastMessageAt: thread.lastMessageAt,
+        lastMessageSenderId: thread.lastMessageSenderId,
+        myUserId: dashboard.user.id,
+        lastViewedAt,
+      });
     }).length;
-  }, [conversationsQuery.data, dashboard.user.id, identity]);
+  }, [conversationsQuery.data, dashboard.user.id, identity, lastViewedAt]);
 
   const deepLinkIdentity = useMemo<AccountIdentity | null>(() => {
     if (!initialConversationId) return null;
@@ -143,19 +158,35 @@ export function MemberAccountApp({
 
   useEffect(() => {
     const stored = readStoredMemberIdentity(dashboard.user.sid, dashboard.user.bid);
+    const requiredIdentity = requiredMemberIdentity(initialView);
+    const hasRequiredIdentity =
+      requiredIdentity === "seller"
+        ? Boolean(dashboard.user.sid)
+        : requiredIdentity === "buyer"
+          ? Boolean(dashboard.user.bid)
+          : true;
     const next =
       initialConversationId && deepLinkIdentity
         ? deepLinkIdentity
+        : requiredIdentity && hasRequiredIdentity
+          ? requiredIdentity
         : stored ?? defaultIdentity;
     const timer = window.setTimeout(() => {
       setIdentity(next);
-      setActiveView((current) => safeMemberView(current, next));
+      if (requiredIdentity && !hasRequiredIdentity) {
+        setAccessNotice(requiredIdentity);
+        setActiveView("dashboard");
+      } else {
+        setAccessNotice(null);
+        setActiveView((current) => safeMemberView(current, next));
+      }
       writeStoredMemberIdentity(next);
     }, 0);
     return () => window.clearTimeout(timer);
   }, [
     dashboard.user.bid,
     dashboard.user.sid,
+    initialView,
     deepLinkIdentity,
     defaultIdentity,
     initialConversationId,
@@ -173,6 +204,7 @@ export function MemberAccountApp({
     if (next === "seller" && !dashboard.user.sid) return;
     if (next === "buyer" && !dashboard.user.bid) return;
     setIdentity(next);
+    setAccessNotice(null);
     setActiveView((current) => safeMemberView(current, next));
     writeStoredMemberIdentity(next);
     // Mirror mobile: identity is UX-only, but cached account data must refresh on switch.
@@ -181,7 +213,22 @@ export function MemberAccountApp({
 
   function handleViewChange(next: AccountViewId) {
     if (next === "browse") setBrowseCategoryId("");
-    setActiveView(safeMemberView(next, identity));
+    const requiredIdentity = requiredMemberIdentity(next);
+    if (requiredIdentity) {
+      const hasIdentity =
+        requiredIdentity === "seller" ? Boolean(dashboard.user.sid) : Boolean(dashboard.user.bid);
+      if (!hasIdentity) {
+        setAccessNotice(requiredIdentity);
+        setActiveView("dashboard");
+        return;
+      }
+      if (identity !== requiredIdentity) {
+        setIdentity(requiredIdentity);
+        writeStoredMemberIdentity(requiredIdentity);
+      }
+    }
+    setAccessNotice(null);
+    setActiveView(next);
   }
 
   function handleMarketplaceSearch(query: string) {
@@ -282,6 +329,12 @@ export function MemberAccountApp({
           {activeView === "my-listings" && canAccessMemberView(activeView, identity) ? <AccountMyListingsView dashboard={dashboard} /> : null}
           {activeView === "my-requirements" && canAccessMemberView(activeView, identity) ? <AccountMyRequirementsView dashboard={dashboard} /> : null}
           {activeView === "applications" ? <AccountApplicationsView identity={identity} /> : null}
+          {activeView === "jobs-bookings" && canAccessMemberView(activeView, identity) ? (
+            <AccountJobsBookingsView />
+          ) : null}
+          {activeView === "seller-tools" && canAccessMemberView(activeView, identity) ? (
+            <AccountSellerToolsView />
+          ) : null}
           {activeView === "verification" && canAccessMemberView(activeView, identity) ? (
             <AccountVerificationView />
           ) : null}
@@ -294,7 +347,13 @@ export function MemberAccountApp({
               unreadCount={notifications.unreadCount}
             />
           ) : null}
-          {activeView === "dashboard" ? <AccountDashboardView dashboard={dashboard} identity={identity} /> : null}
+          {activeView === "dashboard" ? (
+            <AccountDashboardView
+              dashboard={dashboard}
+              identity={identity}
+              accessNotice={accessNotice}
+            />
+          ) : null}
           {activeView === "membership" && canAccessMemberView(activeView, identity) ? <AccountMembershipView dashboard={dashboard} /> : null}
         </div>
         </MemberGlassCanvas>

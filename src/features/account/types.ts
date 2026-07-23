@@ -7,6 +7,8 @@ export type AccountViewId =
   | "my-listings"
   | "my-requirements"
   | "applications"
+  | "jobs-bookings"
+  | "seller-tools"
   | "chat"
   | "notifications"
   | "dashboard"

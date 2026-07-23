@@ -16,6 +16,7 @@ import {
   shouldRedirectTitledPublicPath,
 } from "@/lib/navigation/public-paths";
 import { getSiteOrigin } from "@/lib/seo";
+import { getMemberAccessToken } from "@/lib/auth/session";
 import { JOB_TYPE_OPTIONS } from "@/lib/validations/requirement";
 
 type PageProps = {
@@ -43,8 +44,9 @@ function formatScheduleDate(iso: string | null) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { requirementId: requirementKey } = await params;
   const requirementId = decodePublicRouteParam(requirementKey);
+  const accessToken = await getMemberAccessToken();
   const [requirement, origin] = await Promise.all([
-    getPublicRequirement(requirementId),
+    getPublicRequirement(requirementId, accessToken),
     getSiteOrigin(),
   ]);
 
@@ -74,9 +76,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function RequirementPage({ params }: PageProps) {
   const { requirementId: requirementKey } = await params;
   const requirementId = decodePublicRouteParam(requirementKey);
+  const accessToken = await getMemberAccessToken();
   const [settings, requirement, origin, dashboard] = await Promise.all([
     getPublicAppSettings(),
-    getPublicRequirement(requirementId),
+    getPublicRequirement(requirementId, accessToken),
     getSiteOrigin(),
     loadAccountDashboard(),
   ]);

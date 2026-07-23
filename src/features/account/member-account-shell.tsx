@@ -13,6 +13,7 @@ import {
   Menu,
   MessageCircle,
   Plus,
+  ReceiptText,
   Search,
   ShieldCheck,
 } from "lucide-react";
@@ -65,6 +66,12 @@ const MARKETPLACE_NAV: NavItem[] = [
   { id: "my-listings", label: "My listings", icon: BriefcaseBusiness, sellerOnly: true },
   { id: "my-requirements", label: "My requirements", icon: Megaphone, buyerOnly: true },
   { id: "applications", label: "Applications", icon: FileCheck2 },
+  {
+    id: "jobs-bookings",
+    label: "Jobs & Bookings",
+    icon: BriefcaseBusiness,
+  },
+  { id: "seller-tools", label: "Seller Tools", icon: ReceiptText, sellerOnly: true },
   { id: "verification", label: "Identity verification", icon: ShieldCheck, sellerOnly: true },
 ];
 
