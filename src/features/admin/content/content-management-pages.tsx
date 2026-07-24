@@ -1,7 +1,15 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BriefcaseBusiness, Loader2, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  LayoutGrid,
+  List,
+  Loader2,
+  RotateCcw,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -26,6 +34,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { MoneyText } from "@/components/currency";
 import { formatBudgetRange } from "@/lib/admin/money";
 import { adminPath } from "@/lib/admin/paths";
@@ -34,6 +51,7 @@ import {
   fetchAllRequirements,
   updateListingAvailability,
   updateRequirementAvailability,
+  type AdminListingRecord,
 } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
 
@@ -242,6 +260,7 @@ export function ListingsManagementPage() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
+  const [layout, setLayout] = useState<"list" | "grid">("list");
   const [editingListingId, setEditingListingId] = useState<string | null>(null);
 
   const query = useQuery({
@@ -258,6 +277,14 @@ export function ListingsManagementPage() {
   });
 
   const items = query.data?.data ?? [];
+
+  function toggleAvailability(item: AdminListingRecord) {
+    if (item.status !== "live" && item.status !== "unpublished") return;
+    mutation.mutate({
+      id: item.id,
+      available: item.status !== "live",
+    });
+  }
 
   if (pendingView) {
     return (
@@ -291,6 +318,39 @@ export function ListingsManagementPage() {
         statuses={["draft", "pending_review", "live", "unpublished", "rejected"]}
         searchLabel="Search listings"
       />
+
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground">
+          Dense views for large catalogs — open a listing to edit full details.
+        </p>
+        <div
+          className="inline-flex rounded-xl border border-brand-forest/10 bg-white/70 p-1 shadow-sm"
+          role="group"
+          aria-label="Layout"
+        >
+          <Button
+            type="button"
+            size="sm"
+            variant={layout === "list" ? "default" : "ghost"}
+            className="h-8 gap-1.5 rounded-lg px-2.5"
+            onClick={() => setLayout("list")}
+          >
+            <List className="size-3.5" />
+            List
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={layout === "grid" ? "default" : "ghost"}
+            className="h-8 gap-1.5 rounded-lg px-2.5"
+            onClick={() => setLayout("grid")}
+          >
+            <LayoutGrid className="size-3.5" />
+            Grid
+          </Button>
+        </div>
+      </div>
+
       {query.isError ? (
         <AdminQueryError
           error={query.error}
@@ -305,75 +365,142 @@ export function ListingsManagementPage() {
           description="Try another search or status filter."
           icon={<Search className="size-7" aria-hidden />}
         />
+      ) : layout === "list" ? (
+        <Card className="ios-glass-pane overflow-hidden border-white/80 bg-transparent">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="min-w-[12rem]">Listing</TableHead>
+                <TableHead className="hidden md:table-cell">Seller</TableHead>
+                <TableHead className="hidden sm:table-cell">Location</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="hidden lg:table-cell">Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => {
+                const editable = item.status === "live" || item.status === "unpublished";
+                const pending = mutation.isPending && mutation.variables?.id === item.id;
+
+                return (
+                  <TableRow key={item.id}>
+                    <TableCell className="max-w-[18rem]">
+                      <p className="truncate font-semibold text-brand-forest">{item.title}</p>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground md:hidden">
+                        {item.sellerDisplayName || "Seller"} · {item.location || "—"}
+                      </p>
+                    </TableCell>
+                    <TableCell className="hidden max-w-[10rem] md:table-cell">
+                      <Link
+                        href={adminPath(`/users/${item.sellerId}`)}
+                        className="truncate font-medium text-brand-forest hover:underline"
+                      >
+                        {item.sellerDisplayName || "View seller"}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="hidden max-w-[9rem] truncate text-muted-foreground sm:table-cell">
+                      {item.location || "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={cn("whitespace-nowrap", tone(item.status))}>
+                        {label(item.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden whitespace-nowrap text-muted-foreground lg:table-cell">
+                      {date(item.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-end gap-2">
+                        {editable ? (
+                          <div className="flex items-center gap-2">
+                            {pending ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+                            <Switch
+                              checked={item.status === "live"}
+                              disabled={mutation.isPending}
+                              onCheckedChange={() => toggleAvailability(item)}
+                              aria-label={
+                                item.status === "live" ? "Unpublish listing" : "Make listing live"
+                              }
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">—</span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8"
+                          onClick={() => setEditingListingId(item.id)}
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const editable = item.status === "live" || item.status === "unpublished";
             const pending = mutation.isPending && mutation.variables?.id === item.id;
 
             return (
-              <Card key={item.id} className="ios-glass-pane overflow-hidden border-white/80 bg-transparent">
-                <CardHeader className="border-b border-border/60">
-                  <div className="flex items-start justify-between gap-3">
+              <Card
+                key={item.id}
+                className="ios-glass-pane overflow-hidden border-white/80 bg-transparent"
+              >
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <CardTitle className="break-words text-lg text-brand-forest">
+                      <p className="truncate text-[15px] font-extrabold text-brand-forest">
                         {item.title}
-                      </CardTitle>
-                      <CardDescription>
-                        {item.location || "Location not provided"} · {date(item.createdAt)}
-                      </CardDescription>
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {item.location || "No location"} · {date(item.createdAt)}
+                      </p>
                     </div>
-                    <Badge className={tone(item.status)}>{label(item.status)}</Badge>
+                    <Badge className={cn("shrink-0", tone(item.status))}>{label(item.status)}</Badge>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-1">
-                  <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
-                    {item.description || "No description provided."}
-                  </p>
-                  <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Seller
-                    </span>
-                    <div>
+
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Seller
+                      </p>
                       <Link
                         href={adminPath(`/users/${item.sellerId}`)}
-                        className="font-semibold text-brand-forest hover:underline"
+                        className="truncate font-semibold text-brand-forest hover:underline"
                       >
-                        {item.sellerDisplayName || "View seller account"}
+                        {item.sellerDisplayName || "View seller"}
                       </Link>
                     </div>
+                    {editable ? (
+                      <div className="flex shrink-0 items-center gap-2">
+                        {pending ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
+                        <Switch
+                          checked={item.status === "live"}
+                          disabled={mutation.isPending}
+                          onCheckedChange={() => toggleAvailability(item)}
+                          aria-label={
+                            item.status === "live" ? "Unpublish listing" : "Make listing live"
+                          }
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                  {editable ? (
-                    <div className="rounded-xl border border-brand-forest/10 p-4">
-                      <p className="font-bold text-brand-forest">Listing availability</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {item.status === "live"
-                          ? "This listing is visible to buyers."
-                          : "This listing is hidden from buyers."}
-                      </p>
-                      <Button
-                        className="mt-3"
-                        variant={item.status === "live" ? "destructive" : "default"}
-                        disabled={mutation.isPending}
-                        onClick={() =>
-                          mutation.mutate({
-                            id: item.id,
-                            available: item.status !== "live",
-                          })
-                        }
-                      >
-                        {pending ? <Loader2 className="animate-spin" /> : null}
-                        {item.status === "live" ? "Unpublish listing" : "Make listing live"}
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground">
-                      Availability can be edited after moderation. Use the awaiting approval view
-                      for pending listings.
-                    </p>
-                  )}
-                  <Button variant="outline" onClick={() => setEditingListingId(item.id)}>
-                    Edit listing and media
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 w-full"
+                    onClick={() => setEditingListingId(item.id)}
+                  >
+                    Edit listing
                   </Button>
                 </CardContent>
               </Card>
