@@ -73,7 +73,9 @@ export const PER_GIG_SET_OPTIONS = [1, 2, 3, 4, 5] as const;
 // unit, they're encoded into the existing free-form `unitLabel` string so no backend
 // schema change is needed. Parsing back out lets the editor show structured inputs
 // (a minutes field + a 1-5 set count) instead of the old free-text "2h / 3h / 4h" entry.
-const PER_GIG_UNIT_PATTERN = /^(\d+) sets? × (\d+) min$/;
+// The duration suffix is optional in both the pattern and the formatter below — picking a
+// set count has to survive being encoded on its own, before a duration is ever typed in.
+const PER_GIG_UNIT_PATTERN = /^(\d+) sets?(?: × (\d+) min)?$/;
 
 export function parsePerGigUnitLabel(
   unitLabel: string | null | undefined,
@@ -82,7 +84,7 @@ export function parsePerGigUnitLabel(
   if (match) {
     const sets = Number(match[1]);
     if (PER_GIG_SET_OPTIONS.includes(sets as (typeof PER_GIG_SET_OPTIONS)[number])) {
-      return { sets: sets as (typeof PER_GIG_SET_OPTIONS)[number], durationMinutes: match[2]! };
+      return { sets: sets as (typeof PER_GIG_SET_OPTIONS)[number], durationMinutes: match[2] ?? "" };
     }
   }
   return { sets: 1, durationMinutes: "" };
@@ -93,8 +95,11 @@ export function formatPerGigUnitLabel(
   durationMinutes: string,
 ): string | null {
   const trimmed = durationMinutes.trim();
-  if (!trimmed) return null;
-  return `${sets} set${sets > 1 ? "s" : ""} × ${trimmed} min`;
+  // Both still at their untouched defaults — nothing meaningful to store yet.
+  if (!trimmed && sets === 1) return null;
+  return trimmed
+    ? `${sets} set${sets > 1 ? "s" : ""} × ${trimmed} min`
+    : `${sets} set${sets > 1 ? "s" : ""}`;
 }
 
 export function emptyPricingBlock(modelType: PricingModelType, sortOrder = 0): PricingBlock {
