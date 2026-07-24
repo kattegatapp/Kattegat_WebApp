@@ -61,6 +61,8 @@ export function isCloudinaryConfigured(): boolean {
   return Boolean(CLOUD_NAME && UPLOAD_PRESET);
 }
 
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
 /** Unsigned preset upload — same pattern as the mobile app. */
 export async function uploadImage(file: File, folder: string): Promise<CloudinaryUploadResult> {
   if (!CLOUD_NAME) {
@@ -68,6 +70,12 @@ export async function uploadImage(file: File, folder: string): Promise<Cloudinar
   }
   if (!UPLOAD_PRESET) {
     throw new Error("Photo upload preset is not configured.");
+  }
+  // Checked here too, not just relying on the Cloudinary upload preset's own size cap —
+  // failing before the network round trip gives a specific, immediate error instead of a
+  // generic Cloudinary rejection after the user's already waited for the upload to run.
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error("Image is larger than 2MB. Please choose a smaller photo.");
   }
 
   const formData = new FormData();

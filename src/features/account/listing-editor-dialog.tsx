@@ -461,7 +461,7 @@ function ListingEditorForm({
         >
           <div className="grid gap-3.5 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>Category</Label>
+              <Label>Category *</Label>
               <Select
                 value={categoryId || null}
                 items={categoryItems}
@@ -491,7 +491,7 @@ function ListingEditorForm({
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
-              <Label>Subcategory</Label>
+              <Label>Subcategory *</Label>
               <Select
                 value={subcategoryId || null}
                 items={subcategoryItems}

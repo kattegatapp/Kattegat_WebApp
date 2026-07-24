@@ -26,7 +26,7 @@ export const PRICING_MODEL_META: Record<
   per_gig: {
     label: "Per Gig",
     chip: "+ Per Gig",
-    hint: "One-off talent bookings — optional set label (2h / 3h / 4h).",
+    hint: "One-off talent bookings — optional duration and number of sets.",
   },
   residency: {
     label: "Residency",
@@ -56,6 +56,7 @@ export const PRICING_MODEL_META: Record<
 };
 
 export const RESIDENCY_TERM_OPTIONS = [
+  { value: "per day", label: "Per day" },
   { value: "per month", label: "Per month" },
   { value: "per 3-month term", label: "Per 3-month term" },
 ] as const;
@@ -65,6 +66,36 @@ export const PER_UNIT_OPTIONS = [
   { value: "per item", label: "Per item" },
   { value: "per class", label: "Per class" },
 ] as const;
+
+export const PER_GIG_SET_OPTIONS = [1, 2, 3, 4, 5] as const;
+
+// Per Gig has no dedicated duration/sets columns — like residency's term and per_unit's
+// unit, they're encoded into the existing free-form `unitLabel` string so no backend
+// schema change is needed. Parsing back out lets the editor show structured inputs
+// (a minutes field + a 1-5 set count) instead of the old free-text "2h / 3h / 4h" entry.
+const PER_GIG_UNIT_PATTERN = /^(\d+) sets? × (\d+) min$/;
+
+export function parsePerGigUnitLabel(
+  unitLabel: string | null | undefined,
+): { sets: (typeof PER_GIG_SET_OPTIONS)[number]; durationMinutes: string } {
+  const match = unitLabel ? PER_GIG_UNIT_PATTERN.exec(unitLabel) : null;
+  if (match) {
+    const sets = Number(match[1]);
+    if (PER_GIG_SET_OPTIONS.includes(sets as (typeof PER_GIG_SET_OPTIONS)[number])) {
+      return { sets: sets as (typeof PER_GIG_SET_OPTIONS)[number], durationMinutes: match[2]! };
+    }
+  }
+  return { sets: 1, durationMinutes: "" };
+}
+
+export function formatPerGigUnitLabel(
+  sets: (typeof PER_GIG_SET_OPTIONS)[number],
+  durationMinutes: string,
+): string | null {
+  const trimmed = durationMinutes.trim();
+  if (!trimmed) return null;
+  return `${sets} set${sets > 1 ? "s" : ""} × ${trimmed} min`;
+}
 
 export function emptyPricingBlock(modelType: PricingModelType, sortOrder = 0): PricingBlock {
   return {
@@ -98,11 +129,8 @@ export function validatePricingBlocks(blocks: PricingBlock[], requireAtLeastOne:
     counts.set(block.modelType, (counts.get(block.modelType) ?? 0) + 1);
   }
   for (const [modelType, count] of counts) {
-    const max = modelType === "per_gig" ? 3 : 1;
-    if (count > max) {
-      return modelType === "per_gig"
-        ? "Per Gig may appear at most three times."
-        : `Only one ${PRICING_MODEL_META[modelType as PricingModelType]?.label ?? modelType} block is allowed.`;
+    if (count > 1) {
+      return `Only one ${PRICING_MODEL_META[modelType as PricingModelType]?.label ?? modelType} block is allowed.`;
     }
   }
 

@@ -25,9 +25,8 @@ export async function POST(request: NextRequest) {
       "MAINTENANCE_MODE",
     );
   }
-  if (!settings.features.waitlistEnabled) {
-    return errorResponse("The waitlist is closed.", 404, "WAITLIST_DISABLED");
-  }
+  // waitlistEnabled only gates site-wide redirects to /waitlist — the form itself
+  // stays open so leads can still join while the full product is live.
 
   const parsed = await parseSecureJson(request, waitlistSchema, {
     maxBytes: 8_192,

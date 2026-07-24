@@ -80,9 +80,9 @@ const FEATURE_META: Partial<
     icon: Sparkles,
   },
   waitlistEnabled: {
-    label: "Waitlist registration",
+    label: "Waitlist site gate",
     description:
-      "On: /waitlist accepts registrations and other public product screens are redirected there; legal, support, contact, download, and admin access remain available. Off: the full website works and /waitlist remains available in its closed state.",
+      "On: public product screens redirect to /waitlist (legal, support, contact, download, and admin stay available). Off: the full website works. /waitlist always shows the form and accepts signups either way.",
     icon: DoorOpen,
   },
   buyerSignupEnabled: {

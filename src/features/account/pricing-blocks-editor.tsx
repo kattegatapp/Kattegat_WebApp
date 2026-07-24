@@ -19,6 +19,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import {
   emptyPricingBlock,
+  formatPerGigUnitLabel,
+  parsePerGigUnitLabel,
+  PER_GIG_SET_OPTIONS,
   PER_UNIT_OPTIONS,
   PRICING_MODEL_META,
   PRICING_MODEL_TYPES,
@@ -38,12 +41,7 @@ export function PricingBlocksEditor({
   disabled?: boolean;
 }) {
   const usedTypes = new Set(blocks.map((block) => block.modelType));
-  const availableChips = PRICING_MODEL_TYPES.filter((type) => {
-    if (type === "per_gig") {
-      return blocks.filter((block) => block.modelType === "per_gig").length < 3;
-    }
-    return !usedTypes.has(type);
-  });
+  const availableChips = PRICING_MODEL_TYPES.filter((type) => !usedTypes.has(type));
 
   function updateBlock(index: number, patch: Partial<PricingBlock>) {
     onChange(blocks.map((block, i) => (i === index ? { ...block, ...patch } : block)));
@@ -116,6 +114,7 @@ function PricingBlockCard({
     block.modelType === "revenue_share" && block.sellerSharePct != null
       ? 100 - block.sellerSharePct
       : null;
+  const perGig = parsePerGigUnitLabel(block.unitLabel);
 
   return (
     <div className="rounded-2xl border border-brand-forest/10 bg-gradient-to-b from-white to-brand-forest/[0.02] p-3.5 sm:p-4">
@@ -178,7 +177,7 @@ function PricingBlockCard({
       block.modelType === "per_project" ||
       block.modelType === "per_unit" ? (
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
+          <div className={cn("space-y-1.5", block.modelType === "per_gig" && "sm:col-span-2")}>
             <Label className="inline-flex items-center gap-1.5">
               Amount
               <DirhamSymbol size={12} className="text-brand-mantis" />
@@ -202,17 +201,51 @@ function PricingBlockCard({
           </div>
 
           {block.modelType === "per_gig" ? (
-            <div className="space-y-1.5">
-              <Label>Set label (optional)</Label>
-              <Input
-                disabled={disabled}
-                value={block.unitLabel ?? ""}
-                onChange={(event) => onChange({ unitLabel: event.target.value || null })}
-                className="h-11 rounded-xl border-brand-forest/10"
-                placeholder="2h / 3h / 4h"
-                maxLength={40}
-              />
-            </div>
+            <>
+              <div className="space-y-1.5">
+                <Label>Duration (minutes)</Label>
+                <Input
+                  inputMode="numeric"
+                  disabled={disabled}
+                  value={perGig.durationMinutes}
+                  onChange={(event) => {
+                    const raw = event.target.value.trim();
+                    if (raw && !/^\d+$/.test(raw)) return;
+                    onChange({ unitLabel: formatPerGigUnitLabel(perGig.sets, raw) });
+                  }}
+                  className="h-11 rounded-xl border-brand-forest/10"
+                  placeholder="e.g. 60"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Sets</Label>
+                <Select
+                  value={String(perGig.sets)}
+                  items={PER_GIG_SET_OPTIONS.map((count) => ({ value: String(count), label: String(count) }))}
+                  onValueChange={(value) =>
+                    value &&
+                    onChange({
+                      unitLabel: formatPerGigUnitLabel(
+                        Number(value) as (typeof PER_GIG_SET_OPTIONS)[number],
+                        perGig.durationMinutes,
+                      ),
+                    })
+                  }
+                  disabled={disabled}
+                >
+                  <SelectTrigger className="h-11 w-full rounded-xl border-brand-forest/10 bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PER_GIG_SET_OPTIONS.map((count) => (
+                      <SelectItem key={count} value={String(count)} label={String(count)}>
+                        {count}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           ) : null}
 
           {block.modelType === "residency" ? (
