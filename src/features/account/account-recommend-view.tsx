@@ -21,6 +21,7 @@ import {
   AccountViewWrap,
 } from "@/features/account/account-shared";
 import { AccountCardGridSkeleton } from "@/features/account/account-loading";
+import { CurrencyAmount } from "@/components/currency";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,37 +50,39 @@ const STATUS_META: Record<
   {
     label: string;
     description: string;
+    descriptionWithReward?: string;
     tone: string;
     icon: typeof Send;
   }
 > = {
   submitted: {
     label: "Submitted",
-    description: "Our team has the lead and will review it.",
+    description: "Our team has received this lead and will review it shortly.",
     tone: "border-brand-forest/10 bg-brand-forest/[0.03] text-brand-forest/70",
     icon: Send,
   },
   in_progress: {
     label: "In progress",
-    description: "We are following up with the client.",
+    description: "Our team is following up with the client.",
     tone: "border-brand-blue/30 bg-brand-blue/10 text-brand-blue",
     icon: Clock3,
   },
   confirmed: {
     label: "Confirmed",
-    description: "The opportunity is confirmed. Earning is not final yet.",
+    description: "The opportunity is confirmed. Your reward is confirmed once the engagement completes.",
     tone: "border-brand-mantis/40 bg-brand-mantis/12 text-brand-forest",
     icon: CheckCircle2,
   },
   completed: {
     label: "Completed",
-    description: "This lead completed and your earning was credited to your wallet.",
+    description: "This lead is complete. Your reward will appear in your wallet once confirmed.",
+    descriptionWithReward: "This lead is complete. Your reward has been added to your wallet.",
     tone: "border-brand-emerald/35 bg-brand-emerald/10 text-brand-emerald",
     icon: CircleDollarSign,
   },
   not_proceeding: {
     label: "Not proceeding",
-    description: "This lead did not move forward.",
+    description: "This lead did not move forward. No reward applies.",
     tone: "border-red-300/50 bg-red-50 text-red-700",
     icon: XCircle,
   },
@@ -103,22 +106,6 @@ const HOW_IT_WORKS = [
   },
 ] as const;
 
-function formatReward(fils: number | null) {
-  if (fils == null) return null;
-  return `AED ${(fils / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function earningLabel(lead: RecommendLead) {
-  if (lead.status === "completed" && lead.rewardAmountFils != null) {
-    return formatReward(lead.rewardAmountFils);
-  }
-  if (lead.status === "not_proceeding") return "No earning";
-  return "Not earned yet";
-}
-
 function EmptyBlock({
   title,
   body,
@@ -141,8 +128,18 @@ function EmptyBlock({
 function RecommendLeadCard({ lead }: { lead: RecommendLead }) {
   const meta = STATUS_META[lead.status];
   const Icon = meta.icon;
-  const earning = earningLabel(lead);
-  const earnedAmount = lead.status === "completed" && lead.rewardAmountFils != null;
+  const rewardFils = lead.rewardAmountFils;
+  const hasReward = lead.status === "completed" && rewardFils != null && rewardFils > 0;
+  const earningText =
+    lead.status === "not_proceeding"
+      ? "No reward"
+      : lead.status === "completed"
+        ? hasReward
+          ? null
+          : "Reward pending"
+        : "Reward pending";
+  const description =
+    hasReward && meta.descriptionWithReward ? meta.descriptionWithReward : meta.description;
 
   return (
     <AccountListCard className="flex h-full flex-col p-4">
@@ -175,15 +172,19 @@ function RecommendLeadCard({ lead }: { lead: RecommendLead }) {
           <span
             className={cn(
               "font-extrabold",
-              earnedAmount ? "text-brand-mantis" : "text-brand-forest/55",
+              hasReward ? "text-brand-mantis" : "text-brand-forest/55",
             )}
           >
-            {earning}
+            {hasReward && rewardFils != null ? (
+              <CurrencyAmount fils={rewardFils} size="sm" showDecimals />
+            ) : (
+              earningText
+            )}
           </span>
           <span className="text-brand-forest/35">·</span>
           <span className="text-muted-foreground">{formatRelativeTime(lead.updatedAt)}</span>
         </div>
-        <p className="mt-1 text-[11px] leading-4 text-brand-forest/55">{meta.description}</p>
+        <p className="mt-1 text-[11px] leading-4 text-brand-forest/55">{description}</p>
       </div>
     </AccountListCard>
   );
@@ -435,10 +436,15 @@ export function AccountRecommendView() {
                 </span>
               ) : null}
             </div>
-            <p className="mt-1 text-[13px] text-brand-forest/60">
-              {summaryStats.earned > 0
-                ? `${formatReward(summaryStats.earned)} earned so far · see status and payouts`
-                : "See each lead’s status and whether it has earned yet."}
+            <p className="mt-1 inline-flex flex-wrap items-center gap-1 text-[13px] text-brand-forest/60">
+              {summaryStats.earned > 0 ? (
+                <>
+                  <CurrencyAmount fils={summaryStats.earned} size="sm" showDecimals /> earned so far ·
+                  see status and payouts
+                </>
+              ) : (
+                "See each lead’s status and whether it has earned yet."
+              )}
             </p>
           </div>
           <ArrowRight className="size-4 shrink-0 text-muted-foreground" />

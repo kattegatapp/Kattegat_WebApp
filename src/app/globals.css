@@ -20,9 +20,10 @@
   --brand-forest: #003912;
   --brand-mantis: #6fdb42;
   --brand-emerald: #48dc81;
-  --brand-blue: #1c4759;
+  /* Legacy “blue” accent — remapped to lemon/mantis green (no astronaut blue). */
+  --brand-blue: #6fdb42;
   --border: #e1e7e3;
-  --ring: #1c4759;
+  --ring: #6fdb42;
   --glass: rgb(255 255 255 / 0.6);
   --glass-border: rgb(255 255 255 / 0.8);
   --popover: #ffffff;
@@ -31,7 +32,7 @@
   --input: #e1e7e3;
   --chart-1: #6fdb42;
   --chart-2: #48dc81;
-  --chart-3: #1c4759;
+  --chart-3: #6fdb42;
   --chart-4: #c9a24b;
   --chart-5: #003912;
   --radius: 0.75rem;
@@ -42,7 +43,7 @@
   --sidebar-accent: rgb(255 255 255 / 0.08);
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 0.1);
-  --sidebar-ring: #1c4759;
+  --sidebar-ring: #6fdb42;
 }
 
 @theme inline {
@@ -111,7 +112,7 @@ body {
 .admin-shell {
   background-image:
     radial-gradient(circle at 88% 0%, rgb(111 219 66 / 0.1), transparent 24rem),
-    radial-gradient(circle at 8% 40%, rgb(28 71 89 / 0.08), transparent 20rem),
+    radial-gradient(circle at 8% 40%, rgb(72 220 129 / 0.1), transparent 20rem),
     linear-gradient(rgb(0 57 18 / 0.018) 1px, transparent 1px),
     linear-gradient(90deg, rgb(0 57 18 / 0.018) 1px, transparent 1px);
   background-size: auto, auto, 32px 32px, 32px 32px;
@@ -1060,10 +1061,29 @@ textarea {
 .member-glass-canvas textarea,
 .member-glass-canvas [data-slot="select-trigger"],
 .member-glass-canvas [data-slot="textarea"] {
-  border-color: rgb(255 255 255 / 0.75);
-  background: rgb(255 255 255 / 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Visible field outline so users can see where to click/tap. */
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  border-color: rgb(0 57 18 / 0.28) !important;
+  background: #ffffff !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px rgb(0 57 18 / 0.04);
+}
+
+.member-glass-canvas input:not([type="checkbox"]):not([type="radio"]):hover,
+.member-glass-canvas textarea:hover,
+.member-glass-canvas [data-slot="select-trigger"]:hover,
+.member-glass-canvas [data-slot="textarea"]:hover {
+  border-color: rgb(0 57 18 / 0.4) !important;
+}
+
+.member-glass-canvas input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+.member-glass-canvas textarea:focus-visible,
+.member-glass-canvas [data-slot="select-trigger"]:focus-visible,
+.member-glass-canvas [data-slot="textarea"]:focus-visible {
+  border-color: rgb(111 219 66 / 0.9) !important;
+  box-shadow: 0 0 0 3px rgb(111 219 66 / 0.22);
 }
 
 .member-workspace ::selection {

@@ -51,6 +51,9 @@ export type ListingSearchHit = {
   sellerTier: "starter" | "pro" | "white_glove" | null;
   sellerAggregateRating: number;
   sellerReviewCount: number;
+  /** Server-resolved price chip (Pricing Blocks). */
+  displayPrice: string | null;
+  pricing: { amount?: number; unit?: string } | null;
 };
 
 export type ListingSearchPage = {
@@ -143,6 +146,8 @@ function normalizeSearchHit(listing: DiscoveryListing & {
   location?: string | null;
   coverImage?: string | null;
   subcategoryName?: string | null;
+  displayPrice?: string | null;
+  pricing?: { amount?: number; unit?: string } | null;
 }): ListingSearchHit | null {
   if (!listing.id || !listing.sellerId) return null;
   return {
@@ -164,6 +169,8 @@ function normalizeSearchHit(listing: DiscoveryListing & {
     sellerReviewCount: Number.isFinite(listing.sellerReviewCount)
       ? Number(listing.sellerReviewCount)
       : 0,
+    displayPrice: listing.displayPrice?.trim() || null,
+    pricing: listing.pricing ?? null,
   };
 }
 
@@ -196,6 +203,8 @@ export async function searchListings(options: {
           location?: string | null;
           coverImage?: string | null;
           subcategoryName?: string | null;
+          displayPrice?: string | null;
+          pricing?: { amount?: number; unit?: string } | null;
         }
       >
     >(`/api/listings/search?${params}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
@@ -269,6 +278,17 @@ export type PublicListingDetail = {
   updatedAt: string | null;
   aggregateRating: number;
   reviewCount: number;
+  displayPrice: string | null;
+  pricing: { amount?: number; unit?: string } | null;
+  pricingBlocks: import("@/lib/pricing-blocks").PricingBlock[];
+  schemaFields: Record<string, unknown>;
+};
+
+export type PublicListingMediaItem = {
+  id: string;
+  type: "photo" | "video_link";
+  url: string;
+  sortOrder: number;
 };
 
 export type PublicSellerListing = {
@@ -279,6 +299,8 @@ export type PublicSellerListing = {
   categoryId: string;
   coverImage: string | null;
   pricing: { amount?: number; unit?: string };
+  displayPrice: string | null;
+  pricingBlocks: import("@/lib/pricing-blocks").PricingBlock[];
   aggregateRating: number;
   reviewCount: number;
   createdAt: string;
@@ -329,6 +351,10 @@ export async function getPublicListing(listingKey: string): Promise<PublicListin
       updatedAt?: string | null;
       aggregateRating?: number;
       reviewCount?: number;
+      displayPrice?: string | null;
+      pricing?: { amount?: number; unit?: string } | null;
+      pricingBlocks?: import("@/lib/pricing-blocks").PricingBlock[];
+      schemaFields?: Record<string, unknown>;
     }>(`/api/listings/${encodeURIComponent(listingKey)}`, { cache: "no-store" }, { baseUrl: resolveBackendApiUrl() });
 
     return {
@@ -342,6 +368,13 @@ export async function getPublicListing(listingKey: string): Promise<PublicListin
       updatedAt: data.updatedAt ?? null,
       aggregateRating: Number.isFinite(data.aggregateRating) ? Number(data.aggregateRating) : 0,
       reviewCount: Number.isFinite(data.reviewCount) ? Number(data.reviewCount) : 0,
+      displayPrice: data.displayPrice?.trim() || null,
+      pricing: data.pricing ?? null,
+      pricingBlocks: Array.isArray(data.pricingBlocks) ? data.pricingBlocks : [],
+      schemaFields:
+        data.schemaFields && typeof data.schemaFields === "object" && !Array.isArray(data.schemaFields)
+          ? data.schemaFields
+          : {},
     };
   } catch {
     return null;
@@ -349,17 +382,39 @@ export async function getPublicListing(listingKey: string): Promise<PublicListin
 }
 
 export async function getPublicListingMedia(listingKey: string): Promise<string[]> {
+  const items = await getPublicListingMediaItems(listingKey);
+  return items
+    .filter((item) => item.type === "photo")
+    .map((item) => item.url)
+    .filter(Boolean);
+}
+
+export async function getPublicListingMediaItems(
+  listingKey: string,
+): Promise<PublicListingMediaItem[]> {
   try {
-    const { data } = await apiFetchEnvelope<Array<{ type: string; url: string; sortOrder: number }>>(
+    const { data } = await apiFetchEnvelope<
+      Array<{ id?: string; type: string; url: string; sortOrder: number }>
+    >(
       `/api/listings/${encodeURIComponent(listingKey)}/media`,
       { cache: "no-store" },
       { baseUrl: resolveBackendApiUrl() },
     );
     return data
-      .filter((item) => item.type === "photo")
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((item) => safeRemoteImage(item.url))
-      .filter((url): url is string => Boolean(url));
+      .map((item, index) => {
+        const url =
+          item.type === "photo" ? safeRemoteImage(item.url) : item.url?.trim() || null;
+        if (!url) return null;
+        if (item.type !== "photo" && item.type !== "video_link") return null;
+        return {
+          id: item.id || `${item.type}-${index}`,
+          type: item.type as "photo" | "video_link",
+          url,
+          sortOrder: item.sortOrder ?? index,
+        };
+      })
+      .filter((item): item is PublicListingMediaItem => Boolean(item))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   } catch {
     return [];
   }
@@ -394,6 +449,8 @@ export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDe
         categoryId: string;
         coverImage?: string | null;
         pricing?: { amount?: number; unit?: string };
+        displayPrice?: string | null;
+        pricingBlocks?: import("@/lib/pricing-blocks").PricingBlock[];
         aggregateRating?: number;
         reviewCount?: number;
         createdAt: string;
@@ -430,6 +487,8 @@ export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDe
           categoryId: listing.categoryId,
           coverImage: safeRemoteImage(listing.coverImage ?? null),
           pricing: listing.pricing ?? {},
+          displayPrice: listing.displayPrice?.trim() || null,
+          pricingBlocks: Array.isArray(listing.pricingBlocks) ? listing.pricingBlocks : [],
           aggregateRating: Number.isFinite(listing.aggregateRating) ? Number(listing.aggregateRating) : 0,
           reviewCount: Number.isFinite(listing.reviewCount) ? Number(listing.reviewCount) : 0,
           createdAt: listing.createdAt,

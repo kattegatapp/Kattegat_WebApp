@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DirhamSymbol, MoneyText } from "@/components/currency";
 import {
   createSellerQuote,
   quoteAction,
@@ -30,7 +31,10 @@ import { cn } from "@/lib/utils";
 
 const UAE_VAT_RATE = 0.05;
 const money = (fils: number) =>
-  new Intl.NumberFormat("en-AE", { style: "currency", currency: "AED" }).format(fils / 100);
+  `AED ${(fils / 100).toLocaleString("en-AE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 
 type DraftItem = { description: string; quantity: string; unitPrice: string };
 const blankItem = (): DraftItem => ({ description: "", quantity: "1", unitPrice: "" });
@@ -212,7 +216,10 @@ export function QuoteComposer({
                       />
                     </div>
                     <div className="flex-[1.4] space-y-1">
-                      <Label className="text-[11px] font-normal text-muted-foreground">Unit price (AED)</Label>
+                      <Label className="inline-flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
+                        Unit price
+                        <DirhamSymbol size={11} className="text-brand-mantis" />
+                      </Label>
                       <Input
                         value={item.unitPrice}
                         onChange={(event) => updateItem(index, { unitPrice: event.target.value })}
@@ -230,7 +237,10 @@ export function QuoteComposer({
           </div>
 
           <div className="space-y-1.5">
-            <Label>Discount (AED)</Label>
+            <Label className="inline-flex items-center gap-1.5">
+              Discount
+              <DirhamSymbol size={12} className="text-brand-mantis" />
+            </Label>
             <Input
               value={discount}
               onChange={(event) => setDiscount(event.target.value)}
@@ -245,21 +255,23 @@ export function QuoteComposer({
           <div className="space-y-2 rounded-xl bg-brand-forest/[0.04] px-4 py-3 text-sm">
             <div className="flex items-center justify-between text-brand-forest/70">
               <span>Subtotal</span>
-              <span className="font-semibold">{money(subtotal)}</span>
+              <MoneyText className="font-semibold">{money(subtotal)}</MoneyText>
             </div>
             {discountFils > 0 ? (
               <div className="flex items-center justify-between text-brand-forest/70">
                 <span>Discount</span>
-                <span className="font-semibold">−{money(discountFils)}</span>
+                <MoneyText className="font-semibold">{`−${money(discountFils)}`}</MoneyText>
               </div>
             ) : null}
             <div className="flex items-center justify-between text-brand-forest/70">
               <span>VAT (5%)</span>
-              <span className="font-semibold">{money(vat)}</span>
+              <MoneyText className="font-semibold">{money(vat)}</MoneyText>
             </div>
             <div className="flex items-center justify-between border-t border-brand-forest/10 pt-2">
               <span className="font-bold text-brand-forest">Total incl. VAT</span>
-              <span className="text-lg font-extrabold text-brand-forest">{money(total)}</span>
+              <MoneyText className="text-lg font-extrabold text-brand-forest">
+                {money(total)}
+              </MoneyText>
             </div>
             <p className="text-[11px] leading-4 text-muted-foreground">
               UAE VAT at 5% is mandatory on every quote.

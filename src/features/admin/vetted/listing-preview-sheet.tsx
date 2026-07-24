@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ImageIcon, MapPin, Tag } from "lucide-react";
 
+import { MoneyText } from "@/components/currency";
 import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
@@ -100,7 +101,9 @@ export function ListingPreviewSheet({
                   </Badge>
                 ) : null}
               </div>
-              {price ? <p className="text-sm font-bold text-brand-forest">{price}</p> : null}
+              {price ? (
+                <MoneyText className="text-sm font-bold text-brand-forest">{price}</MoneyText>
+              ) : null}
               {sellerName ? (
                 <p className="text-sm text-muted-foreground">Seller · {sellerName}</p>
               ) : null}

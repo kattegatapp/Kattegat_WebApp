@@ -18,6 +18,7 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import type { PublicPlanFeatures, PublicSellerTier } from "@/lib/api/plans";
 import { cn } from "@/lib/utils";
@@ -287,7 +288,7 @@ export function PlansPageContent({
 
                     <div className="mt-6 border-t border-brand-forest/8 pt-6">
                       <p className="text-3xl font-extrabold tracking-[-0.04em] text-brand-forest">
-                        {planPriceLabel(plan)}
+                        <MoneyText>{planPriceLabel(plan)}</MoneyText>
                         {suffix ? (
                           <span className="ml-1 text-sm font-bold text-brand-forest/45">{suffix}</span>
                         ) : null}

@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MoneyText } from "@/components/currency";
 import { formatBudgetRange } from "@/lib/admin/money";
 import { adminPath } from "@/lib/admin/paths";
 import {
@@ -513,7 +514,7 @@ export function RequirementsManagementPage() {
                         Budget
                       </span>
                       <div className="font-semibold text-brand-forest">
-                        {formatBudgetRange(item.budgetMin, item.budgetMax)}
+                        <MoneyText>{formatBudgetRange(item.budgetMin, item.budgetMax)}</MoneyText>
                       </div>
                     </div>
                   </div>

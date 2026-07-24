@@ -38,6 +38,7 @@ import {
   unpublishAccountListing,
 } from "@/lib/api/account-listings";
 import { formatAedRange, formatRelativeTime } from "@/lib/api/account-home";
+import { MoneyText } from "@/components/currency";
 import {
   fetchMyRequirements,
   fetchOpenRequirements,
@@ -133,9 +134,9 @@ function OpenRequirementCard({
         )}
 
         <div className="mt-auto flex items-end justify-between gap-2 border-t border-brand-forest/8 pt-2.5">
-          <p className="truncate text-[13px] font-extrabold text-brand-mantis">
+          <MoneyText className="truncate text-[13px] font-extrabold text-brand-mantis">
             {formatAedRange(item.budgetMin, item.budgetMax)}
-          </p>
+          </MoneyText>
           <p className="inline-flex max-w-[48%] items-center gap-1 text-[11px] font-medium text-brand-forest/55">
             <MapPin className="size-3 shrink-0" aria-hidden />
             <span className="truncate">{item.location}</span>
@@ -697,9 +698,9 @@ export function AccountMyRequirementsView({ dashboard }: { dashboard: AccountDas
                 {item.description}
               </p>
               <div className="mt-auto flex flex-wrap items-end justify-between gap-2 border-t border-brand-forest/8 pt-2.5">
-                <p className="text-[13px] font-extrabold text-brand-mantis">
+                <MoneyText className="text-[13px] font-extrabold text-brand-mantis">
                   {formatAedRange(item.budgetMin, item.budgetMax)}
-                </p>
+                </MoneyText>
                 <p className="truncate text-[11px] text-brand-forest/55">{item.location}</p>
               </div>
               {requirementEditable(item.status) ? (

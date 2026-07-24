@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import { fetchAdminPayments } from "@/lib/api/admin/billing";
 import { cn } from "@/lib/utils";
@@ -103,7 +104,7 @@ export function AdminPaymentsPage() {
                     <p className="text-xs text-muted-foreground">{payment.userEmail}</p>
                   </TableCell>
                   <TableCell>{payment.description}</TableCell>
-                  <TableCell className="font-semibold">{formatFilsAsAed(payment.amount)}</TableCell>
+                  <TableCell className="font-semibold"><MoneyText>{formatFilsAsAed(payment.amount)}</MoneyText></TableCell>
                   <TableCell>
                     <Badge className={cn("border font-bold capitalize", STATUS_STYLES[payment.status])}>
                       {payment.status}

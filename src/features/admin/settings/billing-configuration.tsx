@@ -11,7 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import {
 } from "@/features/admin/shared/glass";
 import { SettingsLoadError, SettingsLoading, SettingsSaveBar } from "@/features/admin/settings/form-shared";
 import { adminPath } from "@/lib/admin/paths";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   fetchBillingConfiguration,
@@ -130,7 +131,7 @@ export function BillingConfiguration() {
           />
           <StatusItem
             label="Pro pricing (DB)"
-            value={config.proPricingConfigured ? `${monthlyDisplay} / mo` : "Set in Pricing"}
+            value={config.proPricingConfigured ? <MoneyText>{`${monthlyDisplay} / mo`}</MoneyText> : "Set in Pricing"}
           />
         </div>
       </section>
@@ -165,11 +166,11 @@ export function BillingConfiguration() {
           <div className="grid gap-1 text-sm">
             <p>
               <span className="font-semibold text-zinc-900">Monthly:</span>{" "}
-              <span className="text-zinc-600">{monthlyDisplay}</span>
+              <MoneyText className="text-zinc-600">{monthlyDisplay}</MoneyText>
             </p>
             <p>
               <span className="font-semibold text-zinc-900">Annual:</span>{" "}
-              <span className="text-zinc-600">{annualDisplay}</span>
+              <MoneyText className="text-zinc-600">{annualDisplay}</MoneyText>
               {config.proPricingConfigured ? (
                 <span className="text-zinc-500"> (10 months paid, 2 free)</span>
               ) : null}
@@ -425,7 +426,7 @@ function Field({
   );
 }
 
-function StatusItem({ label, value }: { label: string; value: string }) {
+function StatusItem({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="ios-glass-chip rounded-2xl px-4 py-3">
       <p className="text-[11px] font-bold uppercase tracking-wider text-zinc-500">{label}</p>

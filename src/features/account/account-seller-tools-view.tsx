@@ -40,17 +40,16 @@ import {
   type SellerInvoice,
   type SellerQuote,
 } from "@/lib/api/account-seller-tools";
+import { MoneyText } from "@/components/currency";
 import { cn } from "@/lib/utils";
 
 type Tab = "quotes" | "invoices" | "clients";
 
 const money = (value: number) =>
-  new Intl.NumberFormat("en-AE", {
-    style: "currency",
-    currency: "AED",
+  `AED ${(value / 100).toLocaleString("en-AE", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value / 100);
+  })}`;
 
 const QUOTE_STATUS: Record<
   SellerQuote["status"],
@@ -211,7 +210,7 @@ function QuoteCard({
                 Quote total
               </p>
               <p className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest">
-                {money(item.total)}
+                <MoneyText>{money(item.total)}</MoneyText>
               </p>
             </div>
             <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-brand-forest/55 ring-1 ring-brand-forest/8">
@@ -221,13 +220,17 @@ function QuoteCard({
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-brand-forest/8 pt-3 text-xs">
             <div>
               <p className="text-muted-foreground">Subtotal</p>
-              <p className="mt-0.5 font-bold text-brand-forest">{money(item.subtotal)}</p>
+              <MoneyText className="mt-0.5 font-bold text-brand-forest">
+                {money(item.subtotal)}
+              </MoneyText>
             </div>
             <div className="text-right">
               <p className="text-muted-foreground">
                 VAT ({((item.vatRate || 0.05) * 100).toFixed(0)}%)
               </p>
-              <p className="mt-0.5 font-bold text-brand-forest">{money(item.vat)}</p>
+              <MoneyText className="mt-0.5 font-bold text-brand-forest">
+                {money(item.vat)}
+              </MoneyText>
             </div>
           </div>
         </div>
@@ -331,9 +334,9 @@ function InvoiceCard({
           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
             Amount due
           </p>
-          <p className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest">
+          <MoneyText className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest">
             {money(item.total)}
-          </p>
+          </MoneyText>
           <p className="mt-1 text-xs text-muted-foreground">
             {due ? `Due ${due}` : "Due on receipt"}
             {item.sentAt ? " · Sent" : " · Not sent yet"}
@@ -597,7 +600,7 @@ export function AccountSellerToolsView() {
             {stats.pipeline > 0 ? (
               <span className="inline-flex items-center gap-1.5">
                 <Sparkles className="size-3.5 text-brand-mantis" />
-                {money(stats.pipeline)} in open quotes
+                <MoneyText>{money(stats.pipeline)}</MoneyText> in open quotes
               </span>
             ) : null}
           </div>

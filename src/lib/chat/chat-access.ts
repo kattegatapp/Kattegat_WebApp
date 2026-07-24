@@ -11,6 +11,8 @@ export type AccountFeatureFlags = Pick<
   | "contactAgentEnabled"
   | "reviewsEnabled"
   | "freeAccessMode"
+  | "vipSupportEnabled"
+  | "vipSupportProOnly"
 >;
 
 /** Admin / Kattegat.Vetted threads — starter sellers may reply here (mobile parity). */
@@ -97,7 +99,7 @@ export function canAccessFeatureView(
   >,
 ) {
   if (view === "chat") return features.chatEnabled;
-  if (view === "referrals") return features.referralsEnabled;
+  if (view === "referrals" || view === "earnings") return features.referralsEnabled;
   if (view === "recommend") return features.recommendationsEnabled;
   return true;
 }
@@ -113,5 +115,7 @@ export function pickAccountFeatureFlags(
     contactAgentEnabled: features.contactAgentEnabled,
     reviewsEnabled: features.reviewsEnabled,
     freeAccessMode: features.freeAccessMode,
+    vipSupportEnabled: features.vipSupportEnabled !== false,
+    vipSupportProOnly: features.vipSupportProOnly === true,
   };
 }

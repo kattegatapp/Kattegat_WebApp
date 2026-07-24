@@ -54,7 +54,7 @@ function actionTone(action: string) {
   const value = action.toLowerCase();
   if (/test_email|email_configuration/.test(value)) return "border-sky-200 bg-sky-50 text-sky-800";
   if (/communication|notification|message/.test(value)) return "border-cyan-200 bg-cyan-50 text-cyan-800";
-  if (/login|logout|password|session/.test(value)) return "border-brand-blue/20 bg-[rgb(28_71_89/0.08)] text-brand-blue";
+  if (/login|logout|password|session/.test(value)) return "border-brand-blue/20 bg-[rgb(72_220_129/0.08)] text-brand-blue";
   if (/impersonate|view_as/.test(value)) return "border-orange-200 bg-orange-50 text-orange-900";
   if (/delete|remove|reject|ban|suspend|fail|deactivate/.test(value)) return "border-red-200 bg-red-50 text-red-800";
   if (/approve|accept|restore|reactivate|success/.test(value)) return "border-emerald-200 bg-emerald-50 text-emerald-800";

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
+import { MoneyText } from "@/components/currency";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -213,7 +214,7 @@ export function ContactAgentCaseWorkspace({
           </div>
           <p className="truncate text-xs text-muted-foreground">
             {request.listingTitle || "General enquiry"}
-            {priceLabel ? ` · ${priceLabel}` : ""}
+            {priceLabel ? <> · <MoneyText>{priceLabel}</MoneyText></> : null}
             {request.listingId ? " · Tap for listing" : ""}
           </p>
         </button>
@@ -310,7 +311,7 @@ export function ContactAgentCaseWorkspace({
                       <p className="mt-1 text-sm font-extrabold text-brand-forest">
                         {request.listingTitle || "General seller enquiry"}
                       </p>
-                      {priceLabel ? <p className="mt-0.5 text-xs font-semibold">{priceLabel}</p> : null}
+                      {priceLabel ? <MoneyText className="mt-0.5 text-xs font-semibold">{priceLabel}</MoneyText> : null}
                       {request.listingId ? (
                         <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                           /listing/{request.listingId}

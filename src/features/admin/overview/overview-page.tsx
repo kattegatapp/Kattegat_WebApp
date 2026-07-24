@@ -26,6 +26,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bar,
@@ -53,6 +54,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { adminPath } from "@/lib/admin/paths";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import { goToAdminLogin } from "@/lib/admin/session-client";
 import { ADMIN_ME_QUERY_OPTIONS } from "@/lib/admin/query";
@@ -332,7 +334,7 @@ export function AdminOverview() {
             <KpiTile
               label="Lifetime revenue"
               hint="Succeeded payments total"
-              value={formatFilsAsAed(kpiValue(kpis, "revenueTotalFils"))}
+              value={<MoneyText>{formatFilsAsAed(kpiValue(kpis, "revenueTotalFils"))}</MoneyText>}
               icon={CreditCard}
               href={adminPath("/payments")}
               index={2}
@@ -518,7 +520,7 @@ function QuickLinksDialog() {
 
 const CHART_COLORS = [
   "#6FDB42",
-  "#1C4759",
+  "#48DC81",
   "#48DC81",
   "#5B9FD4",
   "#F0B429",
@@ -947,7 +949,7 @@ function KpiTile({
 }: {
   label: string;
   hint: string;
-  value: string;
+  value: ReactNode;
   emphasize?: boolean;
   href?: string;
   icon: LucideIcon;

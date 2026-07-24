@@ -25,6 +25,7 @@ import {
   AccountViewWrap,
 } from "@/features/account/account-shared";
 import { AccountCardGridSkeleton } from "@/features/account/account-loading";
+import { CurrencyAmount } from "@/components/currency";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -81,10 +82,6 @@ function nextAction(item: AccountWorkItem): { label: string; action: BookingActi
     return { label: "Confirm completion", action: "confirm_completion" };
   }
   return null;
-}
-
-function formatMoney(fils: number) {
-  return `AED ${(fils / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatSchedule(value: string | null) {
@@ -227,7 +224,7 @@ function WorkCard({
       <div className="grid grid-cols-2 gap-3 text-xs">
         <div>
           <p className="font-semibold text-muted-foreground">Accepted quote</p>
-          <p className="mt-1 font-extrabold text-brand-forest">{formatMoney(item.contract.price)}</p>
+          <CurrencyAmount fils={item.contract.price} size="sm" showDecimals className="mt-1" />
         </div>
         <div>
           <p className="font-semibold text-muted-foreground">Schedule</p>
@@ -397,9 +394,10 @@ function ReceivedQuotesSection() {
                 {quote.status}
               </span>
             </div>
-            <p className="mt-3 text-2xl font-extrabold text-brand-forest">{formatMoney(quote.total)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Incl. VAT ({((quote.vatRate || 0.05) * 100).toFixed(0)}%): {formatMoney(quote.vat)}
+            <CurrencyAmount fils={quote.total} size="lg" showDecimals className="mt-3" />
+            <p className="mt-1 inline-flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              Incl. VAT ({((quote.vatRate || 0.05) * 100).toFixed(0)}%):{" "}
+              <CurrencyAmount fils={quote.vat} size="sm" showDecimals />
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Button
@@ -505,9 +503,9 @@ function ReceivedInvoicesSection() {
                 {invoice.status}
               </span>
             </div>
-            <p className="mt-3 text-2xl font-extrabold text-brand-forest">{formatMoney(invoice.total)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Incl. VAT (5%): {formatMoney(invoice.vat)}
+            <CurrencyAmount fils={invoice.total} size="lg" showDecimals className="mt-3" />
+            <p className="mt-1 inline-flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              Incl. VAT (5%): <CurrencyAmount fils={invoice.vat} size="sm" showDecimals />
               {invoice.dueDate ? ` · Due ${formatSchedule(invoice.dueDate)}` : " · Due on receipt"}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
@@ -522,7 +520,9 @@ function ReceivedInvoicesSection() {
                 ) : (
                   <CreditCard className="size-3.5" aria-hidden />
                 )}
-                Pay {formatMoney(invoice.total)} now
+                <span className="inline-flex items-center gap-1">
+                  Pay <CurrencyAmount fils={invoice.total} size="sm" showDecimals /> now
+                </span>
               </Button>
               <a
                 className={buttonVariants({ size: "sm", variant: "outline" })}

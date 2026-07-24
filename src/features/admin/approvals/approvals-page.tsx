@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MoneyText } from "@/components/currency";
 import { formatBudgetRange, formatFilsAsAed } from "@/lib/admin/money";
 import { adminPath } from "@/lib/admin/paths";
 import { goToAdminLogin } from "@/lib/admin/session-client";
@@ -96,7 +97,11 @@ function formatBudget(min: number | null, max: number | null) {
   return formatBudgetRange(min, max);
 }
 
-function formatListingPricing(pricing: Record<string, unknown> | null | undefined) {
+function formatListingPricing(
+  pricing: Record<string, unknown> | null | undefined,
+  displayPrice?: string | null,
+) {
+  if (displayPrice) return displayPrice;
   if (!pricing || typeof pricing !== "object") return "Not set";
   const amount = pricing.amount;
   const unit = typeof pricing.unit === "string" && pricing.unit.trim() ? pricing.unit.trim() : null;
@@ -627,7 +632,7 @@ function QueueRow({
 
 type DetailField = {
   label: string;
-  value: string;
+  value: ReactNode;
   icon?: typeof MapPin;
   capitalize?: boolean;
 };
@@ -691,7 +696,7 @@ function ListingDetails({
           { label: "Seller", value: item.sellerDisplayName ?? "Unknown seller" },
           {
             label: "Pricing",
-            value: formatListingPricing(item.pricing),
+            value: <MoneyText>{formatListingPricing(item.pricing, item.displayPrice)}</MoneyText>,
           },
           {
             label: "Location",
@@ -732,7 +737,7 @@ function RequirementDetails({
             value: item.jobType.replaceAll("_", " "),
             capitalize: true,
           },
-          { label: "Budget", value: formatBudget(item.budgetMin, item.budgetMax) },
+          { label: "Budget", value: <MoneyText>{formatBudget(item.budgetMin, item.budgetMax)}</MoneyText> },
           {
             label: "Location",
             value: item.location?.trim() ? item.location : "Not set",

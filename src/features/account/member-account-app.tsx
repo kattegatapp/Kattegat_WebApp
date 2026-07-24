@@ -26,6 +26,7 @@ import {
 } from "@/features/account/account-library-views";
 import { AccountRecommendView } from "@/features/account/account-recommend-view";
 import { AccountReferralsView } from "@/features/account/account-referrals-view";
+import { AccountEarningsView } from "@/features/account/account-earnings-view";
 import type { AccountIdentity, AccountViewId } from "@/features/account/types";
 import type { AccountConversation } from "@/lib/api/account-chat";
 import type { AccountHomeFeed } from "@/lib/api/account-home";
@@ -50,6 +51,7 @@ import {
   canAccessFeatureView,
   type AccountFeatureFlags,
 } from "@/lib/chat/chat-access";
+import type { VipSupportChannels } from "@/lib/vip-support";
 import { cn } from "@/lib/utils";
 
 type MemberAccountAppProps = {
@@ -57,6 +59,8 @@ type MemberAccountAppProps = {
   homeFeed: AccountHomeFeed;
   notifications: AccountNotificationsState;
   features: AccountFeatureFlags;
+  /** WhatsApp + email channels — null when VIP Support is off or unconfigured. */
+  vipSupportChannels?: VipSupportChannels | null;
   initialView?: AccountViewId;
   initialConversationId?: string;
   initialBrowseQuery?: string;
@@ -108,6 +112,7 @@ export function MemberAccountApp({
   homeFeed,
   notifications,
   features,
+  vipSupportChannels = null,
   initialView = "home",
   initialConversationId,
   initialBrowseQuery = "",
@@ -351,6 +356,7 @@ export function MemberAccountApp({
         notifications={notifications}
         chatUnreadCount={features.chatEnabled ? chatUnreadCount : 0}
         features={features}
+        vipSupportChannels={vipSupportChannels}
         onIdentityChange={handleIdentityChange}
         onSignOut={() => logout.mutate()}
         signingOut={logout.isPending}
@@ -415,8 +421,25 @@ export function MemberAccountApp({
           {displayView === "verification" && canAccessMemberView(displayView, identity) ? (
             <AccountVerificationView />
           ) : null}
+          {displayView === "earnings" && features.referralsEnabled ? (
+            <AccountEarningsView
+              dashboard={dashboard}
+              onOpenReferrals={() => handleViewChange("referrals")}
+              onOpenRecommend={
+                features.recommendationsEnabled ? () => handleViewChange("recommend") : undefined
+              }
+              onOpenSellerTools={
+                canAccessMemberView("seller-tools", identity)
+                  ? () => handleViewChange("seller-tools")
+                  : undefined
+              }
+            />
+          ) : null}
           {displayView === "referrals" && features.referralsEnabled ? (
-            <AccountReferralsView dashboard={dashboard} />
+            <AccountReferralsView
+              dashboard={dashboard}
+              onOpenEarnings={() => handleViewChange("earnings")}
+            />
           ) : null}
           {displayView === "recommend" && features.recommendationsEnabled ? (
             <AccountRecommendView />
@@ -433,6 +456,9 @@ export function MemberAccountApp({
               dashboard={dashboard}
               identity={identity}
               accessNotice={accessNotice}
+              onOpenEarnings={
+                features.referralsEnabled ? () => handleViewChange("earnings") : undefined
+              }
             />
           ) : null}
           {displayView === "membership" && canAccessMemberView(displayView, identity) ? (

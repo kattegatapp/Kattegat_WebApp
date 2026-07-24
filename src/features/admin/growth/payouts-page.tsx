@@ -25,6 +25,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatAdminAccessError } from "@/lib/admin/capabilities";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import { fetchPayouts, processPayout, rejectPayout, type PayoutStatus } from "@/lib/api/admin";
 import { cn } from "@/lib/utils";
@@ -133,7 +134,7 @@ export function PayoutsPage() {
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       <CardTitle className="text-lg font-extrabold text-zinc-900">
-                        {formatFilsAsAed(request.amount)}
+                        <MoneyText>{formatFilsAsAed(request.amount)}</MoneyText>
                       </CardTitle>
                       <CardDescription>
                         {request.memberName || request.memberEmail || "Unknown member"} · Requested {date(request.requestedAt)}

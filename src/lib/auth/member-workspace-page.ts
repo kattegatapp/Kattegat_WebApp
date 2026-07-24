@@ -10,6 +10,12 @@ import {
   profileSetupPath,
   resolveProfileSetupStep,
 } from "@/lib/auth/profile-completion";
+import {
+  canAccessVipSupport,
+  hasVipSupportChannels,
+  resolveVipSupportChannels,
+  type VipSupportChannels,
+} from "@/lib/vip-support";
 
 /** Shared member workspace gate — login + profile setup, then load shell data. */
 export async function loadMemberWorkspaceOrRedirect(nextPath: string) {
@@ -30,11 +36,29 @@ export async function loadMemberWorkspaceOrRedirect(nextPath: string) {
     getPublicAppSettings(),
   ]);
 
+  const features = pickAccountFeatureFlags(settings.features);
+  const allowed = canAccessVipSupport({
+    vipSupportEnabled: features.vipSupportEnabled,
+    vipSupportProOnly: features.vipSupportProOnly,
+    freeAccessMode: features.freeAccessMode,
+    sellerTier: dashboard.sellerProfile?.tier ?? null,
+  });
+  const channels = allowed
+    ? resolveVipSupportChannels({
+        whatsappUrl: settings.links.supportWhatsappUrl,
+        email: settings.brand.supportEmail,
+      })
+    : null;
+  const vipSupportChannels: VipSupportChannels | null = hasVipSupportChannels(channels)
+    ? channels
+    : null;
+
   return {
     dashboard,
     impersonation,
     homeFeed,
     notifications,
-    features: pickAccountFeatureFlags(settings.features),
+    features,
+    vipSupportChannels,
   };
 }

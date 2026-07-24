@@ -50,6 +50,8 @@ export type AccountListing = {
   description: string | null;
   location: string | null;
   pricing?: { amount?: number; unit?: string } | Record<string, unknown>;
+  pricingBlocks?: import("@/lib/pricing-blocks").PricingBlock[];
+  displayPrice?: string | null;
   schemaFields?: Record<string, unknown>;
   isConfidential?: boolean;
   status: string;

@@ -13,6 +13,7 @@ export type AccountViewId =
   | "notifications"
   | "dashboard"
   | "membership"
+  | "earnings"
   | "referrals"
   | "recommend"
   | "verification";

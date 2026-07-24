@@ -20,6 +20,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { fetchMarketplaceListings } from "@/lib/api/account-marketplace";
 import { getCatalogCategories, type ListingSearchSort } from "@/lib/api/marketing";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
+import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
+import { MoneyText } from "@/components/currency";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: Array<{ value: ListingSearchSort; label: string }> = [
@@ -238,6 +240,9 @@ export function AccountBrowseListingsView({
                       <h3 className="mt-1.5 line-clamp-2 text-[14px] font-extrabold leading-snug text-brand-forest transition group-hover:text-brand-forest/85">
                         {item.title}
                       </h3>
+                      <MoneyText className="mt-1 text-[13px] font-extrabold text-brand-forest">
+                        {formatListingDisplayPrice(item)}
+                      </MoneyText>
                       <p className="mt-1 truncate text-[12px] text-brand-forest/55">
                         {item.sellerName || "Kattegat seller"}
                       </p>

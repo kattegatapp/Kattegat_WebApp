@@ -11,10 +11,11 @@ import { loadAccountDashboard } from "@/lib/api/account";
 import {
   getCatalogCategories,
   getPublicListing,
-  getPublicListingMedia,
+  getPublicListingMediaItems,
   getPublicSeller,
   searchListings,
 } from "@/lib/api/marketing";
+import { getListingFieldSchema } from "@/lib/api/catalog";
 import { DEFAULT_PUBLIC_PLANS, getPublicPlanFeatures } from "@/lib/api/plans";
 import { getPublicAppSettings } from "@/lib/api/settings";
 import {
@@ -30,6 +31,18 @@ import {
   listingPageTitle,
   locationLabel,
 } from "@/lib/seo";
+import {
+  formatListingDisplayPrice,
+  formatPricingBlockSnapshot,
+} from "@/lib/pricing-blocks";
+import { MoneyText } from "@/components/currency";
+import {
+  parseVimeoId,
+  parseYouTubeId,
+  schemaFieldLinkUrl,
+  vimeoEmbedUrl,
+  youTubeEmbedUrl,
+} from "@/lib/utils/video-link";
 
 type PageProps = {
   params: Promise<{ listingId: string }>;
@@ -94,10 +107,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ListingPage({ params }: PageProps) {
   const { listingId: listingKey } = await params;
   const listingId = decodePublicRouteParam(listingKey);
-  const [settings, listing, media, categories, plans, dashboard] = await Promise.all([
+  const [settings, listing, mediaItems, categories, plans, dashboard] = await Promise.all([
     getPublicAppSettings(),
     getPublicListing(listingId),
-    getPublicListingMedia(listingId),
+    getPublicListingMediaItems(listingId),
     getCatalogCategories(),
     getPublicPlanFeatures(),
     loadAccountDashboard(),
@@ -110,6 +123,7 @@ export default async function ListingPage({ params }: PageProps) {
   }
 
   const publicPath = listingPublicPath({ id: listing.id, title: listing.title });
+  const fieldSchema = await getListingFieldSchema(listing.categoryId);
 
   const [seller, origin, related] = await Promise.all([
     getPublicSeller(listing.sellerId),
@@ -122,7 +136,9 @@ export default async function ListingPage({ params }: PageProps) {
   ]);
 
   const category = categories.find((item) => item.id === listing.categoryId);
-  const cover = media[0] || seller?.avatarUrl || null;
+  const photoUrls = mediaItems.filter((item) => item.type === "photo").map((item) => item.url);
+  const videoLinks = mediaItems.filter((item) => item.type === "video_link");
+  const cover = photoUrls[0] || seller?.avatarUrl || null;
   const sellerName = seller?.displayName || "Kattegat seller";
   const sellerPath = seller
     ? sellerPublicPath({
@@ -146,6 +162,45 @@ export default async function ListingPage({ params }: PageProps) {
         .map((item) => [item.sellerId, item]),
     ).values(),
   ].slice(0, 4);
+
+  const fieldDefByKey = new Map(fieldSchema.fields.map((field) => [field.key, field]));
+  const detailEntries = Object.entries(listing.schemaFields)
+    .map(([key, value]) => {
+      const definition = fieldDefByKey.get(key);
+      const label = definition?.label ?? key.replaceAll("_", " ");
+      const text =
+        typeof value === "boolean"
+          ? value
+            ? "Yes"
+            : "No"
+          : Array.isArray(value)
+            ? value.map(String).join(", ")
+            : value == null
+              ? ""
+              : String(value);
+      const trimmed = text.trim();
+      if (!trimmed) return null;
+      // Legacy free-text rate notes — superseded by Pricing Blocks (per_gig / residency).
+      if (key === "rate_structure") return null;
+      const href = schemaFieldLinkUrl({
+        key,
+        label,
+        type: definition?.type,
+        value: trimmed,
+      });
+      return { key, label, value: trimmed, href };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+  const schemaVideoLinks = detailEntries
+    .filter((entry) => entry.href)
+    .map((entry) => ({ id: entry.key, url: entry.href!, label: entry.label }));
+  const allVideos = [
+    ...videoLinks.map((item) => ({ id: item.id, url: item.url, label: "Video" })),
+    ...schemaVideoLinks.filter(
+      (item) => !videoLinks.some((video) => video.url === item.url),
+    ),
+  ];
 
   const sellerTier = seller?.tier ?? "starter";
   const tierFeatures =
@@ -216,6 +271,9 @@ export default async function ListingPage({ params }: PageProps) {
         <p className="mt-3 text-base font-semibold text-brand-forest/55">
           {category?.name || "Service"} in {place} by {sellerName}
         </p>
+        <MoneyText className="mt-4 inline-flex rounded-full bg-brand-mantis/15 px-3.5 py-1.5 text-sm font-extrabold text-brand-forest">
+          {formatListingDisplayPrice(listing)}
+        </MoneyText>
 
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="overflow-hidden rounded-[1.75rem] bg-[#EEF2F0]">
@@ -252,6 +310,33 @@ export default async function ListingPage({ params }: PageProps) {
                 {listing.description ||
                   `${listing.title} is a live ${category?.name?.toLowerCase() || "marketplace"} listing in ${place} on Kattegat. Message ${sellerName} to book directly — with 0% booking commission.`}
               </p>
+
+              {listing.pricingBlocks.length > 0 ? (
+                <div className="mt-5 rounded-2xl border border-brand-forest/10 bg-brand-forest/[0.03] p-4">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-brand-forest/55">
+                    Service snapshot · Pricing
+                  </p>
+                  <ul className="mt-3 space-y-2.5">
+                    {listing.pricingBlocks
+                      .slice()
+                      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                      .map((block, index) => {
+                        const row = formatPricingBlockSnapshot(block);
+                        return (
+                          <li
+                            key={`${block.modelType}-${index}`}
+                            className="flex items-start justify-between gap-3 text-sm"
+                          >
+                            <span className="font-semibold text-brand-forest/70">{row.label}</span>
+                            <MoneyText className="text-right font-extrabold text-brand-forest">
+                              {row.value}
+                            </MoneyText>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                </div>
+              ) : null}
 
               <div className="mt-6 space-y-3">
                 <ListingContactPanel
@@ -299,6 +384,89 @@ export default async function ListingPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {detailEntries.length > 0 ? (
+          <section className="mt-12">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue">
+              Details
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.03em]">
+              Useful things to know
+            </h2>
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+              {detailEntries.map((entry) => (
+                <li
+                  key={entry.key}
+                  className="rounded-2xl border border-brand-forest/10 bg-white px-4 py-3.5"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-forest/45">
+                    {entry.label}
+                  </p>
+                  {entry.href ? (
+                    <a
+                      href={entry.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-1 inline-flex text-sm font-extrabold text-brand-mantis underline-offset-2 hover:underline"
+                    >
+                      Open link
+                    </a>
+                  ) : (
+                    <p className="mt-1 text-sm font-semibold text-brand-forest">{entry.value}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {allVideos.length > 0 ? (
+          <section className="mt-12">
+            <p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue">
+              Video
+            </p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-[-0.03em]">
+              Preview the service
+            </h2>
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {allVideos.map((item) => {
+                const youTubeId = parseYouTubeId(item.url);
+                const vimeoId = parseVimeoId(item.url);
+                const embedSrc = youTubeId
+                  ? `${youTubeEmbedUrl(youTubeId)}?rel=0&modestbranding=1`
+                  : vimeoId
+                    ? vimeoEmbedUrl(vimeoId)
+                    : null;
+                return (
+                  <div
+                    key={item.id}
+                    className="overflow-hidden rounded-2xl border border-brand-forest/10 bg-brand-forest"
+                  >
+                    {embedSrc ? (
+                      <iframe
+                        src={embedSrc}
+                        title={item.label}
+                        className="aspect-video w-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        referrerPolicy="strict-origin-when-cross-origin"
+                      />
+                    ) : (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex aspect-video items-center justify-center px-4 text-center text-sm font-extrabold text-white underline-offset-2 hover:underline"
+                      >
+                        Open {item.label.toLowerCase()}
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : null}
 
         {relatedListings.length > 0 ? (
           <section className="mt-14">

@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/select";
 import { adminPath } from "@/lib/admin/paths";
 import { formatAdminAccessError } from "@/lib/admin/capabilities";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   fetchFoundingApplications,
@@ -333,9 +334,15 @@ export function RecommendedLeadsPage() {
                     )}
                   >
                     <CircleCheck className="size-5" />
-                    {lead.status === "completed"
-                      ? `This referral has been completed. ${lead.rewardAmountFils ? `${formatFilsAsAed(lead.rewardAmountFils)} was credited to ${lead.recommenderName}'s wallet.` : "No further action is required."}`
-                      : "This lead was closed because the client is not proceeding."}
+                    {lead.status === "completed" ? (
+                      lead.rewardAmountFils ? (
+                        <MoneyText>{`This referral has been completed. ${formatFilsAsAed(lead.rewardAmountFils)} was credited to ${lead.recommenderName}'s wallet.`}</MoneyText>
+                      ) : (
+                        "This referral has been completed. No further action is required."
+                      )
+                    ) : (
+                      "This lead was closed because the client is not proceeding."
+                    )}
                   </div>
                 ) : (
                   <div className="rounded-2xl border-2 border-brand-forest/10 bg-brand-forest/[0.025] p-4">
@@ -447,7 +454,7 @@ export function RecommendedLeadsPage() {
             min="0"
             step="0.01"
             inputMode="decimal"
-            placeholder="AED amount"
+            placeholder="Amount"
             value={rewardAmount}
             onChange={(event) => setRewardAmount(event.target.value)}
           />

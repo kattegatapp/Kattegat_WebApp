@@ -6,6 +6,7 @@ import {
   FileCheck2,
   Gift,
   Grid2x2,
+  Headphones,
   Heart,
   Home,
   LogOut,
@@ -16,6 +17,7 @@ import {
   ReceiptText,
   Search,
   ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,11 +44,13 @@ import { AccountNotificationsMenu } from "@/features/account/account-notificatio
 import { AccountProfileMenu } from "@/features/account/account-profile-menu";
 import { ListingEditorDialog } from "@/features/account/listing-editor-dialog";
 import { RequirementEditorDialog } from "@/features/account/requirement-editor-dialog";
+import { VipSupportDialog } from "@/features/account/vip-support-dialog";
 import type { AccountIdentity, AccountViewId } from "@/features/account/types";
 import { HeaderProgressLine } from "@/components/header-progress-line";
 import type { AccountDashboard } from "@/lib/api/account";
 import type { AccountNotificationsState } from "@/lib/api/account-notifications";
 import { canAccessFeatureView, type AccountFeatureFlags } from "@/lib/chat/chat-access";
+import type { VipSupportChannels } from "@/lib/vip-support";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -77,6 +81,7 @@ const MARKETPLACE_NAV: NavItem[] = [
 ];
 
 const GROWTH_NAV: NavItem[] = [
+  { id: "earnings", label: "Earnings & withdraw", icon: Wallet },
   { id: "referrals", label: "Referrals", icon: Gift },
   { id: "recommend", label: "Recommend & earn", icon: Megaphone },
 ];
@@ -95,6 +100,8 @@ type MemberAccountShellProps = {
   notifications: AccountNotificationsState;
   chatUnreadCount?: number;
   features: AccountFeatureFlags;
+  /** WhatsApp + email channels for the VIP Support chooser. */
+  vipSupportChannels?: VipSupportChannels | null;
   onIdentityChange: (identity: AccountIdentity) => void;
   onSignOut: () => void;
   signingOut?: boolean;
@@ -115,6 +122,7 @@ export function MemberAccountShell({
   notifications,
   chatUnreadCount = 0,
   features,
+  vipSupportChannels = null,
   onIdentityChange,
   onSignOut,
   signingOut,
@@ -125,6 +133,7 @@ export function MemberAccountShell({
   children,
 }: MemberAccountShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [vipSupportOpen, setVipSupportOpen] = useState(false);
   const [listingEditorOpenInternal, setListingEditorOpenInternal] = useState(false);
   const [requirementEditorOpenInternal, setRequirementEditorOpenInternal] = useState(false);
   const listingEditorOpen = listingEditorOpenProp ?? listingEditorOpenInternal;
@@ -254,6 +263,19 @@ export function MemberAccountShell({
             onViewAll={() => selectView("notifications")}
           />
 
+          {vipSupportChannels ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 shrink-0 gap-1.5 rounded-lg border-brand-mantis/35 bg-brand-mantis/10 px-2.5 text-brand-forest hover:bg-brand-mantis/16 sm:h-10 sm:px-3"
+              aria-label="VIP Support"
+              onClick={() => setVipSupportOpen(true)}
+            >
+              <Headphones className="size-4 text-brand-mantis" />
+              <span className="hidden text-[13px] font-bold sm:inline">VIP Support</span>
+            </Button>
+          ) : null}
+
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
@@ -328,9 +350,18 @@ export function MemberAccountShell({
             onOpenRecommend={
               features.recommendationsEnabled ? () => selectView("recommend") : undefined
             }
+            onOpenVipSupport={vipSupportChannels ? () => setVipSupportOpen(true) : undefined}
             onSignOut={onSignOut}
           />
         </header>
+
+        {vipSupportChannels ? (
+          <VipSupportDialog
+            open={vipSupportOpen}
+            onOpenChange={setVipSupportOpen}
+            channels={vipSupportChannels}
+          />
+        ) : null}
 
         <div
           ref={mainScrollRef}

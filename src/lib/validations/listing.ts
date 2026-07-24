@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { ListingFieldDefinition } from "@/lib/api/catalog";
+import { PRICING_MODEL_TYPES, type PricingBlock } from "@/lib/pricing-blocks";
 import {
   containsDangerousMarkup,
   normalizeText,
@@ -11,18 +12,16 @@ import {
 
 const uuid = z.string().uuid("Select a valid option");
 
-function optionalAedToFils() {
-  return z
-    .string()
-    .optional()
-    .transform((value) => (value ?? "").trim())
-    .refine((value) => !value || /^\d+(\.\d{1,2})?$/.test(value), {
-      message: "Enter a valid price in AED",
-    })
-    .transform((value) => (value ? Math.round(Number(value) * 100) : undefined));
-}
-
 const schemaFieldsValueSchema = z.record(z.string(), z.unknown()).optional();
+
+const pricingBlockBodySchema = z.object({
+  modelType: z.enum(PRICING_MODEL_TYPES),
+  amountAed: z.number().int().positive().nullable().optional(),
+  unitLabel: z.string().max(80).nullable().optional(),
+  isFromPrice: z.boolean().optional(),
+  sellerSharePct: z.number().int().min(1).max(99).nullable().optional(),
+  sortOrder: z.number().int().min(0).max(100).optional(),
+});
 
 export const createListingFormSchema = z.object({
   categoryId: uuid,
@@ -30,7 +29,6 @@ export const createListingFormSchema = z.object({
   title: safeSingleLineField("Title", 120).pipe(z.string().min(3, "Title must be at least 3 characters")),
   description: safeOptionalMessageField(5000),
   location: safeOptionalSingleLineField(120),
-  priceAed: optionalAedToFils(),
   isConfidential: z.boolean().optional(),
 });
 
@@ -42,7 +40,7 @@ export type CreateListingPayload = {
   title: string;
   description?: string;
   location?: string;
-  pricing?: { amount: number };
+  pricingBlocks?: PricingBlock[];
   schemaFields?: Record<string, unknown>;
   isConfidential?: boolean;
 };
@@ -50,6 +48,7 @@ export type CreateListingPayload = {
 export function toCreateListingPayload(
   values: CreateListingParsed,
   schemaFields: Record<string, unknown>,
+  pricingBlocks: PricingBlock[],
 ): CreateListingPayload {
   return {
     categoryId: values.categoryId,
@@ -57,7 +56,7 @@ export function toCreateListingPayload(
     title: values.title,
     description: values.description,
     location: values.location,
-    pricing: values.priceAed != null ? { amount: values.priceAed } : undefined,
+    pricingBlocks,
     schemaFields: Object.keys(schemaFields).length ? schemaFields : undefined,
     isConfidential: values.isConfidential || undefined,
   };
@@ -67,7 +66,6 @@ export const updateListingFormSchema = z.object({
   title: safeSingleLineField("Title", 120).pipe(z.string().min(3, "Title must be at least 3 characters")),
   description: safeOptionalMessageField(5000),
   location: safeOptionalSingleLineField(120),
-  priceAed: optionalAedToFils(),
   isConfidential: z.boolean().optional(),
 });
 
@@ -77,7 +75,7 @@ export type UpdateListingPayload = {
   title?: string;
   description?: string;
   location?: string;
-  pricing?: { amount: number };
+  pricingBlocks?: PricingBlock[];
   schemaFields?: Record<string, unknown>;
   isConfidential?: boolean;
 };
@@ -86,31 +84,21 @@ export type ListingDiffSource = {
   title: string;
   description?: string | null;
   location?: string | null;
-  pricing?: { amount?: number; unit?: string } | Record<string, unknown> | null;
+  pricingBlocks?: PricingBlock[] | null;
   schemaFields?: Record<string, unknown> | null;
   isConfidential?: boolean;
 };
-
-function pricingAmount(pricing: ListingDiffSource["pricing"]): number | undefined {
-  if (!pricing || typeof pricing !== "object") return undefined;
-  const amount = "amount" in pricing ? pricing.amount : undefined;
-  return typeof amount === "number" && Number.isFinite(amount) ? amount : undefined;
-}
 
 /** Only changed keys — avoids accidental re-review on live listings (backend CONTENT_FIELDS rule). */
 export function buildUpdateListingPayload(
   values: UpdateListingParsed,
   existing: ListingDiffSource,
   schemaFields: Record<string, unknown>,
+  pricingBlocks: PricingBlock[],
 ): UpdateListingPayload {
   const payload: UpdateListingPayload = {};
   const trimmedDescription = values.description ?? "";
   const trimmedLocation = values.location ?? "";
-  const newPricing = values.priceAed != null ? { amount: values.priceAed } : undefined;
-  const existingPricingJson = JSON.stringify(
-    pricingAmount(existing.pricing) != null ? { amount: pricingAmount(existing.pricing) } : {},
-  );
-  const newPricingJson = JSON.stringify(newPricing ?? {});
 
   if (values.title !== existing.title) payload.title = values.title;
   if (trimmedDescription !== (existing.description ?? "")) {
@@ -119,8 +107,8 @@ export function buildUpdateListingPayload(
   if (trimmedLocation !== (existing.location ?? "")) {
     payload.location = trimmedLocation || undefined;
   }
-  if (newPricingJson !== existingPricingJson) {
-    payload.pricing = newPricing;
+  if (JSON.stringify(pricingBlocks) !== JSON.stringify(existing.pricingBlocks ?? [])) {
+    payload.pricingBlocks = pricingBlocks;
   }
   if (JSON.stringify(schemaFields) !== JSON.stringify(existing.schemaFields ?? {})) {
     payload.schemaFields = schemaFields;
@@ -169,6 +157,7 @@ export const createListingBodySchema = z.object({
     .optional()
     .transform((value) => (value ? normalizeText(value) : undefined)),
   pricing: z.object({ amount: z.number().int().nonnegative() }).partial().optional(),
+  pricingBlocks: z.array(pricingBlockBodySchema).max(12).optional(),
   schemaFields: schemaFieldsValueSchema,
   isConfidential: z.boolean().optional(),
 });

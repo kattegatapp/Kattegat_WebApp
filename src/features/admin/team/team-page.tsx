@@ -102,7 +102,7 @@ const ROLE_FRIENDLY: Record<
   moderator: {
     title: "Reviewer",
     blurb: "Reviews content and trust & safety items.",
-    tone: "bg-[rgb(28_71_89/0.12)] text-brand-blue",
+    tone: "bg-[rgb(72_220_129/0.12)] text-brand-blue",
   },
 };
 

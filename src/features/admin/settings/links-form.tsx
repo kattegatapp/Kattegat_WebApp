@@ -27,7 +27,7 @@ const LINK_GROUPS = [
     keys: [
       { key: "termsUrl" as const, label: "Terms of use", required: false },
       { key: "privacyUrl" as const, label: "Privacy policy", required: false },
-      { key: "supportWhatsappUrl" as const, label: "WhatsApp support", required: false },
+      { key: "supportWhatsappUrl" as const, label: "VIP Support WhatsApp", required: false },
     ],
   },
   {

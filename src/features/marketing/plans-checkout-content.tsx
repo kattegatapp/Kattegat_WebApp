@@ -20,6 +20,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   ANNUAL_FREE_MONTHS,
@@ -194,7 +195,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                 </p>
                 <div className="mt-2 flex flex-wrap items-end gap-x-3 gap-y-1">
                   <p className="text-3xl font-extrabold tracking-[-0.04em] text-brand-forest">
-                    {checkoutTotal}
+                    <MoneyText>{checkoutTotal}</MoneyText>
                     <span className="ml-1 text-sm font-bold text-brand-forest/45">
                       {isAnnual ? "/ year" : "/ month"}
                     </span>
@@ -207,13 +208,13 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                 </div>
                 {isAnnual && quote ? (
                   <p className="mt-2 text-sm text-brand-forest/55">
-                    <span className="line-through">{annualListPrice}/year</span>
+                    <MoneyText className="line-through">{`${annualListPrice}/year`}</MoneyText>
                     <span className="mx-2 text-brand-forest/25">·</span>
-                    Works out to {effectiveMonthly}/month
+                    Works out to <MoneyText>{`${effectiveMonthly}/month`}</MoneyText>
                   </p>
                 ) : quote ? (
-                  <p className="mt-2 text-sm text-brand-forest/55">
-                    Or {annualPrice}/year and save {quote.savingsPercent}% ({ANNUAL_FREE_MONTHS}{" "}
+                  <p className="mt-2 inline-flex flex-wrap items-center gap-1 text-sm text-brand-forest/55">
+                    Or <MoneyText>{`${annualPrice}/year`}</MoneyText> and save {quote.savingsPercent}% ({ANNUAL_FREE_MONTHS}{" "}
                     months free)
                   </p>
                 ) : null}
@@ -253,8 +254,8 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                         </span>
                       ) : null}
                       <p className="text-sm font-extrabold text-brand-forest">{label}</p>
-                      <p className="mt-1 text-sm font-bold text-brand-forest">{priceLine}</p>
-                      <p className="mt-1 text-xs font-semibold text-brand-forest/55">{detail}</p>
+                      <MoneyText className="mt-1 text-sm font-bold text-brand-forest">{priceLine}</MoneyText>
+                      <MoneyText className="mt-1 text-xs font-semibold text-brand-forest/55">{detail}</MoneyText>
                     </button>
                   );
                 })}
@@ -304,11 +305,11 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                     <span className="font-semibold text-brand-forest">
                       Kattegat Pro · {billingCycleLabel(billingCycle)}
                     </span>
-                    <span className="shrink-0 font-bold text-brand-forest">{checkoutTotal}</span>
+                    <MoneyText className="shrink-0 font-bold text-brand-forest">{checkoutTotal}</MoneyText>
                   </div>
                   {isAnnual ? (
                     <p className="text-xs text-brand-forest/55">
-                      Billed once per year. You save {formatFilsAsAed(quote.savingsFils)} compared to
+                      Billed once per year. You save <MoneyText>{formatFilsAsAed(quote.savingsFils)}</MoneyText> compared to
                       paying monthly.
                     </p>
                   ) : (
@@ -318,7 +319,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                 <div className="mt-4 flex items-center justify-between border-t border-brand-forest/8 pt-4">
                   <span className="text-sm font-extrabold text-brand-forest">Total due today</span>
                   <span className="text-lg font-extrabold text-brand-forest">
-                    {checkoutTotal}
+                    <MoneyText>{checkoutTotal}</MoneyText>
                     <span className="ml-1 text-xs font-bold text-brand-forest/45">
                       {isAnnual ? "/ year" : "/ month"}
                     </span>
@@ -409,7 +410,7 @@ export function PlansCheckoutContent({ plan, paymentsEnabled }: PlansCheckoutCon
                     </>
                   ) : (
                     <>
-                      Pay {checkoutTotal}
+                      Pay <MoneyText>{checkoutTotal}</MoneyText>
                       {isAnnual ? " / year" : " / month"}
                       <CreditCard className="size-4" />
                     </>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { MoneyText } from "@/components/currency";
+
 export const metadata: Metadata = { title: "Referral Competition Terms | Kattegat", description: "Official Kattegat Referral Competition Terms and Conditions v1.0." };
 
 const sections = [
@@ -19,5 +21,5 @@ const sections = [
 ] as const;
 
 export default function CompetitionTermsPage() {
-  return <main className="min-h-screen bg-[#F7F9F8] px-5 py-12 text-brand-forest sm:px-8"><article className="mx-auto max-w-4xl rounded-[2rem] border border-border bg-white p-7 shadow-xl sm:p-12"><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue">Official competition rules</p><h1 className="mt-3 text-3xl font-extrabold sm:text-5xl">Referral Competition Terms &amp; Conditions</h1><div className="mt-5 grid gap-3 text-sm sm:grid-cols-3"><span><b>Version:</b> v1.0</span><span><b>Issued:</b> 18 July 2026</span><span><b>Closes:</b> 30 January 2027</span></div><div className="mt-10 space-y-7">{sections.map(([title, body]) => <section key={title}><h2 className="text-lg font-extrabold">{title}</h2><p className="mt-2 leading-7 text-muted-foreground">{body}</p></section>)}</div><div className="mt-10 border-t border-border pt-7"><Link href="/competition" className="inline-flex rounded-xl bg-brand-mantis px-6 py-3 font-extrabold text-brand-forest">Back to competition</Link></div></article></main>;
+  return <main className="min-h-screen bg-[#F7F9F8] px-5 py-12 text-brand-forest sm:px-8"><article className="mx-auto max-w-4xl rounded-[2rem] border border-border bg-white p-7 shadow-xl sm:p-12"><p className="text-xs font-extrabold uppercase tracking-[0.2em] text-brand-blue">Official competition rules</p><h1 className="mt-3 text-3xl font-extrabold sm:text-5xl">Referral Competition Terms &amp; Conditions</h1><div className="mt-5 grid gap-3 text-sm sm:grid-cols-3"><span><b>Version:</b> v1.0</span><span><b>Issued:</b> 18 July 2026</span><span><b>Closes:</b> 30 January 2027</span></div><div className="mt-10 space-y-7">{sections.map(([title, body]) => <section key={title}><h2 className="text-lg font-extrabold">{title}</h2><MoneyText className="mt-2 leading-7 text-muted-foreground">{body}</MoneyText></section>)}</div><div className="mt-10 border-t border-border pt-7"><Link href="/competition" className="inline-flex rounded-xl bg-brand-mantis px-6 py-3 font-extrabold text-brand-forest">Back to competition</Link></div></article></main>;
 }

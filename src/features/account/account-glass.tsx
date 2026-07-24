@@ -27,7 +27,7 @@ export function MemberGlassCanvas({
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden>
         <div className="absolute -left-24 top-0 size-80 rounded-full bg-[#6FDB42]/24 blur-3xl" />
-        <div className="absolute -right-20 top-24 size-96 rounded-full bg-[#1C4759]/16 blur-3xl" />
+        <div className="absolute -right-20 top-24 size-96 rounded-full bg-[#48DC81]/16 blur-3xl" />
         <div className="absolute bottom-6 left-1/3 size-72 rounded-full bg-[#48DC81]/14 blur-3xl" />
         <div className="absolute right-1/4 top-1/2 size-56 rounded-full bg-white/30 blur-3xl" />
       </div>

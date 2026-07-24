@@ -8,6 +8,7 @@ import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import { loadAccountDashboard } from "@/lib/api/account";
 import { formatAedRange, formatRelativeTime } from "@/lib/api/account-home";
+import { MoneyText } from "@/components/currency";
 import { getPublicRequirement } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
 import {
@@ -138,7 +139,7 @@ export default async function RequirementPage({ params }: PageProps) {
             <MapPin className="size-3.5 shrink-0" />
             {requirement.location}
           </span>
-          {budget ? <span>{budget}</span> : null}
+          {budget ? <MoneyText>{budget}</MoneyText> : null}
           <span className="capitalize">{requirement.status.replaceAll("_", " ")}</span>
           {requirement.createdAt ? (
             <span>Posted {formatRelativeTime(requirement.createdAt)}</span>
@@ -188,7 +189,9 @@ export default async function RequirementPage({ params }: PageProps) {
                 </div>
                 <div className="flex justify-between gap-3">
                   <dt className="text-brand-forest/50">Budget</dt>
-                  <dd className="font-bold text-brand-mantis">{budget}</dd>
+                  <dd className="font-bold text-brand-mantis">
+                    <MoneyText>{budget}</MoneyText>
+                  </dd>
                 </div>
               </dl>
 

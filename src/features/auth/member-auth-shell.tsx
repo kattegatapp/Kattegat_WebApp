@@ -26,7 +26,7 @@ export async function MemberAuthShell({
 
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_0%,rgb(111_219_66/0.14),transparent_40%),radial-gradient(ellipse_at_88%_100%,rgb(28_71_89/0.1),transparent_45%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_12%_0%,rgb(111_219_66/0.14),transparent_40%),radial-gradient(ellipse_at_88%_100%,rgb(72_220_129/0.1),transparent_45%)]"
       />
       <div
         aria-hidden

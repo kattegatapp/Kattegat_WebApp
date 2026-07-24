@@ -12,6 +12,8 @@ import type {
   ListingSearchSort,
 } from "@/lib/api/marketing";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
+import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
+import { MoneyText } from "@/components/currency";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: { value: ListingSearchSort; label: string }[] = [
@@ -402,6 +404,9 @@ export function SearchExplorer({
                     <h2 className="mt-1 text-lg font-extrabold tracking-[-0.02em] group-hover:text-brand-blue sm:text-xl">
                       {item.title}
                     </h2>
+                    <MoneyText className="mt-1.5 text-sm font-extrabold text-brand-forest">
+                      {formatListingDisplayPrice(item)}
+                    </MoneyText>
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-brand-forest/60">
                       {item.description || `${item.sellerName} · live on Kattegat`}
                     </p>

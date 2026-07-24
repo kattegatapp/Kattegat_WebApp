@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import {
   ChevronDown,
   Download,
+  Headphones,
   HelpCircle,
   KeyRound,
   LogOut,
@@ -55,6 +56,7 @@ type AccountProfileMenuProps = {
   onOpenMembership?: () => void;
   onOpenReferrals?: () => void;
   onOpenRecommend?: () => void;
+  onOpenVipSupport?: () => void;
   onSignOut: () => void;
 };
 
@@ -70,6 +72,7 @@ export function AccountProfileMenu({
   onOpenMembership,
   onOpenReferrals,
   onOpenRecommend,
+  onOpenVipSupport,
   onSignOut,
 }: AccountProfileMenuProps) {
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -187,6 +190,12 @@ export function AccountProfileMenu({
               <DropdownMenuItem className={menuItemClass} onClick={onOpenRecommend}>
                 <Megaphone className="size-4" />
                 Recommend &amp; earn
+              </DropdownMenuItem>
+            ) : null}
+            {onOpenVipSupport ? (
+              <DropdownMenuItem className={menuItemClass} onClick={onOpenVipSupport}>
+                <Headphones className="size-4" />
+                VIP Support
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem

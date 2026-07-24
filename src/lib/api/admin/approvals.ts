@@ -11,6 +11,8 @@ export interface PendingListing {
   description: string | null;
   location: string | null;
   pricing: Record<string, unknown>;
+  pricingBlocks?: import("@/lib/pricing-blocks").PricingBlock[];
+  displayPrice?: string | null;
   coverImage: string | null;
   submittedAt: string | null;
   createdAt: string;

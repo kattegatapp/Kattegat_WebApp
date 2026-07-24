@@ -23,6 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { DirhamSymbol, MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import { goToAdminLogin } from "@/lib/admin/session-client";
 import {
@@ -448,7 +449,7 @@ function ProPricePreview({ fils }: { fils: number | null }) {
       </p>
       <p className="mt-1 flex items-baseline gap-1.5">
         <span className="text-3xl font-extrabold tracking-tight text-white">
-          {formatFilsAsAed(fils)}
+          <MoneyText>{formatFilsAsAed(fils)}</MoneyText>
         </span>
         <span className="text-sm font-semibold text-white/60">/month</span>
       </p>
@@ -477,11 +478,11 @@ function MonthlyPriceField({
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="pro-monthly-price" className="text-xs font-semibold text-brand-forest">
-          Amount (AED / month)
+          Amount / month
         </Label>
         <div className="relative">
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
-            AED
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-brand-mantis">
+            <DirhamSymbol size={14} />
           </span>
           <Input
             id="pro-monthly-price"

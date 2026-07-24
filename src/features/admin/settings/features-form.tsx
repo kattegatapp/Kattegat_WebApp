@@ -67,6 +67,18 @@ const FEATURE_META: Partial<
     description: "Give every seller Pro capabilities during the launch period.",
     icon: Sparkles,
   },
+  vipSupportEnabled: {
+    label: "VIP Support",
+    description:
+      "Show the VIP Support button. Users choose WhatsApp or email (Brand support email + Links WhatsApp URL).",
+    icon: MessageCircleMore,
+  },
+  vipSupportProOnly: {
+    label: "VIP Support · Pro only",
+    description:
+      "When on, only Pro / White Glove sellers (or Launch access) see VIP Support. Keep off while the line is open to everyone.",
+    icon: Sparkles,
+  },
   waitlistEnabled: {
     label: "Waitlist registration",
     description:
@@ -163,7 +175,7 @@ const FEATURE_GROUP_DEFS: Array<{
     title: "Access & growth",
     description: "Control who can join and how the launch experience behaves.",
     icon: Rocket,
-    tone: "bg-[rgb(28_71_89/0.08)] text-brand-blue ring-[rgb(28_71_89/0.12)]",
+    tone: "bg-[rgb(72_220_129/0.08)] text-brand-blue ring-[rgb(72_220_129/0.12)]",
     keys: ["freeAccessMode", "waitlistEnabled", "buyerSignupEnabled", "sellerSignupEnabled"],
   },
   {
@@ -201,7 +213,12 @@ const FEATURE_GROUP_DEFS: Array<{
     description: "Choose the channels used for platform updates.",
     icon: BellRing,
     tone: "bg-amber-50 text-amber-700 ring-amber-100",
-    keys: ["pushNotificationsEnabled", "emailNotificationsEnabled"],
+    keys: [
+      "pushNotificationsEnabled",
+      "emailNotificationsEnabled",
+      "vipSupportEnabled",
+      "vipSupportProOnly",
+    ],
   },
 ];
 

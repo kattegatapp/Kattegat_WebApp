@@ -42,7 +42,7 @@ const badgeTone = (status: string) =>
     status === "accepted"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
       : status === "under_review"
-        ? "border-blue-200 bg-blue-50 text-blue-800"
+        ? "border-brand-emerald/40 bg-brand-mantis/10 text-brand-forest"
         : status === "waitlisted"
           ? "border-amber-200 bg-amber-50 text-amber-900"
           : "border-border bg-muted/40 text-brand-forest",
@@ -207,7 +207,7 @@ function ApplicationCard({
         ) : null}
 
         {mode === "queue" && item.status === "waitlisted" ? (
-          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+          <div className="rounded-xl border border-brand-emerald/40 bg-brand-mantis/10 p-4">
             <p className="text-sm font-semibold text-brand-forest">On the White Glove waitlist</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Start reviewing when a managed spot is available.

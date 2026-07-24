@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { CatalogCategory, PublicReview, PublicSellerDetail } from "@/lib/api/marketing";
 import { listingPublicPath, sellerPublicPath } from "@/lib/navigation/public-paths";
+import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
+import { MoneyText } from "@/components/currency";
 
 type SellerPublicProfileProps = {
   seller: PublicSellerDetail;
@@ -40,11 +42,11 @@ function tierLabel(tier: PublicSellerDetail["tier"]) {
   return "Pro";
 }
 
-function formatListingPrice(pricing: { amount?: number; unit?: string }) {
-  const amount = pricing?.amount;
-  if (amount == null || !Number.isFinite(amount)) return "Ask for quote";
-  const aed = (amount / 100).toLocaleString("en-AE", { maximumFractionDigits: 0 });
-  return pricing.unit ? `From AED ${aed} / ${pricing.unit}` : `From AED ${aed}`;
+function formatListingPrice(listing: {
+  displayPrice?: string | null;
+  pricing?: { amount?: number; unit?: string } | null;
+}) {
+  return formatListingDisplayPrice(listing);
 }
 
 function formatMemberSince(listings: PublicSellerDetail["listings"]) {
@@ -521,9 +523,9 @@ export function SellerPublicProfile({
                         ) : null}
                         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
                           <div>
-                            <p className="text-sm font-extrabold text-brand-mantis sm:text-base">
-                              {formatListingPrice(listing.pricing)}
-                            </p>
+                            <MoneyText className="text-sm font-extrabold text-brand-mantis sm:text-base">
+                              {formatListingPrice(listing)}
+                            </MoneyText>
                             {reviewsEnabled ? (
                               listingHasRating ? (
                                 <p className="mt-1 flex items-center gap-1 text-[11px] font-bold text-brand-forest/50">

@@ -24,6 +24,7 @@ import {
 } from "@/features/account/account-shared";
 import type { AccountDashboard } from "@/lib/api/account";
 import { fetchIdentityVerificationStatus } from "@/lib/api/account-verification";
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   DEFAULT_PUBLIC_PLANS,
@@ -186,7 +187,7 @@ export function AccountMembershipView({ dashboard, features }: AccountMembership
                   {meta.name}
                 </h2>
                 <p className="mt-0.5 text-sm text-white/70">
-                  {price.label}
+                  <MoneyText>{price.label}</MoneyText>
                   {price.suffix ? ` ${price.suffix}` : ""}
                 </p>
               </div>
@@ -314,7 +315,7 @@ export function AccountMembershipView({ dashboard, features }: AccountMembership
 
               <div className="mt-4 flex items-baseline gap-1.5">
                 <span className="text-2xl font-extrabold tracking-tight text-brand-forest">
-                  {planCost.label}
+                  <MoneyText>{planCost.label}</MoneyText>
                 </span>
                 {planCost.suffix ? (
                   <span className="text-sm text-muted-foreground">{planCost.suffix}</span>

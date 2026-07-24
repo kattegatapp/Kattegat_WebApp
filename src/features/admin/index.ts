@@ -10,6 +10,7 @@ export { AdminLoginAtmosphere } from "@/features/admin/auth/login-atmosphere";
 export { AdminOverview } from "@/features/admin/overview/overview-page";
 export { AdminApprovalsPage } from "@/features/admin/approvals/approvals-page";
 export { AdminPricingForm } from "@/features/admin/pricing/pricing-form";
+export { AdminCategoryPricingForm } from "@/features/admin/catalog/category-pricing-form";
 export { AdminTeamPage } from "@/features/admin/team/team-page";
 export { AdminAccountPage } from "@/features/admin/account/account-page";
 

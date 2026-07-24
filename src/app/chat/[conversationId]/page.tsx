@@ -22,7 +22,7 @@ export default async function ChatConversationPage({ params }: PageProps) {
   const { conversationId } = await params;
   const cleaned = conversationId.trim();
   const nextPath = `/chat/${encodeURIComponent(cleaned)}`;
-  const { dashboard, impersonation, homeFeed, notifications, features } =
+  const { dashboard, impersonation, homeFeed, notifications, features, vipSupportChannels } =
     await loadMemberWorkspaceOrRedirect(nextPath);
 
   return (
@@ -33,6 +33,7 @@ export default async function ChatConversationPage({ params }: PageProps) {
         homeFeed={homeFeed}
         notifications={notifications}
         features={features}
+        vipSupportChannels={vipSupportChannels}
         initialView="chat"
         initialConversationId={cleaned}
       />

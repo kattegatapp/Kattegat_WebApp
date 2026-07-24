@@ -45,6 +45,7 @@ import {
 } from "@/lib/api/account-applications";
 import { formatAedRange, formatRelativeTime } from "@/lib/api/account-home";
 import { ApiRequestError } from "@/lib/api/client";
+import { CurrencyAmount, DirhamSymbol, MoneyText } from "@/components/currency";
 import { requirementPublicPath } from "@/lib/navigation/public-paths";
 import { JOB_TYPE_OPTIONS } from "@/lib/validations/requirement";
 import { cn } from "@/lib/utils";
@@ -57,11 +58,6 @@ const APPLICATION_STATUS_FILTERS: Array<{ value: ApplicationStatus | "all"; labe
   { value: "awarded", label: "Awarded" },
   { value: "declined", label: "Declined" },
 ];
-
-function formatAedFils(fils: number | null | undefined) {
-  if (fils == null) return null;
-  return `AED ${(fils / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-}
 
 function jobTypeLabel(jobType: string) {
   return (
@@ -220,7 +216,6 @@ function SellerApplicationsPanel() {
 }
 
 function SellerApplicationCard({ item }: { item: MyApplication }) {
-  const quote = formatAedFils(item.quote);
   const requirementHref = requirementPublicPath({
     id: item.requirement.id,
     title: item.requirement.title,
@@ -267,15 +262,21 @@ function SellerApplicationCard({ item }: { item: MyApplication }) {
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Your quote
             </p>
-            <p className="mt-0.5 text-[13px] font-extrabold text-brand-mantis">{quote ?? "No quote"}</p>
+            <p className="mt-0.5 text-[13px] font-extrabold text-brand-mantis">
+              {item.quote != null ? (
+                <CurrencyAmount fils={item.quote} size="sm" />
+              ) : (
+                "No quote"
+              )}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               Budget
             </p>
-            <p className="mt-0.5 text-[12px] font-bold text-brand-forest/70">
+            <MoneyText className="mt-0.5 text-[12px] font-bold text-brand-forest/70">
               {formatAedRange(item.requirement.budgetMin, item.requirement.budgetMax)}
-            </p>
+            </MoneyText>
           </div>
         </div>
       </div>
@@ -409,8 +410,8 @@ function BuyerApplicantsPanel() {
                       </p>
                     </div>
                     {item.quote != null ? (
-                      <p className="mt-2 text-[13px] font-extrabold text-brand-mantis">
-                        Quote {formatAedFils(item.quote)}
+                      <p className="mt-2 inline-flex items-center gap-1 text-[13px] font-extrabold text-brand-mantis">
+                        Quote <CurrencyAmount fils={item.quote} size="sm" />
                       </p>
                     ) : null}
                     {item.status !== "awarded" && item.status !== "declined" ? (
@@ -489,7 +490,7 @@ export function ApplyToRequirementDialog({
       if (trimmed.length < 1) throw new Error("Write a short pitch first.");
       const quoteValue = quoteAed.trim() ? Number(quoteAed) : undefined;
       if (quoteValue != null && (!Number.isFinite(quoteValue) || quoteValue < 0)) {
-        throw new Error("Quote must be a valid AED amount.");
+        throw new Error("Quote must be a valid amount.");
       }
       const { applyToRequirement } = await import("@/lib/api/account-applications");
       return applyToRequirement(requirementId, {
@@ -541,7 +542,10 @@ export function ApplyToRequirementDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="apply-quote">Optional quote (AED)</Label>
+            <Label htmlFor="apply-quote" className="inline-flex items-center gap-1.5">
+              Optional quote
+              <DirhamSymbol size={12} className="text-brand-mantis" />
+            </Label>
             <input
               id="apply-quote"
               type="number"

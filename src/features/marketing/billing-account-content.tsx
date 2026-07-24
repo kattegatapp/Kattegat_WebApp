@@ -5,6 +5,7 @@ import { ArrowLeft, CreditCard, Loader2, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { MoneyText } from "@/components/currency";
 import { formatFilsAsAed } from "@/lib/admin/money";
 import {
   createBillingPortalSession,
@@ -174,7 +175,7 @@ export function BillingAccountContent() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-extrabold text-brand-forest">{formatFilsAsAed(payment.amount)}</p>
+                  <MoneyText className="font-extrabold text-brand-forest">{formatFilsAsAed(payment.amount)}</MoneyText>
                   <span
                     className={cn(
                       "mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.12em]",

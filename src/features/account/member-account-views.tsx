@@ -14,6 +14,7 @@ import {
   MessageCircle,
   Sparkles,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -41,12 +42,14 @@ import { formatRelativeTime } from "@/lib/api/account-home";
 import { getCatalogCategories } from "@/lib/api/marketing";
 import { profileSetupPath } from "@/lib/auth/profile-completion";
 import { normalizeMemberDeepLink, isChatDeepLink } from "@/lib/navigation/member-deep-links";
+import { CurrencyAmount } from "@/components/currency";
 import { cn } from "@/lib/utils";
 
 type DashboardProps = {
   dashboard: AccountDashboard;
   identity?: AccountIdentity;
   accessNotice?: AccountIdentity | null;
+  onOpenEarnings?: () => void;
 };
 
 function tierLabel(tier?: string | null) {
@@ -71,13 +74,13 @@ function ViewWrap({ children }: { children: ReactNode }) {
   return <div className="account-view mx-auto max-w-5xl">{children}</div>;
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value }: { label: string; value: ReactNode }) {
   return (
     <AccountGlass className="rounded-[16px] px-4 py-3.5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest">{value}</p>
+      <div className="mt-1 text-2xl font-extrabold tracking-tight text-brand-forest">{value}</div>
     </AccountGlass>
   );
 }
@@ -362,7 +365,12 @@ function ListingsSummary({ listings }: { listings: AccountListing[] }) {
   );
 }
 
-export function AccountDashboardView({ dashboard, identity, accessNotice }: DashboardProps) {
+export function AccountDashboardView({
+  dashboard,
+  identity,
+  accessNotice,
+  onOpenEarnings,
+}: DashboardProps) {
   const { user, sellerProfile, listings, referral } = dashboard;
   const isSeller = identity === "seller";
   const { becomeSeller, becomeBuyer } = useIdentityMutations();
@@ -468,19 +476,97 @@ export function AccountDashboardView({ dashboard, identity, accessNotice }: Dash
         <>
           <AccountGlass className="mt-4 rounded-[20px] p-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Referral wallet</p>
-              <p className="mt-1 text-3xl font-extrabold text-brand-mantis">
-                {walletDisplay.toFixed(2)} <span className="text-lg text-brand-forest">AED</span>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Earnings wallet
               </p>
+              <CurrencyAmount
+                fils={Math.round(walletDisplay * 100)}
+                size="xl"
+                showDecimals
+                className="mt-1 text-brand-mantis"
+              />
               <p className="mt-1 text-[12.5px] text-brand-forest/65">
-                {referral.activeReferrals} active referral{referral.activeReferrals === 1 ? "" : "s"} · {tierLabel(referral.tier)} tier
+                Lifetime earned · {referral.activeReferrals} active referral
+                {referral.activeReferrals === 1 ? "" : "s"} · {tierLabel(referral.tier)} tier
               </p>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <StatTile label="This month" value={`${(referral.wallet.thisMonth / 100).toFixed(2)} AED`} />
-              <StatTile label="Pending" value={`${(referral.wallet.pending / 100).toFixed(2)} AED`} />
-              <StatTile label="Paid out" value={`${(referral.wallet.paidOut / 100).toFixed(2)} AED`} />
+              <StatTile
+                label="This month"
+                value={
+                  <CurrencyAmount fils={referral.wallet.thisMonth} size="lg" showDecimals />
+                }
+              />
+              <StatTile
+                label="In wallet"
+                value={
+                  <CurrencyAmount fils={referral.wallet.pending} size="lg" showDecimals />
+                }
+              />
+              <StatTile
+                label="Paid out"
+                value={
+                  <CurrencyAmount fils={referral.wallet.paidOut} size="lg" showDecimals />
+                }
+              />
             </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <div className="rounded-xl border border-brand-forest/10 bg-white/70 px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Referrals
+                </p>
+                <CurrencyAmount
+                  fils={referral.walletBreakdown?.referral ?? 0}
+                  size="sm"
+                  showDecimals
+                  className="mt-1"
+                />
+              </div>
+              <div className="rounded-xl border border-brand-forest/10 bg-white/70 px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Recommend
+                </p>
+                <CurrencyAmount
+                  fils={referral.walletBreakdown?.recommend ?? 0}
+                  size="sm"
+                  showDecimals
+                  className="mt-1"
+                />
+              </div>
+              <div className="rounded-xl border border-brand-forest/10 bg-white/70 px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  Buyer payments
+                </p>
+                <CurrencyAmount
+                  fils={referral.walletBreakdown?.invoice ?? 0}
+                  size="sm"
+                  showDecimals
+                  className="mt-1"
+                />
+                <p className="mt-0.5 text-[10px] text-brand-forest/50">
+                  Stripe invoice pays only
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-[12px] leading-5 text-brand-forest/60">
+              When a buyer pays your invoice by card in the app/web, that amount lands in{" "}
+              <span className="font-semibold text-brand-forest">Buyer payments</span> and becomes
+              withdrawable from Earnings. Offline “mark paid” money stays with you — it is not added
+              to this wallet.
+            </p>
+
+            {onOpenEarnings ? (
+              <Button
+                type="button"
+                onClick={onOpenEarnings}
+                className="mt-4 rounded-xl bg-gradient-to-br from-brand-mantis to-brand-emerald text-xs font-bold text-brand-forest"
+              >
+                <Wallet className="size-3.5" />
+                Earnings & withdraw
+              </Button>
+            ) : null}
           </AccountGlass>
           <ReferralSharePanel referral={referral} className="mt-4" />
         </>

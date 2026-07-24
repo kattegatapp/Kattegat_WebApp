@@ -48,6 +48,7 @@ import {
   formatRelativeTime,
   type AccountHomeFeed,
 } from "@/lib/api/account-home";
+import { MoneyText } from "@/components/currency";
 import type { AccountNotification } from "@/lib/api/account-notifications";
 import { fetchMyRequirements } from "@/lib/api/account-requirements";
 import { fetchIdentityVerificationStatus } from "@/lib/api/account-verification";
@@ -61,6 +62,7 @@ import {
   type AccountFeatureFlags,
 } from "@/lib/chat/chat-access";
 import { listingPublicPath, requirementPublicPath } from "@/lib/navigation/public-paths";
+import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
 import { cn } from "@/lib/utils";
 
 type AccountHomeViewProps = {
@@ -192,6 +194,9 @@ function ListingCard({ listing }: { listing: ListingSearchHit }) {
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-bold text-brand-forest">{listing.title}</p>
+          <p className="mt-0.5 text-[12px] font-extrabold text-brand-forest">
+            {formatListingDisplayPrice(listing)}
+          </p>
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{listing.sellerName}</p>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] text-muted-foreground">
             {listing.categoryName ? (
@@ -241,9 +246,9 @@ function RequirementCard({
           <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{item.location}</p>
         </div>
         <div className="hidden shrink-0 text-right sm:block">
-          <p className="text-[12px] font-extrabold text-brand-mantis">
+          <MoneyText className="text-[12px] font-extrabold text-brand-mantis">
             {formatAedRange(item.budgetMin, item.budgetMax)}
-          </p>
+          </MoneyText>
         </div>
       </Link>
       <LinkActions href={href} />

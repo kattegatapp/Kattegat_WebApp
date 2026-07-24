@@ -1,11 +1,14 @@
 /** Backend stores money as integer fils (100 fils = 1 AED). */
 
+/**
+ * Formats fils as an AED-token string so `<MoneyText>` can swap in the Dirham symbol.
+ * Do not use Intl `style: "currency"` — it emits a locale currency code that MoneyText cannot replace.
+ */
 export function formatFilsAsAed(fils: number) {
-  return new Intl.NumberFormat("en-AE", {
-    style: "currency",
-    currency: "AED",
+  const amount = (fils / 100).toLocaleString("en-AE", {
     maximumFractionDigits: 0,
-  }).format(fils / 100);
+  });
+  return `AED ${amount}`;
 }
 
 export function formatBudgetRange(min: number | null, max: number | null) {

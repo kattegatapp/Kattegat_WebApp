@@ -1,5 +1,6 @@
 import { apiFetchEnvelope } from "@/lib/api/client";
 import { resolveBackendApiUrl } from "@/lib/api/settings";
+import type { PricingModelType } from "@/lib/pricing-blocks";
 
 export type ListingFieldDefinition = {
   key: string;
@@ -12,11 +13,12 @@ export type ListingFieldDefinition = {
 export type ListingFieldSchema = {
   categoryId: string;
   fields: ListingFieldDefinition[];
+  pricingDefaults: PricingModelType[];
 };
 
 export async function getListingFieldSchema(categoryId: string): Promise<ListingFieldSchema> {
   if (!categoryId) {
-    return { categoryId: "", fields: [] };
+    return { categoryId: "", fields: [], pricingDefaults: [] };
   }
   try {
     const { data } = await apiFetchEnvelope<ListingFieldSchema>(
@@ -27,8 +29,9 @@ export async function getListingFieldSchema(categoryId: string): Promise<Listing
     return {
       categoryId: data.categoryId ?? categoryId,
       fields: data.fields ?? [],
+      pricingDefaults: data.pricingDefaults ?? [],
     };
   } catch {
-    return { categoryId, fields: [] };
+    return { categoryId, fields: [], pricingDefaults: [] };
   }
 }

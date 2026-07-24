@@ -27,6 +27,7 @@ import {
   Server,
   Sparkles,
   Trophy,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -324,6 +325,13 @@ export const adminNavItems: AdminNavItem[] = [
     icon: Tags,
     description: "Seller plan feature limits",
     anyOf: ["pricing.read", "pricing.write"],
+  },
+  {
+    title: "Category pricing",
+    href: adminPath("/category-pricing"),
+    icon: Wallet,
+    description: "Pre-seed listing price blocks per category",
+    anyOf: ["catalog.write"],
   },
   {
     title: "Control Room",

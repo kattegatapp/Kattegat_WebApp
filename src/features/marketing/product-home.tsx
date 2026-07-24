@@ -114,10 +114,10 @@ function shouldShowSellerRating(seller: FeaturedSeller) {
 }
 
 const SELLER_FALLBACK_TONES = [
-  "bg-[radial-gradient(circle_at_28%_18%,rgb(111_219_66/0.45),transparent_42%),linear-gradient(155deg,#003912_0%,#1C4759_100%)]",
-  "bg-[radial-gradient(circle_at_72%_22%,rgb(72_220_129/0.4),transparent_40%),linear-gradient(155deg,#0a2f1c_0%,#003912_55%,#1C4759_100%)]",
-  "bg-[radial-gradient(circle_at_40%_80%,rgb(28_71_89/0.55),transparent_45%),linear-gradient(160deg,#1C4759_0%,#003912_100%)]",
-  "bg-[radial-gradient(circle_at_18%_70%,rgb(111_219_66/0.28),transparent_40%),linear-gradient(145deg,#003912_10%,#0d3d28_50%,#1C4759_100%)]",
+  "bg-[radial-gradient(circle_at_28%_18%,rgb(111_219_66/0.45),transparent_42%),linear-gradient(155deg,#003912_0%,#48DC81_100%)]",
+  "bg-[radial-gradient(circle_at_72%_22%,rgb(72_220_129/0.4),transparent_40%),linear-gradient(155deg,#0a2f1c_0%,#003912_55%,#48DC81_100%)]",
+  "bg-[radial-gradient(circle_at_40%_80%,rgb(72_220_129/0.55),transparent_45%),linear-gradient(160deg,#48DC81_0%,#003912_100%)]",
+  "bg-[radial-gradient(circle_at_18%_70%,rgb(111_219_66/0.28),transparent_40%),linear-gradient(145deg,#003912_10%,#0d3d28_50%,#48DC81_100%)]",
 ] as const;
 
 function SellerAvatar({

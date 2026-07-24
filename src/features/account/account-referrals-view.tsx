@@ -21,6 +21,8 @@ import {
   AccountViewIntro,
   AccountViewWrap,
 } from "@/features/account/account-shared";
+import { CurrencyAmount } from "@/components/currency";
+import { Button } from "@/components/ui/button";
 import type { AccountDashboard } from "@/lib/api/account";
 import { formatRelativeTime } from "@/lib/api/account-home";
 import {
@@ -29,6 +31,7 @@ import {
   fetchReferredUsers,
 } from "@/lib/api/account-referrals";
 import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 const REFERRAL_MILESTONES = [
   { tier: "builder", activeReferralsMin: 1, residualRate: 0.2 },
@@ -37,13 +40,6 @@ const REFERRAL_MILESTONES = [
 ] as const;
 
 type ListTab = "people" | "leaderboard";
-
-function formatAedFils(fils: number) {
-  return `AED ${(fils / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 function tierLabel(tier?: string | null) {
   if (!tier) return "Starter";
@@ -68,7 +64,13 @@ function EmptyBlock({
   );
 }
 
-export function AccountReferralsView({ dashboard }: { dashboard: AccountDashboard }) {
+export function AccountReferralsView({
+  dashboard,
+  onOpenEarnings,
+}: {
+  dashboard: AccountDashboard;
+  onOpenEarnings?: () => void;
+}) {
   const [listTab, setListTab] = useState<ListTab>("people");
 
   const summaryQuery = useQuery({
@@ -141,9 +143,12 @@ export function AccountReferralsView({ dashboard }: { dashboard: AccountDashboar
                     <Wallet className="size-3.5" />
                     Total earned
                   </p>
-                  <p className="mt-2 text-3xl font-extrabold tracking-tight text-brand-mantis sm:text-4xl">
-                    {formatAedFils(referral.wallet.totalEarned)}
-                  </p>
+                  <CurrencyAmount
+                    fils={referral.wallet.totalEarned}
+                    size="xl"
+                    showDecimals
+                    className="mt-2 text-brand-mantis"
+                  />
                 </div>
                 <span className="rounded-full border border-brand-forest/10 bg-white px-3 py-1 text-[11px] font-bold capitalize text-brand-forest/70">
                   {tierLabel(referral.tier)} tier
@@ -167,17 +172,23 @@ export function AccountReferralsView({ dashboard }: { dashboard: AccountDashboar
               <MetricCell
                 icon={CalendarDays}
                 label="This month"
-                value={formatAedFils(referral.wallet.thisMonth)}
+                value={
+                  <CurrencyAmount fils={referral.wallet.thisMonth} size="sm" showDecimals />
+                }
               />
               <MetricCell
                 icon={Clock3}
                 label="Pending"
-                value={formatAedFils(referral.wallet.pending)}
+                value={
+                  <CurrencyAmount fils={referral.wallet.pending} size="sm" showDecimals />
+                }
               />
               <MetricCell
                 icon={Check}
                 label="Paid out"
-                value={formatAedFils(referral.wallet.paidOut)}
+                value={
+                  <CurrencyAmount fils={referral.wallet.paidOut} size="sm" showDecimals />
+                }
               />
               <MetricCell
                 icon={Users}
@@ -186,6 +197,53 @@ export function AccountReferralsView({ dashboard }: { dashboard: AccountDashboar
               />
             </div>
           </AccountListCard>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <AccountGlass className="rounded-[18px] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                Referrals earned
+              </p>
+              <CurrencyAmount
+                fils={referral.walletBreakdown?.referral ?? 0}
+                size="lg"
+                showDecimals
+                className="mt-1"
+              />
+            </AccountGlass>
+            <AccountGlass className="rounded-[18px] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                Recommend earned
+              </p>
+              <CurrencyAmount
+                fils={referral.walletBreakdown?.recommend ?? 0}
+                size="lg"
+                showDecimals
+                className="mt-1"
+              />
+            </AccountGlass>
+            <AccountGlass className="rounded-[18px] p-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                Invoice credits
+              </p>
+              <CurrencyAmount
+                fils={referral.walletBreakdown?.invoice ?? 0}
+                size="lg"
+                showDecimals
+                className="mt-1"
+              />
+            </AccountGlass>
+          </div>
+
+          {onOpenEarnings ? (
+            <Button
+              type="button"
+              onClick={onOpenEarnings}
+              className="w-full rounded-xl bg-gradient-to-br from-brand-mantis to-brand-emerald font-bold text-brand-forest sm:w-auto"
+            >
+              <Wallet className="size-4" />
+              Earnings & withdraw
+            </Button>
+          ) : null}
 
           <ReferralSharePanel referral={referral} />
         </div>
@@ -337,7 +395,7 @@ function MetricCell({
 }: {
   icon: typeof Wallet;
   label: string;
-  value: string;
+  value: ReactNode;
 }) {
   return (
     <div className="bg-white px-4 py-3.5">
@@ -345,7 +403,7 @@ function MetricCell({
         <Icon className="size-3" />
         {label}
       </p>
-      <p className="mt-1 truncate text-[15px] font-extrabold text-brand-forest">{value}</p>
+      <div className="mt-1 truncate text-[15px] font-extrabold text-brand-forest">{value}</div>
     </div>
   );
 }

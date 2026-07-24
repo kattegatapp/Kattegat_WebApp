@@ -8,6 +8,7 @@ import {
   FALLBACK_COMPETITION,
   type PublicCompetition,
 } from "@/lib/api/competition";
+import { DirhamSymbol } from "@/components/currency";
 
 type CompetitionDashboardBannerProps = {
   activeReferrals?: number;
@@ -107,8 +108,9 @@ export function CompetitionDashboardBanner({
       <span className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-[#E6C970] to-transparent" />
       <span className={`flex items-center justify-center ${compact ? "gap-0" : "gap-1"}`}>
         {!compact ? <Laurel /> : null}
-        <span className={`whitespace-nowrap bg-gradient-to-r from-[#C6F3CA] via-brand-mantis to-brand-emerald bg-clip-text font-extrabold tracking-tight text-transparent ${compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"}`}>
-          <small className="mr-1 text-[10px] tracking-widest">AED</small>{competition.prizePoolAed.toLocaleString()}
+        <span className={`inline-flex items-center gap-1 whitespace-nowrap bg-gradient-to-r from-[#C6F3CA] via-brand-mantis to-brand-emerald bg-clip-text font-extrabold tracking-tight text-transparent ${compact ? "text-lg sm:text-xl" : "text-xl sm:text-2xl"}`}>
+          <DirhamSymbol size={compact ? 14 : 18} className="text-brand-mantis" />
+          {competition.prizePoolAed.toLocaleString()}
         </span>
         {!compact ? <Laurel mirrored /> : null}
       </span>

@@ -46,6 +46,8 @@ export interface PublicAppSettings {
     pushNotificationsEnabled: boolean;
     emailNotificationsEnabled: boolean;
     freeAccessMode: boolean;
+    vipSupportEnabled: boolean;
+    vipSupportProOnly: boolean;
   };
   operations: {
     defaultCurrency: string;
@@ -126,6 +128,8 @@ export const fallbackAppSettings: PublicAppSettings = {
     pushNotificationsEnabled: false,
     emailNotificationsEnabled: false,
     freeAccessMode: false,
+    vipSupportEnabled: true,
+    vipSupportProOnly: false,
   },
   operations: {
     defaultCurrency: "AED",
