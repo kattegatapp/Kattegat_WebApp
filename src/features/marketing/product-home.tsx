@@ -28,6 +28,7 @@ import { SERVICE_CATEGORIES } from "@/features/marketing/service-categories";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import type { PublicAppSettings } from "@/lib/api/settings";
 import type { FeaturedSeller } from "@/lib/api/marketing";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 
 type ProductHomeProps = {
@@ -137,7 +138,7 @@ function SellerAvatar({
     return (
       // eslint-disable-next-line @next/next/no-img-element -- remote seller avatars; hosts vary
       <img
-        src={seller.avatarUrl}
+        src={cloudinaryCrop(seller.avatarUrl, "1:1", "face")}
         alt=""
         className={cn("object-cover", className)}
         style={style}

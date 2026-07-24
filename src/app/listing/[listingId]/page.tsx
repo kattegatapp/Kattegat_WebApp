@@ -5,9 +5,11 @@ import { ArrowRight, MapPin, Star } from "lucide-react";
 
 import { ListingContactPanel } from "@/features/marketing/listing-contact-panel";
 import { DUBAI_SEO_PAGES } from "@/features/marketing/local-seo";
+import { ManagedListingBadge } from "@/features/marketing/managed-listing-badge";
 import { MarketingHeader } from "@/features/marketing/marketing-header";
 import { SiteFooter } from "@/features/marketing/site-footer";
 import { loadAccountDashboard } from "@/lib/api/account";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import {
   getCatalogCategories,
   getPublicListing,
@@ -279,7 +281,7 @@ export default async function ListingPage({ params }: PageProps) {
           <div className="overflow-hidden rounded-[1.75rem] bg-[#EEF2F0]">
             {cover ? (
               // eslint-disable-next-line @next/next/no-img-element -- remote listing media
-              <img src={cover} alt="" className="aspect-[4/3] w-full object-cover" />
+              <img src={cloudinaryCrop(cover, "4:3", "auto")} alt="" className="aspect-[4/3] w-full object-cover" />
             ) : (
               <div className="flex aspect-[4/3] items-center justify-center text-sm font-extrabold text-brand-forest/30">
                 Kattegat
@@ -310,6 +312,12 @@ export default async function ListingPage({ params }: PageProps) {
                 {listing.description ||
                   `${listing.title} is a live ${category?.name?.toLowerCase() || "marketplace"} listing in ${place} on Kattegat. Message ${sellerName} to book directly — with 0% booking commission.`}
               </p>
+
+              {sellerTier === "white_glove" ? (
+                <div className="mt-5">
+                  <ManagedListingBadge managedBy={seller?.managedBy ?? null} managedAgent={seller?.managedAgent ?? null} />
+                </div>
+              ) : null}
 
               {listing.pricingBlocks.length > 0 ? (
                 <div className="mt-5 rounded-2xl border border-brand-forest/10 bg-brand-forest/[0.03] p-4">
@@ -529,7 +537,11 @@ export default async function ListingPage({ params }: PageProps) {
                     <div className="size-12 overflow-hidden rounded-xl bg-[#EEF2F0]">
                       {item.sellerAvatarUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element -- remote avatar
-                        <img src={item.sellerAvatarUrl} alt="" className="size-full object-cover" />
+                        <img
+                          src={cloudinaryCrop(item.sellerAvatarUrl, "1:1", "face")}
+                          alt=""
+                          className="size-full object-cover"
+                        />
                       ) : (
                         <div className="flex size-full items-center justify-center text-[10px] font-extrabold text-brand-forest/30">
                           KG

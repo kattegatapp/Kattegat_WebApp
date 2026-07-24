@@ -35,6 +35,29 @@ function withDeliveryTransform(secureUrl: string): string {
   return `${secureUrl.slice(0, insertAt)}${DELIVERY_TRANSFORM}/${secureUrl.slice(insertAt)}`;
 }
 
+/**
+ * Crops a Cloudinary-delivered image to a specific aspect ratio using content-aware
+ * gravity, instead of leaving it to the browser's blind center-crop (`object-fit: cover`)
+ * — a portrait photo shown in a wide/square box would otherwise get its top (often a
+ * person's head) cut off regardless of upload orientation. `gravity: "face"` biases toward
+ * a detected face and falls back to Cloudinary's standard center crop when none is found
+ * (e.g. avatars, seller headshots); `"auto"` uses general saliency detection for photos
+ * that aren't necessarily of a person (listing covers, portfolio media).
+ */
+export function cloudinaryCrop(
+  url: string,
+  aspectRatio: string,
+  gravity: "auto" | "face" = "auto",
+): string {
+  const uploadSegment = "/image/upload/";
+  const uploadIndex = url.indexOf(uploadSegment);
+  if (uploadIndex === -1) return url;
+
+  const insertAt = uploadIndex + uploadSegment.length;
+  const transform = `c_fill,ar_${aspectRatio},g_${gravity}`;
+  return `${url.slice(0, insertAt)}${transform}/${url.slice(insertAt)}`;
+}
+
 function parseCloudinaryErrorMessage(responseText: string): string {
   try {
     const json = JSON.parse(responseText) as CloudinaryErrorResponse;

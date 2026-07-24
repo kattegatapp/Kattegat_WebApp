@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { CatalogCategory, PublicReview, PublicSellerDetail } from "@/lib/api/marketing";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { listingPublicPath, sellerPublicPath } from "@/lib/navigation/public-paths";
 import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
 import { MoneyText } from "@/components/currency";
@@ -249,7 +250,11 @@ export function SellerPublicProfile({
               <div className="flex min-w-0 items-end gap-4 sm:gap-5">
                 <div className="-mt-10 shrink-0 rounded-2xl bg-card p-1.5 shadow-lg sm:-mt-14">
                   <Avatar className="size-20 rounded-xl sm:size-28">
-                    <AvatarImage src={seller.avatarUrl ?? undefined} alt="" className="rounded-xl" />
+                    <AvatarImage
+                      src={seller.avatarUrl ? cloudinaryCrop(seller.avatarUrl, "1:1", "face") : undefined}
+                      alt=""
+                      className="rounded-xl"
+                    />
                     <AvatarFallback className="rounded-xl text-lg font-extrabold text-brand-forest sm:text-2xl">
                       {sellerInitials(name)}
                     </AvatarFallback>
@@ -427,7 +432,7 @@ export function SellerPublicProfile({
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.url}
+                    src={cloudinaryCrop(item.url, "4:5", "auto")}
                     alt=""
                     className="size-full object-cover transition duration-500 group-hover:scale-105"
                   />
@@ -496,7 +501,7 @@ export function SellerPublicProfile({
                         {listing.coverImage ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
-                            src={listing.coverImage}
+                            src={cloudinaryCrop(listing.coverImage, "4:3", "auto")}
                             alt=""
                             className="size-full object-cover transition duration-500 group-hover:scale-105"
                           />

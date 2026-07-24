@@ -47,7 +47,7 @@ import {
   updateAccountRequirement,
   type AccountRequirement,
 } from "@/lib/api/account-requirements";
-import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
+import { cloudinaryCrop, isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
 import {
   buildUpdateRequirementPayload,
   JOB_TYPE_OPTIONS,
@@ -422,7 +422,7 @@ function RequirementEditorForm({
                     key={attachment.id}
                     className="relative size-[4.5rem] overflow-hidden rounded-xl border border-brand-forest/10 shadow-sm"
                   >
-                    <Image src={preview} alt="" fill className="object-cover" sizes="72px" />
+                    <Image src={cloudinaryCrop(preview, "1:1", "auto")} alt="" fill className="object-cover" sizes="72px" />
                     {!notEditable ? (
                       <button
                         type="button"

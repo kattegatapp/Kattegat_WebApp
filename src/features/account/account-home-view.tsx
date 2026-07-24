@@ -52,6 +52,7 @@ import { MoneyText } from "@/components/currency";
 import type { AccountNotification } from "@/lib/api/account-notifications";
 import { fetchMyRequirements } from "@/lib/api/account-requirements";
 import { fetchIdentityVerificationStatus } from "@/lib/api/account-verification";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import type { ListingSearchHit } from "@/lib/api/marketing";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
 import { readBrowseResume } from "@/lib/auth/browse-resume";
@@ -185,7 +186,13 @@ function ListingCard({ listing }: { listing: ListingSearchHit }) {
       <Link href={href} className="flex min-w-0 flex-1 items-center gap-3">
         <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted sm:size-16">
           {listing.coverImage ? (
-            <Image src={listing.coverImage} alt="" fill className="object-cover" sizes="64px" />
+            <Image
+              src={cloudinaryCrop(listing.coverImage, "1:1", "auto")}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-brand-forest/5 to-brand-blue/10">
               <BriefcaseBusiness className="size-5 text-brand-forest/25" />

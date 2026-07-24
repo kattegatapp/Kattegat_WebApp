@@ -356,6 +356,8 @@ function AccountEditor({
   const [vat, setVat] = useState(seller?.vatRegistered ?? false);
   const [tags, setTags] = useState(seller?.tags.join(", ") ?? "");
   const [social, setSocial] = useState(JSON.stringify(seller?.socialLinks ?? {}, null, 2));
+  const [managedBy, setManagedBy] = useState(seller?.managedBy ?? "kattegat_vetted");
+  const [managedAgent, setManagedAgent] = useState(seller?.managedAgent ?? "");
 
   function save() {
     if (!canWrite) return;
@@ -379,6 +381,8 @@ function AccountEditor({
           vatRegistered: vat,
           tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean),
           socialLinks,
+          managedBy: tier === "white_glove" ? managedBy.trim() || "kattegat_vetted" : null,
+          managedAgent: tier === "white_glove" ? managedAgent.trim() || null : null,
         },
       }),
     });
@@ -498,6 +502,12 @@ function AccountEditor({
                   </SelectContent>
                 </Select>
               </label>
+              {tier === "white_glove" ? (
+                <>
+                  <Field label="Managed listing agency" value={managedBy} setValue={setManagedBy} />
+                  <Field label="Managed listing agent name" value={managedAgent} setValue={setManagedAgent} />
+                </>
+              ) : null}
               <label className="flex items-center gap-2 self-end rounded-xl border p-3 text-sm font-semibold">
                 <input
                   type="checkbox"

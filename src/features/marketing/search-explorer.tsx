@@ -11,6 +11,7 @@ import type {
   ListingSearchHit,
   ListingSearchSort,
 } from "@/lib/api/marketing";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
 import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
 import { MoneyText } from "@/components/currency";
@@ -376,7 +377,7 @@ export function SearchExplorer({
                   <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-[#EEF2F0] sm:size-24">
                     {image ? (
                       // eslint-disable-next-line @next/next/no-img-element -- remote listing media; hosts vary
-                      <img src={image} alt="" className="size-full object-cover" />
+                      <img src={cloudinaryCrop(image, "1:1", "auto")} alt="" className="size-full object-cover" />
                     ) : (
                       <div className="flex size-full items-center justify-center text-[10px] font-extrabold uppercase tracking-wide text-brand-forest/30">
                         KG

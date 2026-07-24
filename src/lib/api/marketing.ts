@@ -329,6 +329,10 @@ export type PublicSellerDetail = {
   bio: string | null;
   customSlug: string | null;
   tier: "starter" | "pro" | "white_glove" | null;
+  /** Managed Listing Badge (Kattegat Vetted) — only meaningful when `tier === "white_glove"`.
+   * `managedBy` defaults to "Kattegat Vetted" display-side when null. */
+  managedBy: string | null;
+  managedAgent: string | null;
   aggregateRating: number;
   reviewCount: number;
   tags: string[];
@@ -430,6 +434,8 @@ export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDe
       bio: string | null;
       customSlug: string | null;
       tier?: "starter" | "pro" | "white_glove" | null;
+      managedBy?: string | null;
+      managedAgent?: string | null;
       aggregateRating?: number;
       reviewCount?: number;
       tags?: string[];
@@ -465,6 +471,8 @@ export async function getPublicSeller(sellerKey: string): Promise<PublicSellerDe
       bio: data.bio?.trim() || null,
       customSlug: data.customSlug?.trim() || null,
       tier: data.tier ?? null,
+      managedBy: data.managedBy?.trim() || null,
+      managedAgent: data.managedAgent?.trim() || null,
       aggregateRating: Number.isFinite(data.aggregateRating) ? Number(data.aggregateRating) : 0,
       reviewCount: Number.isFinite(data.reviewCount) ? Number(data.reviewCount) : 0,
       tags: data.tags ?? [],

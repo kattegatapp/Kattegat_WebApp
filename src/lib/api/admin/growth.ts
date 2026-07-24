@@ -78,7 +78,7 @@ export interface AdminManagedUser {
   phone: string | null; username: string | null; businessName: string | null; avatarUrl: string | null; status: string; createdAt: string;
 }
 export interface AdminUserDetail extends AdminManagedUser {
-  sellerProfile: { tier: string; displayName: string | null; aggregateRating: number; reviewCount: number; bio: string | null; socialLinks: Record<string, string>; tags: string[]; customSlug: string | null; vatRegistered: boolean } | null;
+  sellerProfile: { tier: string; displayName: string | null; aggregateRating: number; reviewCount: number; bio: string | null; socialLinks: Record<string, string>; tags: string[]; customSlug: string | null; vatRegistered: boolean; managedBy: string | null; managedAgent: string | null } | null;
   buyerProfile: { bid: string } | null;
   adminProfile: { adminRole: string } | null;
 }
@@ -148,7 +148,7 @@ export async function fetchManagedUsers(q = "", page = 1, filters?: { status?: s
   if (filters?.role && filters.role !== "all") params.set("role", filters.role);
   return apiFetchEnvelope<AdminManagedUser[]>(`/api/admin/users?${params}`, undefined, { baseUrl: "" });
 }
-export type AdminUserUpdate = { status?: string; username?: string; phone?: string; businessName?: string; avatarUrl?: string | null; sellerProfile?: { displayName?: string; bio?: string | null; socialLinks?: Record<string, string>; tags?: string[]; customSlug?: string | null; tier?: string; vatRegistered?: boolean } };
+export type AdminUserUpdate = { status?: string; username?: string; phone?: string; businessName?: string; avatarUrl?: string | null; sellerProfile?: { displayName?: string; bio?: string | null; socialLinks?: Record<string, string>; tags?: string[]; customSlug?: string | null; tier?: string; vatRegistered?: boolean; managedBy?: string | null; managedAgent?: string | null } };
 export const updateManagedUser = (id: string, input: AdminUserUpdate) => {
   const payload = { ...input };
   if (!payload.username?.trim()) delete payload.username;

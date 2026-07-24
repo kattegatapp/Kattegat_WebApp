@@ -38,6 +38,7 @@ import {
   unpublishAccountListing,
 } from "@/lib/api/account-listings";
 import { formatAedRange, formatRelativeTime } from "@/lib/api/account-home";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { MoneyText } from "@/components/currency";
 import {
   fetchMyRequirements,
@@ -411,7 +412,7 @@ export function AccountSavedView() {
                       {listing.coverImage ? (
                         <div className="relative mb-3 aspect-[16/10] overflow-hidden rounded-xl bg-muted">
                           <Image
-                            src={listing.coverImage}
+                            src={cloudinaryCrop(listing.coverImage, "16:10", "auto")}
                             alt=""
                             fill
                             className="object-cover"

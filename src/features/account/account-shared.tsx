@@ -6,6 +6,7 @@ import { MEMBER_GLASS_CARD } from "@/features/account/account-glass";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { cn } from "@/lib/utils";
 
 export function accountDisplayName(input: {
@@ -52,7 +53,7 @@ export function AccountAvatar({
     <Avatar className={cn("rounded-xl", vettedLogo && "bg-white", className)}>
       {imageUrl ? (
         <AvatarImage
-          src={imageUrl}
+          src={vettedLogo ? imageUrl : cloudinaryCrop(imageUrl, "1:1", "face")}
           alt=""
           className={cn(
             "rounded-[inherit]",

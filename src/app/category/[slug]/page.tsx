@@ -11,6 +11,7 @@ import {
   searchListings,
 } from "@/lib/api/marketing";
 import { getPublicAppSettings } from "@/lib/api/settings";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
 import {
   categoryPageDescription,
@@ -146,7 +147,7 @@ export default async function CategoryPage({ params }: PageProps) {
                     <div className="size-20 shrink-0 overflow-hidden rounded-2xl bg-[#EEF2F0] sm:size-24">
                       {image ? (
                         // eslint-disable-next-line @next/next/no-img-element -- remote media
-                        <img src={image} alt="" className="size-full object-cover" />
+                        <img src={cloudinaryCrop(image, "1:1", "auto")} alt="" className="size-full object-cover" />
                       ) : (
                         <div className="flex size-full items-center justify-center text-[10px] font-extrabold text-brand-forest/30">
                           KG

@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AccountDashboard } from "@/lib/api/account";
 import { updateAccountProfile, updateSellerProfile } from "@/lib/api/account-actions";
 import { ApiRequestError } from "@/lib/api/client";
-import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
+import { cloudinaryCrop, isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
 import { needsBusinessNameField } from "@/lib/auth/profile-completion";
 import { INPUT_LIMITS } from "@/lib/security/input";
 import {
@@ -241,7 +241,7 @@ function AccountProfileEditForm({
             {/* Avatar preview — remote Cloudinary URL; next/image not required here */}
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="size-14 rounded-full object-cover" />
+              <img src={cloudinaryCrop(avatarUrl, "1:1", "face")} alt="" className="size-14 rounded-full object-cover" />
             ) : (
               <div className="grid size-14 place-items-center rounded-full bg-brand-mantis/15 text-sm font-bold text-brand-forest">
                 {(username || user.email).slice(0, 1).toUpperCase()}
@@ -395,7 +395,7 @@ function AccountProfileEditForm({
                   {profileMedia.map((item, index) => (
                     <div key={`${item.url}-${index}`} className="relative overflow-hidden rounded-lg border">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.url} alt="" className="aspect-square w-full object-cover" />
+                      <img src={cloudinaryCrop(item.url, "1:1", "auto")} alt="" className="aspect-square w-full object-cover" />
                       <button
                         type="button"
                         className="absolute top-1 right-1 rounded-md bg-white/90 p-1 text-red-600"

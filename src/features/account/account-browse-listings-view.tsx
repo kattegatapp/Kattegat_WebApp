@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { fetchMarketplaceListings } from "@/lib/api/account-marketplace";
+import { cloudinaryCrop } from "@/lib/cloudinary";
 import { getCatalogCategories, type ListingSearchSort } from "@/lib/api/marketing";
 import { listingPublicPath } from "@/lib/navigation/public-paths";
 import { formatListingDisplayPrice } from "@/lib/pricing-blocks";
@@ -211,7 +212,7 @@ export function AccountBrowseListingsView({
                     <div className="relative aspect-[16/10] bg-[#EEF2F0]">
                       {item.coverImage || item.sellerAvatarUrl ? (
                         <Image
-                          src={item.coverImage || item.sellerAvatarUrl || ""}
+                          src={cloudinaryCrop(item.coverImage || item.sellerAvatarUrl || "", "16:10", "auto")}
                           alt=""
                           fill
                           unoptimized

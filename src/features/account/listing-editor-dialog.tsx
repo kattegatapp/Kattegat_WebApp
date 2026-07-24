@@ -53,7 +53,7 @@ import {
   type ListingMediaItem,
 } from "@/lib/api/account-listings";
 import { getPublicPlanFeatures } from "@/lib/api/plans";
-import { isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
+import { cloudinaryCrop, isCloudinaryConfigured, uploadImage } from "@/lib/cloudinary";
 import { getCatalogCategories, getCatalogSubcategories } from "@/lib/api/marketing";
 import {
   blocksFromDefaults,
@@ -620,7 +620,7 @@ function ListingEditorForm({
                   key={photo.id}
                   className="relative size-[4.5rem] overflow-hidden rounded-xl border border-brand-forest/10 shadow-sm"
                 >
-                  <Image src={photo.url} alt="" fill className="object-cover" sizes="72px" />
+                  <Image src={cloudinaryCrop(photo.url, "1:1", "auto")} alt="" fill className="object-cover" sizes="72px" />
                 </div>
               ))}
               {stagedPhotos.map((photo) => (
