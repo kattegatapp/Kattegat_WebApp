@@ -16,8 +16,12 @@ export function ReferralCompetitionPage({ competition }: { competition: PublicCo
   const isLive = competition.status === "live";
   return (
     <div className="min-h-screen bg-[#F7F9F8] text-brand-forest">
-      <MarketingHeader />
-      <main>
+      <div className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
+        <div className="mx-auto w-full max-w-7xl">
+          <MarketingHeader />
+        </div>
+      </div>
+      <main className="pt-24 sm:pt-28">
         <section className="relative isolate overflow-hidden border-b border-brand-forest/8 px-5 py-16 sm:px-8 lg:py-24">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_0%,rgba(111,219,66,0.22),transparent_32rem),radial-gradient(circle_at_90%_90%,rgba(72,220,129,0.15),transparent_30rem),linear-gradient(135deg,#ffffff,#f2faf3_58%,#eaf7ec)]" />
           <div className="pointer-events-none absolute -right-32 top-20 -z-10 size-96 rounded-full border-[55px] border-brand-mantis/8" />

@@ -173,7 +173,7 @@ export function ProductHome({ settings, featuredSellers = [] }: ProductHomeProps
       </div>
 
       <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-4 lg:top-4 lg:px-6 lg:pt-0">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto w-full max-w-7xl">
           <MarketingHeader brandName={brand} />
         </div>
       </header>
