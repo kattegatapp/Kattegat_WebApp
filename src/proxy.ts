@@ -66,7 +66,8 @@ export async function proxy(request: NextRequest) {
     pathname === "/.well-known" ||
     pathname.startsWith("/.well-known/") ||
     pathname === "/sitemap.xml" ||
-    pathname === "/robots.txt"
+    pathname === "/robots.txt" ||
+    pathname.startsWith("/google") && pathname.endsWith(".html")
   ) {
     return NextResponse.next();
   }

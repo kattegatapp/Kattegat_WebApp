@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     rateLimit: {
       key: `admin-login:${requestIp(request)}`,
       windowMs: 15 * 60 * 1000,
-      max: 15,
+      max: 60,
     },
   });
   if (!parsed.ok) return parsed.response;
