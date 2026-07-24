@@ -53,6 +53,8 @@ export const deleteAdminListingMedia = (listingId: string, mediaId: string) =>
     { method: "DELETE" },
     { baseUrl: "" },
   );
+export const deleteAdminListing = (listingId: string) =>
+  apiFetch<null>(`/api/admin/listings/${listingId}`, { method: "DELETE" }, { baseUrl: "" });
 export const updateListingAvailability = (id: string, available: boolean) => apiFetch<null>(`/api/admin/listings/${id}/availability`, { method: "PATCH", body: JSON.stringify({ available }) }, { baseUrl: "" });
 
 export async function fetchAllRequirements(input: { q?: string; status?: string; page: number }) {
@@ -62,3 +64,9 @@ export async function fetchAllRequirements(input: { q?: string; status?: string;
   return apiFetchEnvelope<AdminRequirementRecord[]>(`/api/admin/requirements?${params}`, undefined, { baseUrl: "" });
 }
 export const updateRequirementAvailability = (id: string, available: boolean) => apiFetch<null>(`/api/admin/requirements/${id}/availability`, { method: "PATCH", body: JSON.stringify({ available }) }, { baseUrl: "" });
+export const deleteAdminRequirement = (requirementId: string) =>
+  apiFetch<null>(
+    `/api/admin/requirements/${requirementId}`,
+    { method: "DELETE" },
+    { baseUrl: "" },
+  );

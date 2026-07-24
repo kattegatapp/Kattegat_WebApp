@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Search,
   SlidersHorizontal,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -24,7 +25,7 @@ import {
 } from "@/features/admin/shared/query-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -47,6 +48,8 @@ import { MoneyText } from "@/components/currency";
 import { formatBudgetRange } from "@/lib/admin/money";
 import { adminPath } from "@/lib/admin/paths";
 import {
+  deleteAdminListing,
+  deleteAdminRequirement,
   fetchAllListings,
   fetchAllRequirements,
   updateListingAvailability,
@@ -276,6 +279,11 @@ export function ListingsManagementPage() {
     onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "all-listings"] }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAdminListing(id),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "all-listings"] }),
+  });
+
   const items = query.data?.data ?? [];
 
   function toggleAvailability(item: AdminListingRecord) {
@@ -284,6 +292,14 @@ export function ListingsManagementPage() {
       id: item.id,
       available: item.status !== "live",
     });
+  }
+
+  function confirmDeleteListing(item: AdminListingRecord) {
+    const ok = window.confirm(
+      `Delete “${item.title}”? This permanently removes the listing and its photos from Cloudinary. This cannot be undone.`,
+    );
+    if (!ok) return;
+    deleteMutation.mutate(item.id);
   }
 
   if (pendingView) {
@@ -382,6 +398,7 @@ export function ListingsManagementPage() {
               {items.map((item) => {
                 const editable = item.status === "live" || item.status === "unpublished";
                 const pending = mutation.isPending && mutation.variables?.id === item.id;
+                const deleting = deleteMutation.isPending && deleteMutation.variables === item.id;
 
                 return (
                   <TableRow key={item.id}>
@@ -411,13 +428,13 @@ export function ListingsManagementPage() {
                       {date(item.createdAt)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         {editable ? (
                           <div className="flex items-center gap-2">
                             {pending ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
                             <Switch
                               checked={item.status === "live"}
-                              disabled={mutation.isPending}
+                              disabled={mutation.isPending || deleteMutation.isPending}
                               onCheckedChange={() => toggleAvailability(item)}
                               aria-label={
                                 item.status === "live" ? "Unpublish listing" : "Make listing live"
@@ -431,9 +448,20 @@ export function ListingsManagementPage() {
                           size="sm"
                           variant="outline"
                           className="h-8"
+                          disabled={deleteMutation.isPending}
                           onClick={() => setEditingListingId(item.id)}
                         >
                           Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-8 px-2"
+                          disabled={deleteMutation.isPending}
+                          aria-label={`Delete ${item.title}`}
+                          onClick={() => confirmDeleteListing(item)}
+                        >
+                          {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
                         </Button>
                       </div>
                     </TableCell>
@@ -448,6 +476,7 @@ export function ListingsManagementPage() {
           {items.map((item) => {
             const editable = item.status === "live" || item.status === "unpublished";
             const pending = mutation.isPending && mutation.variables?.id === item.id;
+            const deleting = deleteMutation.isPending && deleteMutation.variables === item.id;
 
             return (
               <Card
@@ -484,7 +513,7 @@ export function ListingsManagementPage() {
                         {pending ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : null}
                         <Switch
                           checked={item.status === "live"}
-                          disabled={mutation.isPending}
+                          disabled={mutation.isPending || deleteMutation.isPending}
                           onCheckedChange={() => toggleAvailability(item)}
                           aria-label={
                             item.status === "live" ? "Unpublish listing" : "Make listing live"
@@ -494,20 +523,40 @@ export function ListingsManagementPage() {
                     ) : null}
                   </div>
 
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 w-full"
-                    onClick={() => setEditingListingId(item.id)}
-                  >
-                    Edit listing
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 flex-1"
+                      disabled={deleteMutation.isPending}
+                      onClick={() => setEditingListingId(item.id)}
+                    >
+                      Edit listing
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 px-2.5"
+                      disabled={deleteMutation.isPending}
+                      aria-label={`Delete ${item.title}`}
+                      onClick={() => confirmDeleteListing(item)}
+                    >
+                      {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      {deleteMutation.isError ? (
+        <p className="text-sm text-red-600">
+          {deleteMutation.error instanceof Error
+            ? deleteMutation.error.message
+            : "Could not delete listing."}
+        </p>
+      ) : null}
       <Pagination page={page} count={items.length} setPage={setPage} />
       <ListingEditSheet
         listingId={editingListingId}
@@ -541,7 +590,20 @@ export function RequirementsManagementPage() {
     onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "all-requirements"] }),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteAdminRequirement(id),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["admin", "all-requirements"] }),
+  });
+
   const items = query.data?.data ?? [];
+
+  function confirmDeleteRequirement(title: string, id: string) {
+    const ok = window.confirm(
+      `Delete “${title}”? This permanently removes the requirement and its Cloudinary attachments. This cannot be undone.`,
+    );
+    if (!ok) return;
+    deleteMutation.mutate(id);
+  }
 
   if (pendingView) {
     return (
@@ -598,65 +660,56 @@ export function RequirementsManagementPage() {
           icon={<BriefcaseBusiness className="size-7" aria-hidden />}
         />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => {
             const editable = item.status === "open" || item.status === "closed";
             const pending = mutation.isPending && mutation.variables?.id === item.id;
+            const deleting = deleteMutation.isPending && deleteMutation.variables === item.id;
 
             return (
               <Card key={item.id} className="ios-glass-pane border-white/80 bg-transparent">
-                <CardHeader className="border-b border-border/60">
-                  <div className="flex items-start justify-between gap-3">
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <CardTitle className="break-words text-lg text-brand-forest">
+                      <p className="truncate text-[15px] font-extrabold text-brand-forest">
                         {item.title}
-                      </CardTitle>
-                      <CardDescription>
-                        {item.location} · {label(item.jobType)} · {date(item.createdAt)}
-                      </CardDescription>
-                    </div>
-                    <Badge className={tone(item.status)}>{label(item.status)}</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-1">
-                  <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">
-                    {item.description}
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Buyer
-                      </span>
-                      <div>
-                        <Link
-                          href={adminPath(`/users/${item.buyerId}`)}
-                          className="font-semibold text-brand-forest hover:underline"
-                        >
-                          {item.buyerDisplayName || item.buyerEmail || "View buyer account"}
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                        Budget
-                      </span>
-                      <div className="font-semibold text-brand-forest">
-                        <MoneyText>{formatBudgetRange(item.budgetMin, item.budgetMax)}</MoneyText>
-                      </div>
-                    </div>
-                  </div>
-                  {editable ? (
-                    <div className="rounded-xl border border-brand-forest/10 p-4">
-                      <p className="font-bold text-brand-forest">Requirement availability</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {item.status === "open"
-                          ? "Sellers can currently discover this requirement."
-                          : "This requirement is closed to sellers."}
                       </p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {item.location} · {label(item.jobType)} · {date(item.createdAt)}
+                      </p>
+                    </div>
+                    <Badge className={cn("shrink-0", tone(item.status))}>{label(item.status)}</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Buyer
+                      </p>
+                      <Link
+                        href={adminPath(`/users/${item.buyerId}`)}
+                        className="truncate font-semibold text-brand-forest hover:underline"
+                      >
+                        {item.buyerDisplayName || item.buyerEmail || "View buyer"}
+                      </Link>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Budget
+                      </p>
+                      <p className="font-semibold text-brand-forest">
+                        <MoneyText>{formatBudgetRange(item.budgetMin, item.budgetMax)}</MoneyText>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {editable ? (
                       <Button
-                        className="mt-3"
-                        variant={item.status === "open" ? "destructive" : "default"}
-                        disabled={mutation.isPending}
+                        size="sm"
+                        className="h-8 flex-1"
+                        variant={item.status === "open" ? "outline" : "default"}
+                        disabled={mutation.isPending || deleteMutation.isPending}
                         onClick={() =>
                           mutation.mutate({
                             id: item.id,
@@ -664,21 +717,34 @@ export function RequirementsManagementPage() {
                           })
                         }
                       >
-                        {pending ? <Loader2 className="animate-spin" /> : null}
-                        {item.status === "open" ? "Close requirement" : "Reopen requirement"}
+                        {pending ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                        {item.status === "open" ? "Close" : "Reopen"}
                       </Button>
-                    </div>
-                  ) : (
-                    <p className="rounded-xl bg-muted p-3 text-xs text-muted-foreground">
-                      Availability cannot be changed during this service stage.
-                    </p>
-                  )}
+                    ) : null}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 px-2.5"
+                      disabled={deleteMutation.isPending}
+                      aria-label={`Delete ${item.title}`}
+                      onClick={() => confirmDeleteRequirement(item.title, item.id)}
+                    >
+                      {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+      {deleteMutation.isError ? (
+        <p className="text-sm text-red-600">
+          {deleteMutation.error instanceof Error
+            ? deleteMutation.error.message
+            : "Could not delete requirement."}
+        </p>
+      ) : null}
       <Pagination page={page} count={items.length} setPage={setPage} />
     </div>
   );
